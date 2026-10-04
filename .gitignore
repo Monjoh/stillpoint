@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# WXT build output
+.output/
+.wxt/
+stats.html
+stats-*.json
+
+# Local development context — planning, session notes, agent instructions.
+# The tracked repo carries only the extension itself, never docs about building it.
+docs/
+CLAUDE.md
+
+# Secrets & local env
+.env
+.env.local
+.env.*.local
+
+# Packaging artifacts
+web-ext-artifacts/
+*.xpi
+*.zip
+
+# Test & lint caches
+coverage/
+.eslintcache
+.vitest/
+
+# Editor / OS
+.DS_Store
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
