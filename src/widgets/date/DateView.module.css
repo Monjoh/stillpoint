@@ -1,0 +1,7 @@
+.date {
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--sp-text, #f2f2f2);
+}

@@ -2,7 +2,7 @@ import { fitTextCss } from '@/lib/fit-text';
 import type { WidgetProps } from '@/core/registry/types';
 import type { ClockSettings } from './definition';
 import { formatClock, tickIntervalMs } from './format';
-import { useNow } from './useNow';
+import { useNow } from '@/lib/use-now';
 import styles from './Clock.module.css';
 
 const WEIGHT = { light: 200, regular: 400, medium: 500 } as const;

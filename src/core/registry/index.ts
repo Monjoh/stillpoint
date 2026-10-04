@@ -1,4 +1,6 @@
 import { clockDefinition } from '@/widgets/clock/definition';
+import { dateDefinition } from '@/widgets/date/definition';
+import { quoteDefinition } from '@/widgets/quote/definition';
 import { createRegistry } from './registry';
 import type { AnyWidgetDefinition } from './types';
 
@@ -9,6 +11,8 @@ import type { AnyWidgetDefinition } from './types';
  */
 export const widgetDefinitions = [
   clockDefinition,
+  dateDefinition,
+  quoteDefinition,
 ] as const satisfies readonly AnyWidgetDefinition[];
 
 /**
