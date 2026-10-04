@@ -191,6 +191,24 @@ describe('describeSchema', () => {
     expect(odd?.label).toBe('Odd');
   });
 
+  // For state the schema has to carry but the user has no business editing, and for
+  // options belonging to a feature that is not built yet.
+  it('drops hidden fields entirely', () => {
+    const fields = describeSchema(
+      z.object({
+        shown: z
+          .boolean()
+          .default(true)
+          .meta(field({ label: 'Shown' })),
+        internal: z
+          .boolean()
+          .default(false)
+          .meta(field({ label: 'Internal', hidden: true })),
+      }),
+    );
+    expect(fields.map((f) => f.key)).toEqual(['shown']);
+  });
+
   it('returns nothing for a schema that is not an object', () => {
     expect(describeSchema(z.string())).toEqual([]);
   });

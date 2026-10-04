@@ -25,15 +25,13 @@
   No transition on the padding: it would re-measure the canvas on every animation
   frame through the ResizeObserver, and relayout the whole grid each time.
 
-  The fallback matches --sp-ui-panel-width in edit/ui-tokens.css. That file ships with
+  The fallback matches --sp-ui-panel-width in core/theme/ui-tokens.css, which ships with
   the edit chunk, and this rule only ever applies once the chunk is loaded, so the
   fallback is belt and braces — but the two numbers must not drift.
 */
 @media (min-width: 760px) {
   .stage[data-panel] {
-    padding-right: calc(
-      var(--sp-ui-panel-width, 288px) + var(--sp-ui-panel-gutter, 16px) * 2
-    );
+    padding-right: calc(var(--sp-ui-panel-width, 288px) + var(--sp-space-4, 24px));
   }
 }
 

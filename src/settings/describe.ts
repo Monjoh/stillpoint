@@ -46,6 +46,8 @@ export interface FieldDescriptor extends ControlField {
   showIf?: FieldMeta['showIf'];
   group?: string;
   order?: number;
+  /** Dropped by `describeSchema`; present so `describeField` stays total. */
+  hidden?: boolean;
   /** `group`: the nested fields. `list`: the fields of one row. */
   fields?: FieldDescriptor[];
   /** `custom`: the widget's own control. */
@@ -61,6 +63,7 @@ export function describeSchema(schema: z.ZodType, prefix = ''): FieldDescriptor[
 
   return Object.entries(shape)
     .map(([key, field], index) => ({ field: describeField(key, field, prefix), index }))
+    .filter((entry) => !entry.field.hidden)
     .sort((a, b) => order(a) - order(b))
     .map((entry) => entry.field);
 }
@@ -93,6 +96,7 @@ export function describeField(
     showIf: meta?.showIf,
     group: meta?.group,
     order: meta?.order,
+    hidden: meta?.hidden,
   };
 
   // An explicit `control` in the metadata wins over anything inferred — that is the

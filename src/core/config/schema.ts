@@ -47,13 +47,50 @@ export const widgetInstanceSchema = z.object({
   frame: frameSchema,
 });
 
+/**
+ * The grid, and the only part of a profile the user arranges widgets *against*.
+ *
+ * Carries `.meta()` so the edit panel can draw it with the same generator that draws
+ * a widget's settings. Metadata changes nothing about what the schema parses, so this
+ * is not a config shape change and needs no migration.
+ */
 export const layoutSchema = z
   .object({
-    columns: z.number().int().min(4).max(48).default(24),
-    rows: z.number().int().min(4).max(32).default(12),
-    gap: z.number().int().min(0).max(64).default(12),
+    // Number fields, not the sliders a min/max pair would otherwise infer. Changing
+    // the column count rescales every widget, and rounding to whole cells is lossy,
+    // so a slider drag would compound a hundred roundings into a mangled layout.
+    // See `setLayout` in canvas/operations.ts.
+    columns: z.number().int().min(4).max(48).default(24).meta({
+      control: 'number',
+      label: 'Columns',
+      help: 'How finely a widget can be placed across the page. More columns means finer placement, not smaller widgets.',
+    }),
+    rows: z
+      .number()
+      .int()
+      .min(4)
+      .max(32)
+      .default(12)
+      .meta({ control: 'number', label: 'Rows' }),
+    gap: z
+      .number()
+      .int()
+      .min(0)
+      .max(64)
+      .default(12)
+      .meta({ label: 'Gap', unit: 'px' }),
     /** Caps canvas width so an ultrawide composes instead of smearing. */
-    maxWidth: z.number().int().min(480).nullable().default(1600),
+    maxWidth: z
+      .number()
+      .int()
+      .min(480)
+      .nullable()
+      .default(1600)
+      .meta({
+        label: 'Maximum width',
+        unit: 'px',
+        help: 'Keeps the canvas from smearing across an ultrawide screen. Clear it to use the whole window.',
+      }),
   })
   .prefault({});
 
@@ -105,13 +142,37 @@ export const profileSchema = z.object({
   activation: z.null().default(null),
 });
 
+/**
+ * Global settings, edited on the options page by the same generator that draws a
+ * widget's panel — it only needs an object with a zod schema, and this is one.
+ *
+ * Fields marked `hidden` are carried but not offered: either internal state, or an
+ * option for a feature that does not exist yet. A control that does nothing teaches
+ * the user less than no control at all.
+ */
 export const appSettingsSchema = z
   .object({
-    locale: z.string().default('en'),
+    locale: z
+      .string()
+      .default('en')
+      // Nothing reads this yet — the clock formats with the browser's own locale.
+      // Offered to the user when something does. See M5.
+      .meta({ label: 'Language', hidden: true }),
     /** User-supplied; Unsplash backgrounds are off until it is set. */
-    unsplashAccessKey: z.string().nullable().default(null),
-    hasCompletedFirstRun: z.boolean().default(false),
-    editModeEnabled: z.boolean().default(true),
+    unsplashAccessKey: z
+      .string()
+      .nullable()
+      .default(null)
+      // Unsplash backgrounds are M4. Shown when there is something for a key to do.
+      .meta({ label: 'Unsplash access key', hidden: true }),
+    hasCompletedFirstRun: z
+      .boolean()
+      .default(false)
+      .meta({ label: 'Has completed first run', hidden: true }),
+    editModeEnabled: z.boolean().default(true).meta({
+      label: 'Allow editing the layout',
+      help: 'Turn this off to lock the canvas. The “Edit layout” button and the E shortcut stop responding.',
+    }),
   })
   .prefault({});
 

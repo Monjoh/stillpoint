@@ -131,6 +131,8 @@ export type FieldMeta = {
   help?: string;
   control?:
     | 'slider'
+    /** Opt out of the slider a min/max pair would otherwise infer. */
+    | 'number'
     | 'select'
     | 'segmented'
     | 'color'
@@ -150,6 +152,13 @@ export type FieldMeta = {
   /** Group fields under a collapsible heading. */
   group?: string;
   order?: number;
+  /**
+   * Skip this field in generated forms. For state the schema has to carry but the
+   * user has no business editing — a first-run flag, a cache stamp — and for fields
+   * belonging to a feature that is not built yet. A control for something that does
+   * nothing teaches the user less than no control at all.
+   */
+  hidden?: boolean;
 };
 
 /**

@@ -1,4 +1,4 @@
-import type { Profile, Rect, WidgetInstance } from '@/core/config/schema';
+import type { LayoutConfig, Profile, Rect, WidgetInstance } from '@/core/config/schema';
 import { widgetInstanceSchema } from '@/core/config/schema';
 import type { AnyWidgetDefinition } from '@/core/registry/types';
 import { newId } from '@/lib/id';
@@ -121,6 +121,50 @@ export function updateWidgetSettings(
     widgets: profile.widgets.map((i) =>
       i.instanceId === instanceId ? { ...i, settings } : i,
     ),
+  };
+}
+
+/**
+ * Change the grid, and bring every widget with it.
+ *
+ * Rects are rescaled, not clamped. Changing `columns` from 24 to 48 is a request for
+ * finer placement, not for every widget to become half as wide, so each one keeps the
+ * fraction of the page it occupied. Clamping instead — the obvious implementation —
+ * would pile the whole layout into the top-left corner the moment the grid shrank,
+ * and the original positions would be gone.
+ *
+ * Rounding to whole cells is still lossy, so a column count dragged down and back up
+ * does not return the layout it started from. That is why `columns` and `rows` are
+ * number fields rather than sliders in the edit panel: one deliberate step at a time,
+ * instead of a hundred compounding ones during a drag.
+ *
+ * Rescaling can round two widgets into the same cells. Overlap is allowed here —
+ * it is visible and the user can drag their way out of it, whereas refusing the whole
+ * grid change because of one awkward widget is a dead end they cannot.
+ */
+export function setLayout(profile: Profile, layout: LayoutConfig): Profile {
+  const scaleX = layout.columns / profile.layout.columns;
+  const scaleY = layout.rows / profile.layout.rows;
+
+  // Exactly 1 on both axes when only `gap` or `maxWidth` moved, so those leave every
+  // rect byte-identical rather than quietly re-rounding it.
+  if (scaleX === 1 && scaleY === 1) return { ...profile, layout };
+
+  return {
+    ...profile,
+    layout,
+    widgets: profile.widgets.map((i) => ({
+      ...i,
+      rect: clampRect(
+        {
+          x: Math.round(i.rect.x * scaleX),
+          y: Math.round(i.rect.y * scaleY),
+          w: Math.max(1, Math.round(i.rect.w * scaleX)),
+          h: Math.max(1, Math.round(i.rect.h * scaleY)),
+        },
+        layout,
+      ),
+    })),
   };
 }
 

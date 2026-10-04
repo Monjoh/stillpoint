@@ -3,8 +3,9 @@ import { Background } from '@/canvas/Background';
 import { Canvas } from '@/canvas/Canvas';
 import { removeWidget, withProfile } from '@/canvas/operations';
 import { useEditSession } from '@/canvas/useEditSession';
+import { browser } from 'wxt/browser';
 import { configStore, useConfig } from '@/core/config/store';
-import type { Profile } from '@/core/config/schema';
+import type { Profile, StillpointConfig } from '@/core/config/schema';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
 import styles from './NewTab.module.css';
 
@@ -55,15 +56,25 @@ export function NewTab() {
   });
 
   /**
-   * The panel is open exactly when edit mode has a selection that still exists. Asked
-   * here rather than inferred from `selectedId` alone, because deleting the selected
-   * widget leaves the id behind for a render — and the stage would then hold open a
-   * gap for a panel that is not there.
+   * The panel belongs to edit mode, not to the selection. Asked of the session rather
+   * than derived from `selectedId`, which is what it used to be: the stage gives up
+   * the panel's width, so a panel that appeared on selection moved every widget on
+   * the canvas at the exact moment one was being clicked.
    */
-  const panelOpen =
-    session.isEditing &&
-    session.selectedId !== null &&
-    profile?.widgets.some((w) => w.instanceId === session.selectedId) === true;
+  const panelOpen = session.isEditing && session.panelOpen;
+
+  /** Extension APIs belong to the entrypoint; the panel is handed a plain callback. */
+  const handleOpenOptions = useCallback(() => {
+    void browser.runtime.openOptionsPage();
+  }, []);
+
+  const handleConfigChange = useCallback(
+    (recipe: (config: StillpointConfig) => StillpointConfig) => {
+      configStore.getState().update(recipe);
+      void configStore.getState().flush();
+    },
+    [],
+  );
 
   return (
     <>
@@ -85,10 +96,15 @@ export function NewTab() {
                     <Suspense fallback={null}>
                       <EditMode
                         geometry={geometry}
+                        config={config}
                         profile={profile}
                         selectedId={session.selectedId}
+                        panelOpen={panelOpen}
                         onSelect={session.select}
                         onChange={handleProfileChange}
+                        onChangeConfig={handleConfigChange}
+                        onTogglePanel={session.togglePanel}
+                        onOpenOptions={handleOpenOptions}
                         onCommit={handleCommit}
                         onExit={session.exit}
                       />

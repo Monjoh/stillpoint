@@ -18,6 +18,13 @@
   color: var(--sp-ui-text);
 }
 
+/* The toolbar belongs to the canvas, not to the window. Once the settings sidebar has
+   taken its width out of the stage, centring on the viewport leaves the toolbar
+   visibly off to the right of the thing it acts on. */
+.toolbar[data-panel] {
+  left: calc(50% - var(--sp-ui-panel-width) / 2);
+}
+
 .action,
 .done {
   display: inline-flex;

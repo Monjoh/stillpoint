@@ -13,16 +13,30 @@ import { useCallback, useEffect, useState } from 'react';
  * leave. Everything else — arrows, delete, duplicate — belongs to edit mode and loads
  * with it.
  *
- * Escape is two-stage once there is a settings panel to close: it clears the
- * selection first and leaves edit mode second.
+ * Escape is two-stage: it clears the selection first — which returns the settings
+ * panel to the page-level settings — and leaves edit mode second.
+ *
+ * Whether the panel is showing also lives here rather than inside the lazily loaded
+ * edit chunk, because the stage has to reserve the panel's width, and the stage is
+ * rendered by the page.
  */
+
+/**
+ * Below this the stage cannot afford to give up the panel's width, so the panel
+ * overlays instead of displacing. Matches the breakpoint in SettingsPanel.module.css
+ * and Canvas.module.css; the three must not drift.
+ */
+const PANEL_MIN_VIEWPORT = 760;
 
 export interface EditSession {
   isEditing: boolean;
   selectedId: string | null;
+  /** The settings panel is showing. Open throughout edit mode, not per selection. */
+  panelOpen: boolean;
   enter: () => void;
   exit: () => void;
   select: (instanceId: string | null) => void;
+  togglePanel: () => void;
 }
 
 export interface EditSessionOptions {
@@ -36,7 +50,20 @@ export function useEditSession({ enabled, onExit }: EditSessionOptions): EditSes
   const [isEditing, setIsEditing] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  /**
+   * Open by default, and the user's choice from then on — never reopened behind their
+   * back. The panel used to appear and disappear with the selection, which resized
+   * the stage mid-click: every widget shifted, including the one being aimed at.
+   *
+   * On a window too narrow to displace the canvas it starts closed instead, because
+   * there it would cover the thing it is meant to be editing.
+   */
+  const [panelOpen, setPanelOpen] = useState(
+    () => typeof window === 'undefined' || window.innerWidth >= PANEL_MIN_VIEWPORT,
+  );
+
   const enter = useCallback(() => setIsEditing(true), []);
+  const togglePanel = useCallback(() => setPanelOpen((open) => !open), []);
 
   const exit = useCallback(() => {
     setIsEditing(false);
@@ -79,7 +106,15 @@ export function useEditSession({ enabled, onExit }: EditSessionOptions): EditSes
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [enabled, isEditing, selectedId, enter, exit]);
 
-  return { isEditing, selectedId, enter, exit, select: setSelectedId };
+  return {
+    isEditing,
+    selectedId,
+    panelOpen,
+    enter,
+    exit,
+    select: setSelectedId,
+    togglePanel,
+  };
 }
 
 /**

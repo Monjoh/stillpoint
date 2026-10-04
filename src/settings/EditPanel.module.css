@@ -6,20 +6,26 @@
   screen would cover up.
 
   It does not overlay the canvas either — the stage reserves this width while the panel
-  is open (see Canvas.module.css), so a widget is never hidden behind it.
+  is open (see Canvas.module.css), so a widget is never hidden behind it. Which is
+  also why it stays open for the whole of edit mode rather than following the
+  selection: appearing would move every widget on the canvas, including the one being
+  clicked.
+
+  Full height and flush to the window edge, rather than a floating card with a gutter
+  around it. A card reads as something lying *on top of* the page; an edge-to-edge
+  sidebar reads as the page having made room, which is what is actually happening.
 */
 
 .panel {
   position: fixed;
   z-index: 9;
-  top: 72px;
-  right: var(--sp-ui-panel-gutter);
-  bottom: var(--sp-ui-panel-gutter);
+  top: 0;
+  right: 0;
+  bottom: 0;
   width: var(--sp-ui-panel-width);
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--sp-ui-border);
-  border-radius: var(--sp-ui-radius);
+  border-left: 1px solid var(--sp-ui-border);
   background: var(--sp-ui-bg);
   box-shadow: var(--sp-ui-shadow);
   font-family: system-ui, sans-serif;
@@ -31,7 +37,7 @@
    reserving 320px of a 700px window would leave less canvas than panel. */
 @media (max-width: 759px) {
   .panel {
-    width: min(var(--sp-ui-panel-width), calc(100vw - var(--sp-ui-panel-gutter) * 2));
+    width: min(var(--sp-ui-panel-width), 80vw);
   }
 }
 
@@ -68,6 +74,7 @@
   text-overflow: ellipsis;
 }
 
+.back,
 .close {
   flex: none;
   display: grid;
@@ -81,17 +88,21 @@
   cursor: pointer;
 }
 
+.back:hover,
 .close:hover {
   background: var(--sp-ui-bg-raised);
   color: var(--sp-ui-text);
 }
 
+.back:focus-visible,
 .close:focus-visible,
-.reset:focus-visible {
+.button:focus-visible,
+.quiet:focus-visible {
   outline: 2px solid var(--sp-ui-accent);
   outline-offset: 1px;
 }
 
+.back svg,
 .close svg {
   width: 14px;
   height: 14px;
@@ -104,6 +115,9 @@
 .body {
   flex: 1;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   padding: 14px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -117,7 +131,7 @@
   border-top: 1px solid var(--sp-ui-border);
 }
 
-.reset {
+.quiet {
   padding: 4px 9px;
   border: 1px solid transparent;
   border-radius: 6px;
@@ -128,7 +142,7 @@
   cursor: pointer;
 }
 
-.reset:hover {
+.quiet:hover {
   border-color: var(--sp-ui-border);
   color: var(--sp-ui-text);
 }
@@ -138,4 +152,27 @@
   font-size: 11.5px;
   line-height: 1.5;
   color: var(--sp-ui-text-muted);
+}
+
+.buttonRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.button {
+  flex: 1 1 auto;
+  padding: 5px 10px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 7px;
+  background: var(--sp-ui-bg);
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button:hover {
+  border-color: var(--sp-ui-accent);
 }
