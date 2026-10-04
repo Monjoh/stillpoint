@@ -38,6 +38,8 @@ function setup(
   const current = options.config ?? config();
   const active = current.profiles.find((p) => p.id === current.activeProfileId)!;
   const onChangeLayout = vi.fn();
+  const onChangeTheme = vi.fn();
+  const onChangeBackground = vi.fn();
   const onChangeConfig = vi.fn();
 
   render(
@@ -45,6 +47,8 @@ function setup(
       config={current}
       profile={active}
       onChangeLayout={onChangeLayout}
+      onChangeTheme={onChangeTheme}
+      onChangeBackground={onChangeBackground}
       onChangeConfig={onChangeConfig}
       onOpenOptions={options.onOpenOptions}
     />,
@@ -58,7 +62,15 @@ function setup(
     return recipe(current);
   };
 
-  return { current, active, onChangeLayout, onChangeConfig, applied };
+  return {
+    current,
+    active,
+    onChangeLayout,
+    onChangeTheme,
+    onChangeBackground,
+    onChangeConfig,
+    applied,
+  };
 }
 
 describe('the profile section', () => {

@@ -1,5 +1,6 @@
-import type { LayoutConfig, Rect, StillpointConfig } from '@/core/config/schema';
-import { profileToPaint, type CanvasPaint } from '@/core/theme/apply';
+import type { Rect, StillpointConfig } from '@/core/config/schema';
+import { paintToTokens, profileToPaint } from '@/core/theme/apply';
+import type { TokenSet } from '@/core/theme/tokens';
 
 /**
  * The synchronous first-paint cache.
@@ -24,11 +25,24 @@ import { profileToPaint, type CanvasPaint } from '@/core/theme/apply';
 
 const KEY = 'stillpoint.paint';
 
-/** Bump when the shape below changes. A mismatch is treated as a cache miss. */
-export const PAINT_CACHE_VERSION = 1;
+/**
+ * Bump when the shape below changes. A mismatch is treated as a cache miss.
+ *
+ * 2 — the cache now holds a resolved token set rather than the pieces to resolve one
+ * from. Before this the boot paint used whatever the inline CSS declared, which was
+ * Midnight's palette under any theme: pick Paper, and every cold tab flashed dark
+ * text on a dark background until React arrived.
+ *
+ * Resolved, and not `{ preset, overrides }`, so that the preset table stays out of
+ * `boot.js`. Storing the question rather than the answer would mean shipping four
+ * complete themes in front of the first pixel to use one of them.
+ */
+export const PAINT_CACHE_VERSION = 2;
 
-export interface PaintCache extends CanvasPaint {
+export interface PaintCache {
   v: number;
+  /** Every custom property the page needs, already merged. See `paintToTokens`. */
+  tokens: TokenSet;
   /** Widget positions, so the skeleton can reserve cells and avoid layout shift. */
   rects: Rect[];
 }
@@ -44,15 +58,9 @@ function isRect(value: unknown): value is Rect {
   );
 }
 
-function isLayout(value: unknown): value is LayoutConfig {
+function isTokenSet(value: unknown): value is TokenSet {
   if (typeof value !== 'object' || value === null) return false;
-  const l = value as Record<string, unknown>;
-  return (
-    typeof l.columns === 'number' &&
-    typeof l.rows === 'number' &&
-    typeof l.gap === 'number' &&
-    (l.maxWidth === null || typeof l.maxWidth === 'number')
-  );
+  return Object.values(value).every((v) => typeof v === 'string');
 }
 
 /**
@@ -64,11 +72,7 @@ function isPaintCache(value: unknown): value is PaintCache {
   if (typeof value !== 'object' || value === null) return false;
   const c = value as Record<string, unknown>;
   if (c.v !== PAINT_CACHE_VERSION) return false;
-  if (typeof c.background !== 'object' || c.background === null) return false;
-  if (typeof (c.background as Record<string, unknown>).kind !== 'string') return false;
-  if (!isLayout(c.layout)) return false;
-  if (typeof c.fontScale !== 'number') return false;
-  if (typeof c.overrides !== 'object' || c.overrides === null) return false;
+  if (!isTokenSet(c.tokens)) return false;
   if (!Array.isArray(c.rects) || !c.rects.every(isRect)) return false;
   return true;
 }
@@ -95,7 +99,9 @@ export function writePaintCache(config: StillpointConfig): void {
 
     const cache: PaintCache = {
       v: PAINT_CACHE_VERSION,
-      ...profileToPaint(profile),
+      // Resolved here, on the write, because this runs after a config save where
+      // nobody is waiting. Boot runs in front of the first pixel, where someone is.
+      tokens: paintToTokens(profileToPaint(profile)),
       rects: profile.widgets.map((w) => w.rect),
     };
 

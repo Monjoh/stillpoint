@@ -27,10 +27,17 @@ describe('paint cache', () => {
     const cache = readPaintCache();
     expect(cache).not.toBeNull();
     expect(cache!.v).toBe(PAINT_CACHE_VERSION);
-    expect(cache!.background).toEqual(config.profiles[0]!.background);
-    expect(cache!.layout).toEqual(config.profiles[0]!.layout);
-    expect(cache!.fontScale).toBe(1.2);
-    expect(cache!.overrides).toEqual({ '--sp-accent': '#ff8800' });
+    // Resolved, not raw: boot writes these straight to :root without consulting a
+    // preset table, which is what keeps the table out of boot.js.
+    expect(cache!.tokens).toMatchObject({
+      '--sp-background': 'linear-gradient(160deg, #11131c 0%, #1d2033 100%)',
+      '--sp-grid-cols': '24',
+      '--sp-scale': '1.2',
+      // The profile's own override, already merged over the preset.
+      '--sp-accent': '#ff8800',
+      // And a token the profile never mentions, from the preset underneath it.
+      '--sp-radius': '10px',
+    });
     expect(cache!.rects).toEqual([
       { x: 8, y: 4, w: 8, h: 3 },
       { x: 8, y: 7, w: 8, h: 1 },
@@ -43,7 +50,7 @@ describe('paint cache', () => {
       activeProfileId: '44444444-4444-4444-8444-444444444444',
     });
     writePaintCache(config);
-    expect(readPaintCache()!.background).toEqual({ kind: 'solid', color: '#f4f1ea' });
+    expect(readPaintCache()!.tokens['--sp-background']).toBe('#f4f1ea');
   });
 
   it('holds no user content — only geometry and colour', () => {

@@ -1,5 +1,11 @@
 import { createPortal } from 'react-dom';
-import type { LayoutConfig, Profile, StillpointConfig } from '@/core/config/schema';
+import type {
+  BackgroundConfig,
+  LayoutConfig,
+  Profile,
+  StillpointConfig,
+  ThemeConfig,
+} from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
 import { EditPanel } from '@/settings/EditPanel';
 import type { CanvasGeometry } from '../geometry';
@@ -92,6 +98,13 @@ export default function EditMode({
             }
             onChangeLayout={(layout: LayoutConfig) =>
               onChange(setLayout(profile, layout))
+            }
+            // Plain field replacements, unlike the layout: neither the theme nor the
+            // background touches a widget's rect, so there is nothing to rescale and
+            // an operation in `canvas/operations.ts` would be ceremony.
+            onChangeTheme={(theme: ThemeConfig) => onChange({ ...profile, theme })}
+            onChangeBackground={(background: BackgroundConfig) =>
+              onChange({ ...profile, background })
             }
             onChangeConfig={onChangeConfig}
             onOpenOptions={onOpenOptions}

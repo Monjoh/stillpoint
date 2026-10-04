@@ -82,12 +82,22 @@ export const layoutSchema = z
   })
   .prefault({});
 
+/**
+ * `fontScale` carries `.meta()` so the panel can generate it. `preset` and
+ * `overrides` deliberately do not: a preset is chosen from swatches that show what
+ * each theme looks like, and a `<select>` of four names shows nothing at all. That
+ * is what `control: 'custom'` is for, and the panel places it by hand.
+ */
 export const themeSchema = z
   .object({
     preset: z.string().default('midnight'),
     /** Sparse token overrides, e.g. { '--sp-accent': '#ff8800' }. */
     overrides: z.record(z.string(), z.string()).default({}),
-    fontScale: z.number().min(0.6).max(2).default(1),
+    fontScale: z.number().min(0.6).max(2).default(1).meta({
+      label: 'Text size',
+      step: 0.05,
+      help: 'Scales every widget’s type together. The one control that makes the whole page bigger.',
+    }),
   })
   .prefault({});
 

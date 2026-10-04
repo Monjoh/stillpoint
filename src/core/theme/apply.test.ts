@@ -3,6 +3,8 @@ import { configSchema } from '@/core/config/schema';
 import fixtureV1 from '@/core/config/__fixtures__/config-v1.json';
 import { backgroundToCss } from './background';
 import { applyCanvasTokens, isThemeableToken, profileToPaint } from './apply';
+import { getPreset } from './presets';
+import { THEME_TOKEN_NAMES } from './tokens';
 
 describe('backgroundToCss', () => {
   it('renders a solid colour', () => {
@@ -78,6 +80,7 @@ describe('applyCanvasTokens', () => {
       {
         background: { kind: 'solid', color: '#000' },
         layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
+        preset: 'midnight',
         fontScale: 1,
         overrides: { '--sp-ui-bg': '#ff00ff', '--sp-ui-text': '#ff00ff' },
       },
@@ -94,11 +97,89 @@ describe('applyCanvasTokens', () => {
       {
         background: { kind: 'image', assetId: 'a1', fit: 'cover', blur: 0, dim: 0 },
         layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
+        preset: 'midnight',
         fontScale: 1,
         overrides: {},
       },
       root,
     );
     expect(root.style.getPropertyValue('--sp-background')).toBe('the-default');
+  });
+});
+
+describe('presets', () => {
+  let root: HTMLElement;
+
+  beforeEach(() => {
+    root = document.createElement('div');
+  });
+
+  const paint = (preset: string, overrides: Record<string, string> = {}) => ({
+    background: { kind: 'solid' as const, color: '#000' },
+    layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
+    preset,
+    fontScale: 1,
+    overrides,
+  });
+
+  it('writes every token of the chosen preset', () => {
+    applyCanvasTokens(paint('terminal'), root);
+    for (const token of THEME_TOKEN_NAMES) {
+      expect(root.style.getPropertyValue(token)).toBe(
+        getPreset('terminal').tokens[token],
+      );
+    }
+  });
+
+  it('lets an override win over the preset it sits on', () => {
+    applyCanvasTokens(paint('midnight', { '--sp-accent': '#ff8800' }), root);
+    expect(root.style.getPropertyValue('--sp-accent')).toBe('#ff8800');
+    // and leaves the rest of the preset intact
+    expect(root.style.getPropertyValue('--sp-text')).toBe('#f2f2f2');
+  });
+
+  /**
+   * The bug this pair of mechanisms exists to prevent: Terminal has square corners
+   * and no shadow, and `setProperty` is not undone by a later theme that simply does
+   * not mention the token.
+   */
+  it('does not leak a token from the theme that was on before', () => {
+    applyCanvasTokens(paint('terminal'), root);
+    expect(root.style.getPropertyValue('--sp-radius')).toBe('0px');
+
+    applyCanvasTokens(paint('midnight'), root);
+    expect(root.style.getPropertyValue('--sp-radius')).toBe('10px');
+    expect(root.style.getPropertyValue('--sp-shadow')).toBe(
+      '0 2px 20px rgb(0 0 0 / 0.25)',
+    );
+  });
+
+  // Same mechanism, the case a user actually hits: set a custom accent, change your
+  // mind, clear it. Without the sweep the old accent is inline on :root forever.
+  it('drops an override that has been removed', () => {
+    applyCanvasTokens(paint('midnight', { '--sp-accent': '#ff8800' }), root);
+    applyCanvasTokens(paint('midnight'), root);
+    expect(root.style.getPropertyValue('--sp-accent')).toBe('#7aa2f7');
+  });
+
+  it('sweeps away a token no preset defines, falling back to the stylesheet', () => {
+    applyCanvasTokens(paint('midnight', { '--sp-space-2': '40px' }), root);
+    expect(root.style.getPropertyValue('--sp-space-2')).toBe('40px');
+
+    applyCanvasTokens(paint('midnight'), root);
+    expect(root.style.getPropertyValue('--sp-space-2')).toBe('');
+  });
+
+  // The sweep must not reach the tool chrome: the panel is not the user's to restyle,
+  // and it is also not ours to clear out from under whoever did set it.
+  it('leaves tool chrome properties untouched', () => {
+    root.style.setProperty('--sp-ui-bg', '#123456');
+    applyCanvasTokens(paint('midnight'), root);
+    expect(root.style.getPropertyValue('--sp-ui-bg')).toBe('#123456');
+  });
+
+  it('paints an unknown preset as the default rather than as nothing', () => {
+    applyCanvasTokens(paint('from-the-future'), root);
+    expect(root.style.getPropertyValue('--sp-text')).toBe('#f2f2f2');
   });
 });

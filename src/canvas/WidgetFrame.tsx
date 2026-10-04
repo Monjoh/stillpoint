@@ -94,11 +94,16 @@ export function WidgetFrame({
         padding: `${frame.padding}px`,
         opacity: frame.opacity,
         justifyContent: JUSTIFY[frame.align],
+        // The surface is the only thing a theme can shape here, so it carries all
+        // four of the tokens that distinguish one preset from another. `glass` is
+        // nothing but blur and shadow; `terminal` is their absence.
         ...(frame.showBackground
           ? {
               background: 'var(--sp-surface)',
               border: '1px solid var(--sp-surface-border)',
               borderRadius: 'var(--sp-radius)',
+              boxShadow: 'var(--sp-shadow)',
+              backdropFilter: 'blur(var(--sp-surface-blur, 0px))',
             }
           : null),
       }}

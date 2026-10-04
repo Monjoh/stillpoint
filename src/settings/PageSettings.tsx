@@ -2,9 +2,11 @@ import { useMemo } from 'react';
 import {
   appSettingsSchema,
   layoutSchema,
+  type BackgroundConfig,
   type LayoutConfig,
   type Profile,
   type StillpointConfig,
+  type ThemeConfig,
 } from '@/core/config/schema';
 import {
   createProfile,
@@ -16,6 +18,7 @@ import {
 import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
 import { NameField } from './NameField';
+import { ThemeSettings } from './ThemeSettings';
 // The section frame and the input chrome come from the two stylesheets the generator
 // already uses, so a hand-placed field beside a generated one is visually the same
 // field. Duplicating either here is how two settings surfaces start to drift apart.
@@ -42,6 +45,8 @@ export interface PageSettingsProps {
   config: StillpointConfig;
   profile: Profile;
   onChangeLayout: (layout: LayoutConfig) => void;
+  onChangeTheme: (theme: ThemeConfig) => void;
+  onChangeBackground: (background: BackgroundConfig) => void;
   onChangeConfig: (recipe: (config: StillpointConfig) => StillpointConfig) => void;
   onOpenOptions?: () => void;
 }
@@ -50,6 +55,8 @@ export function PageSettings({
   config,
   profile,
   onChangeLayout,
+  onChangeTheme,
+  onChangeBackground,
   onChangeConfig,
   onOpenOptions,
 }: PageSettingsProps) {
@@ -125,6 +132,12 @@ export function PageSettings({
             </button>
           </div>
         </section>
+
+        <ThemeSettings
+          profile={profile}
+          onChangeTheme={onChangeTheme}
+          onChangeBackground={onChangeBackground}
+        />
 
         <section className={fields.section}>
           <h3 className={fields.sectionHeading}>Layout</h3>

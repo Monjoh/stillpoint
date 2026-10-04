@@ -1,7 +1,9 @@
 import type {
+  BackgroundConfig,
   LayoutConfig,
   Profile,
   StillpointConfig,
+  ThemeConfig,
   WidgetInstance,
 } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
@@ -37,6 +39,8 @@ export interface EditPanelProps {
   instance?: WidgetInstance;
   onChangeSettings: (instanceId: string, settings: unknown) => void;
   onChangeLayout: (layout: LayoutConfig) => void;
+  onChangeTheme: (theme: ThemeConfig) => void;
+  onChangeBackground: (background: BackgroundConfig) => void;
   onChangeConfig: (recipe: (config: StillpointConfig) => StillpointConfig) => void;
   /** Return from a widget's settings to the page's. Clears the selection. */
   onBack: () => void;
@@ -53,6 +57,8 @@ export function EditPanel({
   instance,
   onChangeSettings,
   onChangeLayout,
+  onChangeTheme,
+  onChangeBackground,
   onChangeConfig,
   onBack,
   onHide,
@@ -115,6 +121,8 @@ export function EditPanel({
           config={config}
           profile={profile}
           onChangeLayout={onChangeLayout}
+          onChangeTheme={onChangeTheme}
+          onChangeBackground={onChangeBackground}
           onChangeConfig={onChangeConfig}
           onOpenOptions={onOpenOptions}
         />

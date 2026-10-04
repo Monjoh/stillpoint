@@ -70,7 +70,7 @@ describe('config store — load', () => {
 
     expect(store.getState().config?.profiles).toHaveLength(2);
     expect(sets).not.toHaveBeenCalled();
-    expect(readPaintCache()?.fontScale).toBe(1.2);
+    expect(readPaintCache()?.tokens['--sp-scale']).toBe('1.2');
 
     store.getState().dispose();
   });
@@ -166,7 +166,7 @@ describe('config store — writes', () => {
     }));
     await store.getState().flush();
 
-    expect(readPaintCache()?.background).toEqual({ kind: 'solid', color: '#123456' });
+    expect(readPaintCache()?.tokens['--sp-background']).toBe('#123456');
 
     store.getState().dispose();
   });

@@ -1,5 +1,7 @@
 import type { BackgroundConfig, LayoutConfig, Profile } from '@/core/config/schema';
 import { backgroundToCss } from './background';
+import { presetTokens } from './presets';
+import { isThemeableToken, type TokenSet } from './tokens';
 
 /**
  * Everything needed to paint an empty but correctly-styled canvas.
@@ -14,6 +16,7 @@ import { backgroundToCss } from './background';
 export interface CanvasPaint {
   background: BackgroundConfig;
   layout: LayoutConfig;
+  preset: string;
   fontScale: number;
   overrides: Record<string, string>;
 }
@@ -22,37 +25,95 @@ export function profileToPaint(profile: Profile): CanvasPaint {
   return {
     background: profile.background,
     layout: profile.layout,
+    preset: profile.theme.preset,
     fontScale: profile.theme.fontScale,
     overrides: profile.theme.overrides,
   };
 }
 
+export { isThemeableToken };
+
 /**
- * An override may only touch canvas tokens. `--sp-ui-*` is tool chrome and is not
- * user-themeable on purpose: a settings panel that inherits a broken custom palette
- * becomes unusable exactly when the user is trying to fix that palette.
+ * Canvas tokens the sweep below must never remove.
+ *
+ * `--sp-background` is not written when the background kind needs an asset that is
+ * not resolved yet, and "not written" there means *keep what is on screen* — the
+ * exact opposite of "clear it". Removing it would turn every image background into a
+ * flash of the default gradient on the way to the real one.
  */
-export function isThemeableToken(token: string): boolean {
-  return token.startsWith('--sp-') && !token.startsWith('--sp-ui-');
+const PRESERVED_TOKENS = new Set(['--sp-background']);
+
+/**
+ * The complete set of custom properties a paint describes.
+ *
+ * Built as one object before anything is written, which is what makes the stale-token
+ * sweep below safe: the writer knows the full set it owns, so anything else inline on
+ * `:root` is from a previous paint and has no business surviving this one.
+ */
+export function paintToTokens(paint: CanvasPaint): TokenSet {
+  const tokens: TokenSet = { ...presetTokens(paint.preset) };
+
+  // Overrides last: a preset is a starting point and the user's own value wins.
+  for (const [token, value] of Object.entries(paint.overrides)) {
+    if (isThemeableToken(token)) tokens[token] = value;
+  }
+
+  const background = backgroundToCss(paint.background);
+  if (background !== null) tokens['--sp-background'] = background;
+
+  tokens['--sp-grid-cols'] = String(paint.layout.columns);
+  tokens['--sp-grid-rows'] = String(paint.layout.rows);
+  tokens['--sp-grid-gap'] = `${paint.layout.gap}px`;
+  tokens['--sp-canvas-max-width'] =
+    paint.layout.maxWidth === null ? 'none' : `${paint.layout.maxWidth}px`;
+  tokens['--sp-scale'] = String(paint.fontScale);
+
+  return tokens;
 }
 
+/**
+ * Write a resolved token set to an element, and clear what it supersedes.
+ *
+ * The primitive `boot.ts` calls. It is handed tokens rather than a paint on purpose:
+ * resolving a paint needs the preset table, and the preset table has no business in
+ * the blocking boot script. The cache stores the answer, so boot only writes it.
+ */
+export function applyTokens(
+  tokens: TokenSet,
+  root: HTMLElement = document.documentElement,
+): void {
+  for (const [token, value] of Object.entries(tokens)) {
+    root.style.setProperty(token, value);
+  }
+
+  // Remove canvas properties this paint does not set. An inline property is not
+  // cleared by a later theme simply failing to mention it, so without this a token
+  // set once would outlive every theme chosen afterwards — switch to Terminal, get
+  // square corners, switch back, keep them. Removing an inline property falls back
+  // to the stylesheet's value, which is the cold-start default in index.html.
+  //
+  // `--sp-ui-*` is skipped: tool chrome is not ours to clear.
+  for (const token of inlineCanvasTokens(root)) {
+    if (!(token in tokens) && !PRESERVED_TOKENS.has(token)) {
+      root.style.removeProperty(token);
+    }
+  }
+}
+
+/** Resolve a paint and apply it. What the React tree calls, once the config is in. */
 export function applyCanvasTokens(
   paint: CanvasPaint,
   root: HTMLElement = document.documentElement,
 ): void {
-  const background = backgroundToCss(paint.background);
-  if (background !== null) root.style.setProperty('--sp-background', background);
+  applyTokens(paintToTokens(paint), root);
+}
 
-  root.style.setProperty('--sp-grid-cols', String(paint.layout.columns));
-  root.style.setProperty('--sp-grid-rows', String(paint.layout.rows));
-  root.style.setProperty('--sp-grid-gap', `${paint.layout.gap}px`);
-  root.style.setProperty(
-    '--sp-canvas-max-width',
-    paint.layout.maxWidth === null ? 'none' : `${paint.layout.maxWidth}px`,
-  );
-  root.style.setProperty('--sp-scale', String(paint.fontScale));
-
-  for (const [token, value] of Object.entries(paint.overrides)) {
-    if (isThemeableToken(token)) root.style.setProperty(token, value);
+/** Snapshot first — removing a property while iterating the live list skips entries. */
+function inlineCanvasTokens(root: HTMLElement): string[] {
+  const found: string[] = [];
+  for (let i = 0; i < root.style.length; i++) {
+    const token = root.style[i];
+    if (token !== undefined && isThemeableToken(token)) found.push(token);
   }
+  return found;
 }

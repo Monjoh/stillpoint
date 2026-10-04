@@ -1,6 +1,6 @@
 import { defineUnlistedScript } from 'wxt/utils/define-unlisted-script';
 import { readPaintCache } from '@/core/storage/paint-cache';
-import { applyCanvasTokens } from '@/core/theme/apply';
+import { applyTokens } from '@/core/theme/apply';
 
 /**
  * The first-paint path, built as its own tiny bundle at `/boot.js`.
@@ -13,12 +13,13 @@ import { applyCanvasTokens } from '@/core/theme/apply';
  *
  * Keep it tiny and keep it synchronous. It must not import zod, the store, or anything
  * that reaches `browser.storage` — everything here is on the critical path of every new
- * tab the user opens.
+ * tab the user opens. It does not resolve a theme either: the cache holds tokens that
+ * are already resolved, so the preset table never reaches this bundle.
  *
  * A cache miss is not an error. The inline CSS in index.html already describes a
  * perfectly good default page, so doing nothing is the correct fallback.
  */
 export default defineUnlistedScript(() => {
   const cache = readPaintCache();
-  if (cache) applyCanvasTokens(cache);
+  if (cache) applyTokens(cache.tokens);
 });

@@ -51,6 +51,8 @@ function setup(options: { instance?: WidgetInstance | null } = {}) {
   const handlers = {
     onChangeSettings: vi.fn(),
     onChangeLayout: vi.fn(),
+    onChangeTheme: vi.fn(),
+    onChangeBackground: vi.fn(),
     onChangeConfig: vi.fn(),
     onBack: vi.fn(),
     onHide: vi.fn(),
