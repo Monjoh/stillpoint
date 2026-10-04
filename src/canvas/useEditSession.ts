@@ -23,8 +23,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 /**
  * Below this the stage cannot afford to give up the panel's width, so the panel
- * overlays instead of displacing. Matches the breakpoint in SettingsPanel.module.css
- * and Canvas.module.css; the three must not drift.
+ * overlays instead of displacing. Matches the breakpoint in EditPanel.module.css and
+ * Canvas.module.css; the three must not drift.
  */
 const PANEL_MIN_VIEWPORT = 760;
 

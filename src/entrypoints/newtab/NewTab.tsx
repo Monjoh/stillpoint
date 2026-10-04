@@ -83,7 +83,7 @@ export function NewTab() {
       {/* Nothing is rendered over the background until the real config is in: a
           placeholder that is replaced a frame later is a flicker on every new tab,
           and boot.ts has already made the page look correct. */}
-      {status === 'ready' && profile && (
+      {status === 'ready' && config && profile && (
         <>
           <Canvas
             profile={profile}

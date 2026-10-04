@@ -116,40 +116,47 @@ describe('typing in a generated settings field', () => {
     const stage = container.querySelector('[class*="stage"]');
     expect(stage?.hasAttribute('data-panel')).toBe(false);
 
+    // The panel opens with edit mode, not with a selection, so the width is given up
+    // once — before anything is clicked — rather than under the cursor mid-click.
     await user.keyboard('e');
-    await screen.findByRole('toolbar', { name: 'Edit layout' });
-    // Edit mode alone must not move the canvas; only an open panel does.
-    expect(stage?.hasAttribute('data-panel')).toBe(false);
-
-    await user.click(screen.getByRole('button', { name: /^Clock, column/ }));
-    await screen.findByRole('complementary', { name: 'Clock settings' });
+    await screen.findByRole('complementary', { name: 'Page settings' });
     expect(stage?.hasAttribute('data-panel')).toBe(true);
 
-    // First Escape clears the selection, which closes the panel.
+    await user.click(screen.getByRole('button', { name: 'Hide settings' }));
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(stage?.hasAttribute('data-panel')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(stage?.hasAttribute('data-panel')).toBe(true);
+
+    // Leaving edit mode takes the panel with it, whatever state it was left in.
     await user.keyboard('{Escape}');
     expect(screen.queryByRole('complementary')).toBeNull();
     expect(stage?.hasAttribute('data-panel')).toBe(false);
   });
 
-  // Deleting the selected widget leaves its id in the session for a render. The gap
-  // must close with the panel, not a frame later.
-  it('closes the gap when the selected widget is deleted', async () => {
+  // Selecting and deselecting is the common case, and the canvas must not move for
+  // it. Deleting the selected widget also leaves its id in the session for a render.
+  it('holds the stage still while the selection comes and goes', async () => {
     const user = userEvent.setup();
     const { container } = render(<NewTab />);
     await screen.findByText(/^\d{2}:\d{2}$/);
 
     await user.keyboard('e');
     await screen.findByRole('toolbar', { name: 'Edit layout' });
+    const stage = container.querySelector('[class*="stage"]');
+    expect(stage?.hasAttribute('data-panel')).toBe(true);
+
     const box = screen.getByRole('button', { name: /^Clock, column/ });
     await user.click(box);
-
-    const stage = container.querySelector('[class*="stage"]');
+    await screen.findByRole('complementary', { name: 'Clock settings' });
     expect(stage?.hasAttribute('data-panel')).toBe(true);
 
     box.focus();
     await user.keyboard('{Delete}');
-    expect(screen.queryByRole('complementary')).toBeNull();
-    expect(stage?.hasAttribute('data-panel')).toBe(false);
+    expect(stage?.hasAttribute('data-panel')).toBe(true);
+    // The widget is gone, so the panel has nothing to show but the page itself.
+    expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
   });
 
   it('keeps focus and accumulates the value across keystrokes', async () => {

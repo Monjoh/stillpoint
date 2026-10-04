@@ -8,6 +8,7 @@ import {
   findFreeRect,
   placeWidget,
   removeWidget,
+  setLayout,
   updateWidgetSettings,
   withProfile,
 } from './operations';
@@ -143,5 +144,67 @@ describe('withProfile', () => {
     expect(next.profiles[0]!.widgets).toHaveLength(1);
     expect(next.profiles[1]).toBe(b);
     expect(next.activeProfileId).toBe('p1');
+  });
+});
+
+describe('setLayout', () => {
+  const grid = (columns: number, rows: number, gap = 12) => ({
+    columns,
+    rows,
+    gap,
+    maxWidth: 1600,
+  });
+
+  it('keeps each widget on the same fraction of the page when the grid grows', () => {
+    const p = profile([at(12, 6, 8, 3, 'a')]);
+    const next = setLayout(p, grid(48, 24));
+
+    expect(next.layout.columns).toBe(48);
+    expect(next.widgets[0]!.rect).toEqual({ x: 24, y: 12, w: 16, h: 6 });
+  });
+
+  // The destructive alternative, written down so it is not quietly reintroduced:
+  // clamping into the smaller grid would pile every widget into the top-left corner
+  // and lose the positions, so going back up could not restore them.
+  it('shrinks proportionally rather than clamping into the corner', () => {
+    const p = profile([at(0, 0, 8, 4, 'a'), at(16, 8, 8, 4, 'b')]);
+    const next = setLayout(p, grid(12, 6));
+
+    expect(next.widgets[0]!.rect).toEqual({ x: 0, y: 0, w: 4, h: 2 });
+    expect(next.widgets[1]!.rect).toEqual({ x: 8, y: 4, w: 4, h: 2 });
+  });
+
+  it('leaves every rect byte-identical when only the gap moves', () => {
+    const p = profile([at(3, 1, 8, 3, 'a')]);
+    const next = setLayout(p, grid(24, 12, 32));
+
+    expect(next.layout.gap).toBe(32);
+    expect(next.widgets[0]).toBe(p.widgets[0]);
+  });
+
+  it('never rounds a widget away to nothing', () => {
+    const p = profile([at(0, 0, 2, 1, 'a')]);
+    const next = setLayout(p, grid(4, 4));
+
+    expect(next.widgets[0]!.rect.w).toBeGreaterThanOrEqual(1);
+    expect(next.widgets[0]!.rect.h).toBeGreaterThanOrEqual(1);
+  });
+
+  it('keeps a widget at the far edge inside the new grid', () => {
+    const p = profile([at(20, 9, 4, 3, 'a')]);
+    const next = setLayout(p, grid(10, 5));
+    const r = next.widgets[0]!.rect;
+
+    expect(r.x + r.w).toBeLessThanOrEqual(10);
+    expect(r.y + r.h).toBeLessThanOrEqual(5);
+  });
+
+  // Rounding is lossy on purpose — hence a number box rather than a slider — but it
+  // must stay lossy in a bounded way rather than drifting the layout off the page.
+  it('survives a round trip with everything still on the canvas', () => {
+    const p = profile([at(0, 0, 8, 3, 'a'), at(12, 6, 6, 4, 'b')]);
+    const back = setLayout(setLayout(p, grid(48, 24)), grid(24, 12));
+
+    expect(back.widgets.map((w) => w.rect)).toEqual(p.widgets.map((w) => w.rect));
   });
 });

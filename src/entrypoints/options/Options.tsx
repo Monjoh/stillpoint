@@ -17,6 +17,7 @@ import {
 } from '@/core/config/transfer';
 import { describeSchema } from '@/settings/describe';
 import { GeneratedFields } from '@/settings/generate';
+import { NameField } from '@/settings/NameField';
 import styles from './Options.module.css';
 
 /**
@@ -117,10 +118,12 @@ function Profiles({ config, write }: { config: StillpointConfig; write: Write })
               onChange={() => write((c) => setActiveProfile(c, profile.id))}
             />
 
-            <ProfileName
-              id={profile.id}
-              name={profile.name}
-              onRename={(name) => write((c) => renameProfile(c, profile.id, name))}
+            <NameField
+              id={`profile-name-${profile.id}`}
+              className={styles.name}
+              label={`Name of profile ${profile.name}`}
+              value={profile.name}
+              onCommit={(name) => write((c) => renameProfile(c, profile.id, name))}
             />
 
             <span className={styles.count}>
@@ -169,48 +172,6 @@ function Profiles({ config, write }: { config: StillpointConfig; write: Write })
         New profile
       </button>
     </section>
-  );
-}
-
-/**
- * The name is a draft until the field is left.
- *
- * Writing on every keystroke would mean the store rejecting an empty name mid-edit —
- * `renameProfile` refuses one — and the input fighting the user over the deletion of
- * their own last character.
- */
-function ProfileName({
-  id,
-  name,
-  onRename,
-}: {
-  id: string;
-  name: string;
-  onRename: (name: string) => void;
-}) {
-  const [draft, setDraft] = useState<{ text: string; of: string } | null>(null);
-  const text = draft && draft.of === name ? draft.text : name;
-
-  const commit = () => {
-    setDraft(null);
-    if (text.trim() !== '' && text !== name) onRename(text);
-  };
-
-  return (
-    <input
-      type="text"
-      className={styles.name}
-      value={text}
-      maxLength={60}
-      aria-label={`Name of profile ${name}`}
-      id={`profile-name-${id}`}
-      onChange={(event) => setDraft({ text: event.target.value, of: name })}
-      onBlur={commit}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter') event.currentTarget.blur();
-        if (event.key === 'Escape') setDraft(null);
-      }}
-    />
   );
 }
 

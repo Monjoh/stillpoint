@@ -76,9 +76,13 @@ export function PageSettings({
                 // Switching mid-edit is intentional: the canvas becomes the other
                 // profile and the selection falls away with the widgets that are no
                 // longer there, which puts the panel back on this view by itself.
-                onChange={(event) =>
-                  onChangeConfig((c) => setActiveProfile(c, event.target.value))
-                }
+                // The id is read now, not inside the recipe: the recipe is a closure
+                // the caller may run later, and by then this controlled select has
+                // been re-rendered back to whatever the config still says.
+                onChange={(event) => {
+                  const id = event.target.value;
+                  onChangeConfig((c) => setActiveProfile(c, id));
+                }}
               >
                 {config.profiles.map((p) => (
                   <option key={p.id} value={p.id}>

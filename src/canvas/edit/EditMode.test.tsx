@@ -1,7 +1,12 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { profileSchema, type Profile } from '@/core/config/schema';
+import {
+  configSchema,
+  profileSchema,
+  type Profile,
+  type StillpointConfig,
+} from '@/core/config/schema';
 import { computeGeometry } from '../geometry';
 import EditMode from './EditMode';
 
@@ -43,15 +48,33 @@ const clock = (id: string, x: number, y: number, w = 8, h = 3) => ({
   rect: { x, y, w, h },
 });
 
-/** Renders EditMode against a live profile, the way NewTab drives it. */
-function setup(initial: Profile) {
-  const state = { profile: initial };
+/**
+ * Renders EditMode against a live profile, the way NewTab drives it.
+ *
+ * `panelOpen` starts true because that is the real default: the panel belongs to edit
+ * mode, not to the selection. Tests that want the canvas to themselves pass false.
+ */
+function setup(initial: Profile, options: { panelOpen?: boolean } = {}) {
+  const state = { profile: initial, config: configFor(initial) };
   const onChange = vi.fn((next: Profile) => {
     state.profile = next;
+    state.config = configFor(next);
+    rerender();
+  });
+  const onChangeConfig = vi.fn((recipe: (c: StillpointConfig) => StillpointConfig) => {
+    state.config = recipe(state.config);
+    state.profile =
+      state.config.profiles.find((p) => p.id === state.config.activeProfileId) ??
+      state.profile;
     rerender();
   });
   const onCommit = vi.fn();
   const onExit = vi.fn();
+  let panelOpen = options.panelOpen ?? true;
+  const onTogglePanel = vi.fn(() => {
+    panelOpen = !panelOpen;
+    rerender();
+  });
   let selected: string | null = null;
   const onSelect = vi.fn((id: string | null) => {
     selected = id;
@@ -61,10 +84,14 @@ function setup(initial: Profile) {
   const tree = () => (
     <EditMode
       geometry={geometry}
+      config={state.config}
       profile={state.profile}
       selectedId={selected}
+      panelOpen={panelOpen}
       onSelect={onSelect}
       onChange={onChange}
+      onChangeConfig={onChangeConfig}
+      onTogglePanel={onTogglePanel}
       onCommit={onCommit}
       onExit={onExit}
     />
@@ -73,7 +100,26 @@ function setup(initial: Profile) {
   const view = render(tree());
   const rerender = () => view.rerender(tree());
 
-  return { state, onChange, onCommit, onExit, onSelect, view };
+  return {
+    state,
+    onChange,
+    onChangeConfig,
+    onCommit,
+    onExit,
+    onSelect,
+    onTogglePanel,
+    view,
+  };
+}
+
+/** The smallest config that holds this profile, so the panel has something to read. */
+function configFor(profile: Profile): StillpointConfig {
+  return configSchema.parse({
+    version: 1,
+    activeProfileId: profile.id,
+    profiles: [profile],
+    app: {},
+  });
 }
 
 /** The overlay box for the nth widget, in config order. */
@@ -331,12 +377,24 @@ describe('leaving', () => {
 });
 
 describe('the settings panel', () => {
-  it('is not there until a widget is selected', async () => {
+  it('is open from the start, on the page settings, with nothing selected', () => {
     setup(profile([clock('a', 0, 0)]));
-    expect(screen.queryByRole('complementary')).toBeNull();
+
+    const panel = screen.getByRole('complementary', { name: 'Page settings' });
+    expect(within(panel).getByLabelText('Columns')).toBeTruthy();
+    expect(within(panel).getByLabelText('Profile name')).toBeTruthy();
+  });
+
+  it('switches to the widget’s settings on selection, and back again', async () => {
+    setup(profile([clock('a', 0, 0)]));
 
     await userEvent.click(widgetBox(0));
     expect(screen.getByRole('complementary', { name: 'Clock settings' })).toBeTruthy();
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Back to page settings' }),
+    );
+    expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
   });
 
   it('writes a setting through to the profile, leaving the layout alone', async () => {
@@ -348,10 +406,31 @@ describe('the settings panel', () => {
     expect(state.profile.widgets[0]?.rect).toEqual({ x: 2, y: 1, w: 8, h: 3 });
   });
 
-  it('closes when the selection is cleared', async () => {
+  it('changes the grid and brings the widgets with it', () => {
+    const { state } = setup(profile([clock('a', 12, 0)]));
+
+    // One deliberate step, not a typed sequence: 24 → 4 → 48 would rescale twice and
+    // round the widget away in between, which is the whole reason this is a number
+    // field and not a slider.
+    fireEvent.change(screen.getByLabelText('Columns'), { target: { value: '48' } });
+
+    expect(state.profile.layout.columns).toBe(48);
+    // Half way across a 24-column grid is still half way across a 48-column one.
+    expect(state.profile.widgets[0]?.rect).toMatchObject({ x: 24, w: 16 });
+  });
+
+  it('hides on request and comes back from the toolbar', async () => {
     setup(profile([clock('a', 0, 0)]));
-    await userEvent.click(widgetBox(0));
-    await userEvent.click(screen.getByRole('button', { name: 'Close settings' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide settings' }));
+    expect(screen.queryByRole('complementary')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
+  });
+
+  it('stays out of the way when it is closed', () => {
+    setup(profile([clock('a', 0, 0)]), { panelOpen: false });
     expect(screen.queryByRole('complementary')).toBeNull();
   });
 

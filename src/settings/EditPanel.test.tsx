@@ -1,13 +1,23 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
-import { widgetInstanceSchema, type WidgetInstance } from '@/core/config/schema';
-import { SettingsPanel } from './SettingsPanel';
+import {
+  configSchema,
+  profileSchema,
+  widgetInstanceSchema,
+  type Profile,
+  type StillpointConfig,
+  type WidgetInstance,
+} from '@/core/config/schema';
+import { EditPanel } from './EditPanel';
 
 /**
  * The panel against the real clock definition and the real registry, because the
  * claim being tested is M3's: the clock's entire settings UI comes out of its schema
  * with no hand-written form anywhere.
+ *
+ * The shell's own claim is newer and tested here too — one sidebar, two states, and
+ * it does not come and go with the selection.
  */
 
 function instance(settings: unknown = {}, type = 'stillpoint.clock'): WidgetInstance {
@@ -19,20 +29,73 @@ function instance(settings: unknown = {}, type = 'stillpoint.clock'): WidgetInst
   });
 }
 
-function setup(options: { instance?: WidgetInstance } = {}) {
-  const onChangeSettings = vi.fn();
-  const onCommit = vi.fn();
-  const onClose = vi.fn();
-  const view = render(
-    <SettingsPanel
-      instance={options.instance ?? instance()}
-      onChangeSettings={onChangeSettings}
-      onCommit={onCommit}
-      onClose={onClose}
-    />,
-  );
-  return { onChangeSettings, onCommit, onClose, view };
+function profile(): Profile {
+  return profileSchema.parse({
+    id: 'p1',
+    name: 'Focus',
+    background: { kind: 'solid', color: '#000' },
+  });
 }
+
+function config(profiles: Profile[] = [profile()]): StillpointConfig {
+  return configSchema.parse({
+    version: 1,
+    activeProfileId: profiles[0]!.id,
+    profiles,
+    app: {},
+  });
+}
+
+/** `instance: null` is the no-selection state; omitting it gives a clock. */
+function setup(options: { instance?: WidgetInstance | null } = {}) {
+  const handlers = {
+    onChangeSettings: vi.fn(),
+    onChangeLayout: vi.fn(),
+    onChangeConfig: vi.fn(),
+    onBack: vi.fn(),
+    onHide: vi.fn(),
+    onCommit: vi.fn(),
+  };
+  const selected =
+    options.instance === null ? undefined : (options.instance ?? instance());
+
+  const tree = (shown: WidgetInstance | undefined) => (
+    <EditPanel config={config()} profile={profile()} instance={shown} {...handlers} />
+  );
+
+  const view = render(tree(selected));
+  return { ...handlers, view, tree };
+}
+
+describe('the shell', () => {
+  it('shows the page settings when nothing is selected, and offers no way back', () => {
+    setup({ instance: null });
+
+    expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Back to page settings' })).toBeNull();
+  });
+
+  it('names the selected widget and offers the way back', async () => {
+    const { onBack } = setup();
+
+    expect(screen.getByRole('complementary', { name: 'Clock settings' })).toBeTruthy();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Back to page settings' }),
+    );
+    expect(onBack).toHaveBeenCalled();
+  });
+
+  // Hiding is about the width, not about the selection: the two used to be the same
+  // thing and the canvas moved under the cursor every time a widget was clicked.
+  it('hides without touching the selection or writing anything', async () => {
+    const { onHide, onBack, onChangeSettings } = setup();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Hide settings' }));
+    expect(onHide).toHaveBeenCalled();
+    expect(onBack).not.toHaveBeenCalled();
+    expect(onChangeSettings).not.toHaveBeenCalled();
+  });
+});
 
 describe('the clock’s generated panel', () => {
   it('renders every field the schema declares, and nothing hand-written', () => {
@@ -69,17 +132,10 @@ describe('the clock’s generated panel', () => {
 
   // The roadmap's own criterion for M3.
   it('hides Show AM/PM in 24-hour time and reveals it in 12-hour', () => {
-    const { view } = setup();
+    const { view, tree } = setup();
     expect(screen.queryByLabelText('Show AM/PM')).toBeNull();
 
-    view.rerender(
-      <SettingsPanel
-        instance={instance({ format: '12h' })}
-        onChangeSettings={vi.fn()}
-        onCommit={vi.fn()}
-        onClose={vi.fn()}
-      />,
-    );
+    view.rerender(tree(instance({ format: '12h' })));
     expect(screen.getByLabelText('Show AM/PM')).toBeTruthy();
   });
 
@@ -91,13 +147,6 @@ describe('the clock’s generated panel', () => {
 
     expect(onChangeSettings).toHaveBeenCalledWith('w1', {});
     expect(onCommit).toHaveBeenCalled();
-  });
-
-  it('closes without writing anything', async () => {
-    const { onClose, onChangeSettings } = setup();
-    await userEvent.click(screen.getByRole('button', { name: 'Close settings' }));
-    expect(onClose).toHaveBeenCalled();
-    expect(onChangeSettings).not.toHaveBeenCalled();
   });
 
   it('flushes the debounced write when focus leaves the panel', async () => {

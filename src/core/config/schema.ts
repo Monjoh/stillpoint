@@ -72,25 +72,13 @@ export const layoutSchema = z
       .max(32)
       .default(12)
       .meta({ control: 'number', label: 'Rows' }),
-    gap: z
-      .number()
-      .int()
-      .min(0)
-      .max(64)
-      .default(12)
-      .meta({ label: 'Gap', unit: 'px' }),
+    gap: z.number().int().min(0).max(64).default(12).meta({ label: 'Gap', unit: 'px' }),
     /** Caps canvas width so an ultrawide composes instead of smearing. */
-    maxWidth: z
-      .number()
-      .int()
-      .min(480)
-      .nullable()
-      .default(1600)
-      .meta({
-        label: 'Maximum width',
-        unit: 'px',
-        help: 'Keeps the canvas from smearing across an ultrawide screen. Clear it to use the whole window.',
-      }),
+    maxWidth: z.number().int().min(480).nullable().default(1600).meta({
+      label: 'Maximum width',
+      unit: 'px',
+      help: 'Keeps the canvas from smearing across an ultrawide screen. Clear it to use the whole window.',
+    }),
   })
   .prefault({});
 
