@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import fixtureV1 from './__fixtures__/config-v1.json';
 import fixtureV2 from './__fixtures__/config-v2.json';
+import fixtureV3 from './__fixtures__/config-v3.json';
 import { ConfigVersionError, migrations, runMigrations } from './migrations';
 import { CONFIG_VERSION, configSchema } from './schema';
 
@@ -91,14 +92,19 @@ describe('fixtures', () => {
   });
 
   it('config-v1 loses the page-wide text size and nothing else', () => {
-    const { config, applied } = runMigrations(fixtureV1);
-    expect(applied).toEqual([2]);
-    expect(config).toEqual(fixtureV2);
+    expect(migrations[2]!(fixtureV1)).toEqual(fixtureV2);
+    expect(runMigrations(fixtureV1).applied).toEqual([2, 3]);
   });
 
-  it('config-v2 is current and parses as-is', () => {
-    expect(runMigrations(fixtureV2).applied).toEqual([]);
-    expect(configSchema.safeParse(fixtureV2).success).toBe(true);
+  it('config-v2 loses the frame padding and gets opacity in percent', () => {
+    const { config, applied } = runMigrations(fixtureV2);
+    expect(applied).toEqual([3]);
+    expect(config).toEqual(fixtureV3);
+  });
+
+  it('config-v3 is current and parses as-is', () => {
+    expect(runMigrations(fixtureV3).applied).toEqual([]);
+    expect(configSchema.safeParse(fixtureV3).success).toBe(true);
   });
 });
 
@@ -106,5 +112,34 @@ describe('migration 2', () => {
   it('leaves a malformed tree for the schema to reject', () => {
     expect(() => migrations[2]!({ version: 1, profiles: 'nope' })).not.toThrow();
     expect(() => migrations[2]!({ version: 1, profiles: [null, {}] })).not.toThrow();
+  });
+});
+
+describe('migration 3', () => {
+  const frame = (opacity: unknown) =>
+    migrations[3]!({
+      version: 2,
+      profiles: [{ widgets: [{ frame: { opacity, padding: 8, align: 'center' } }] }],
+    }).profiles[0].widgets[0].frame;
+
+  it('raises an invisible widget to the new floor', () => {
+    expect(frame(0)).toEqual({ opacity: 20, align: 'center' });
+    expect(frame(0.05)).toEqual({ opacity: 20, align: 'center' });
+  });
+
+  it('turns a fraction into a whole percent', () => {
+    expect(frame(0.35).opacity).toBe(35);
+    expect(frame(1).opacity).toBe(100);
+  });
+
+  it('leaves an unreadable opacity for the schema default', () => {
+    expect(frame('half')).toEqual({ align: 'center' });
+  });
+
+  it('leaves a malformed tree for the schema to reject', () => {
+    expect(() => migrations[3]!({ version: 2, profiles: 'nope' })).not.toThrow();
+    expect(() =>
+      migrations[3]!({ version: 2, profiles: [null, { widgets: [null, {}] }] }),
+    ).not.toThrow();
   });
 });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { configSchema } from '@/core/config/schema';
-import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
+import fixtureV3 from '@/core/config/__fixtures__/config-v3.json';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import {
@@ -50,7 +50,7 @@ describe('the asset store', () => {
 
 describe('assetIdsIn', () => {
   it('collects photographs across every profile, not only the active one', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     const [first, second] = config.profiles;
     const withPhotos = {
       ...config,

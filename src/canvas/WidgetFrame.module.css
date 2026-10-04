@@ -2,7 +2,6 @@
   position: absolute;
   display: flex;
   align-items: center;
-  overflow: hidden;
   box-sizing: border-box;
   /* Makes the frame's content box the reference for `cqw`/`cqh` inside the widget, so
      a widget can size itself against its cell in pure CSS. Both grid axes are
@@ -11,6 +10,35 @@
      The frame always has an explicit width and height, which `container-type: size`
      requires. */
   container: sp-widget / size;
+}
+
+/* The card's two layers, under the body. See WidgetFrame.tsx for why it is two. */
+.blur,
+.surface {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--sp-radius, 10px);
+  pointer-events: none;
+}
+
+.surface {
+  box-sizing: border-box;
+  border: 1px solid var(--sp-surface-border);
+  background: var(--sp-surface);
+  box-shadow: var(--sp-shadow);
+}
+
+/* The frame's content box. It clips, not the frame: the frame must let the card's
+   shadow out. */
+.body {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: inherit;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* The widget's own box. The frame owns position and padding; the widget owns what is

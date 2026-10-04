@@ -15,7 +15,7 @@ z.config({ jitless: true });
  * Bump for ANY shape change, including additive ones, and write a migration.
  * Two releases sharing a version number with different shapes is unrecoverable.
  */
-export const CONFIG_VERSION = 2;
+export const CONFIG_VERSION = 3;
 
 /**
  * A position on the canvas in grid cells, not pixels. Both axes are relative:
@@ -45,12 +45,6 @@ export const frameSchema = z
       label: 'Card',
       help: 'A surface behind the widget. Its colour, border, corners, shadow and blur come from the theme.',
     }),
-    padding: z
-      .number()
-      .min(0)
-      .max(64)
-      .default(0)
-      .meta({ label: 'Padding', unit: 'px' }),
     align: z
       .enum(['start', 'center', 'end'])
       .default('center')
@@ -59,7 +53,15 @@ export const frameSchema = z
         control: 'segmented',
         options: { start: 'Start', center: 'Centre', end: 'End' },
       }),
-    opacity: z.number().min(0).max(1).default(1).meta({ label: 'Opacity', step: 0.05 }),
+    // Percent, with a floor: at 0 a widget was invisible and nearly impossible to
+    // find again. Config v3; v2 stored a 0–1 fraction.
+    opacity: z
+      .number()
+      .int()
+      .min(20)
+      .max(100)
+      .default(100)
+      .meta({ label: 'Opacity', step: 5, unit: '%' }),
   })
   .prefault({});
 

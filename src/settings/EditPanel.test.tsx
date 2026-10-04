@@ -171,7 +171,8 @@ describe('the frame', () => {
     const heading = screen.getByRole('heading', { name: 'Frame' });
     expect(heading).toBeTruthy();
     expect(screen.getByLabelText('Card')).toHaveProperty('checked', false);
-    expect(screen.getByLabelText('Padding')).toBeTruthy();
+    // Gone in config v3: a card's padding now follows its size.
+    expect(screen.queryByLabelText('Padding')).toBeNull();
     expect(screen.getByRole('group', { name: 'Alignment' })).toBeTruthy();
     expect(screen.getByLabelText('Opacity')).toBeTruthy();
   });

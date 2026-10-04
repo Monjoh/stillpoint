@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configSchema } from '@/core/config/schema';
-import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
+import fixtureV3 from '@/core/config/__fixtures__/config-v3.json';
 import { backgroundToCss } from './background';
 import { applyCanvasTokens, isThemeableToken, profileToPaint } from './apply';
 import { getPreset } from './presets';
@@ -50,7 +50,7 @@ describe('applyCanvasTokens', () => {
   });
 
   it('writes background and grid geometry', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
 
     expect(root.style.getPropertyValue('--sp-background')).toBe(
@@ -63,13 +63,13 @@ describe('applyCanvasTokens', () => {
   });
 
   it('writes `none` for an uncapped canvas width', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     applyCanvasTokens(profileToPaint(config.profiles[1]!), root);
     expect(root.style.getPropertyValue('--sp-canvas-max-width')).toBe('none');
   });
 
   it('applies canvas overrides', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
     expect(root.style.getPropertyValue('--sp-accent')).toBe('#ff8800');
   });
@@ -126,7 +126,7 @@ describe('applyCanvasTokens', () => {
   // something wrong: the last background stays until the first photo arrives.
   it('keeps what is on screen until an Unsplash photo is in', () => {
     root.style.setProperty('--sp-background', 'url("blob:old-photo")');
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     const profile = {
       ...config.profiles[0]!,
       background: {
@@ -146,7 +146,7 @@ describe('applyCanvasTokens', () => {
 
   // Always written, so the sweep never leaves a photo's blur on the gradient after it.
   it('writes a zero blur for a background that is not a photo', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
     expect(root.style.getPropertyValue('--sp-background-blur')).toBe('0px');
   });

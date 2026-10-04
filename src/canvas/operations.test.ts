@@ -215,8 +215,7 @@ describe('updateWidgetFrame', () => {
     const before = profile([at(0, 0, 4, 2, 'a'), at(4, 0, 4, 2, 'b')]);
     const frame = {
       showBackground: true,
-      opacity: 0.8,
-      padding: 12,
+      opacity: 80,
       align: 'start' as const,
     };
     const after = updateWidgetFrame(before, 'a', frame);

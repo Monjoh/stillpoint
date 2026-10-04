@@ -46,10 +46,12 @@ export function WidgetFrame({
     [definition, instance.settings],
   );
 
+  const padding = frame.showBackground ? cardPadding(box) : 0;
+  const fade = frame.opacity / 100;
   // The content box the widget actually gets, which is what `WidgetProps.size` means.
   const size = {
-    width: Math.max(0, box.width - frame.padding * 2),
-    height: Math.max(0, box.height - frame.padding * 2),
+    width: Math.max(0, box.width - padding * 2),
+    height: Math.max(0, box.height - padding * 2),
   };
 
   let content: ReactNode;
@@ -91,34 +93,52 @@ export function WidgetFrame({
         top: `${box.top}px`,
         width: `${box.width}px`,
         height: `${box.height}px`,
-        padding: `${frame.padding}px`,
-        opacity: frame.opacity,
+        padding: `${padding}px`,
         justifyContent: JUSTIFY[frame.align],
-        // The surface is the only thing a theme can shape here, so it carries all
-        // four of the tokens that distinguish one preset from another. `glass` is
-        // nothing but blur and shadow; `terminal` is their absence.
-        ...(frame.showBackground
-          ? {
-              background: 'var(--sp-surface)',
-              border: '1px solid var(--sp-surface-border)',
-              borderRadius: 'var(--sp-radius)',
-              boxShadow: 'var(--sp-shadow)',
-              backdropFilter: 'blur(var(--sp-surface-blur, 0px))',
-            }
-          : null),
       }}
     >
-      <WidgetErrorBoundary
-        // Remounting on a settings change gives a widget that failed on bad input a
-        // genuine second chance once the input is fixed, without a manual retry.
-        resetKey={`${instance.type}:${JSON.stringify(instance.settings)}`}
-        name={definition?.name ?? instance.type}
-        onRemove={isEditing ? onRemove : undefined}
-      >
-        {content}
-      </WidgetErrorBoundary>
+      {/* The card is two layers, so that no element has both `opacity` and
+          `backdrop-filter`. Opacity below 1 makes an element a backdrop root, which
+          browsers render inconsistently with a blur. Instead the blur fades by its
+          radius, and the surface by its opacity. */}
+      {frame.showBackground && (
+        <>
+          <div
+            className={styles.blur}
+            aria-hidden="true"
+            style={{
+              backdropFilter: `blur(calc(var(--sp-surface-blur, 0px) * ${fade}))`,
+            }}
+          />
+          <div
+            className={styles.surface}
+            aria-hidden="true"
+            style={fade < 1 ? { opacity: fade } : undefined}
+          />
+        </>
+      )}
+      <div className={styles.body} style={fade < 1 ? { opacity: fade } : undefined}>
+        <WidgetErrorBoundary
+          // Remounting on a settings change gives a widget that failed on bad input a
+          // genuine second chance once the input is fixed, without a manual retry.
+          resetKey={`${instance.type}:${JSON.stringify(instance.settings)}`}
+          name={definition?.name ?? instance.type}
+          onRemove={isEditing ? onRemove : undefined}
+        >
+          {content}
+        </WidgetErrorBoundary>
+      </div>
     </div>
   );
+}
+
+/**
+ * A card's inner padding, in proportion to the cell. A fixed pixel padding was too
+ * much for a one-row widget and too little for a large one: the grid is relative, so
+ * the cell's size is the window's, not a number the user chose.
+ */
+export function cardPadding(box: { width: number; height: number }): number {
+  return Math.round(Math.min(16, Math.max(4, Math.min(box.width, box.height) * 0.12)));
 }
 
 const JUSTIFY = {

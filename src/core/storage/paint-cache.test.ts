@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDefaultConfig } from '@/core/config/defaults';
 import { configSchema } from '@/core/config/schema';
-import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
+import fixtureV3 from '@/core/config/__fixtures__/config-v3.json';
 import {
   clearPaintCache,
   forgetImagePreviews,
@@ -15,7 +15,7 @@ import {
 const preview = { color: '#336699', thumb: 'data:image/jpeg;base64,AA==' };
 
 function withPhoto(assetId: string) {
-  const config = configSchema.parse(fixtureV2);
+  const config = configSchema.parse(fixtureV3);
   const [first, ...rest] = config.profiles;
   return {
     ...config,
@@ -47,7 +47,7 @@ describe('paint cache', () => {
   });
 
   it('round-trips the paint-critical slice of the active profile', () => {
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     writePaintCache(config);
 
     const cache = readPaintCache();
@@ -71,7 +71,7 @@ describe('paint cache', () => {
 
   it('caches the ACTIVE profile, not the first one', () => {
     const config = configSchema.parse({
-      ...fixtureV2,
+      ...fixtureV3,
       activeProfileId: '44444444-4444-4444-8444-444444444444',
     });
     writePaintCache(config);
@@ -79,7 +79,7 @@ describe('paint cache', () => {
   });
 
   it('holds no user content — only geometry and colour', () => {
-    writePaintCache(configSchema.parse(fixtureV2));
+    writePaintCache(configSchema.parse(fixtureV3));
     const raw = localStorage.getItem(KEY)!;
     // Widget settings and names must not leak into a store we never validate.
     expect(raw).not.toContain('stillpoint.clock');
@@ -108,7 +108,7 @@ describe('paint cache', () => {
   });
 
   it('rejects a cache with a malformed rect', () => {
-    writePaintCache(configSchema.parse(fixtureV2));
+    writePaintCache(configSchema.parse(fixtureV3));
     const stored = JSON.parse(localStorage.getItem(KEY)!);
     stored.rects[0] = { x: 1, y: 2 };
     localStorage.setItem(KEY, JSON.stringify(stored));
@@ -182,7 +182,7 @@ describe('image previews', () => {
   // still photos, and the next tab should still open on one.
   it('caches the Unsplash photo the next tab should open on', () => {
     writeImagePreview('unsplash', preview);
-    const config = configSchema.parse(fixtureV2);
+    const config = configSchema.parse(fixtureV3);
     writePaintCache({
       ...config,
       profiles: config.profiles.map((p) => ({

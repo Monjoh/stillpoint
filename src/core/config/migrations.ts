@@ -42,7 +42,36 @@ export const migrations: Record<number, Migration> = {
         })
       : v1.profiles,
   }),
+
+  /**
+   * v3 drops the frame's `padding`, a fixed pixel value that did not scale with a
+   * relative cell; a card now gets padding proportional to its size. `opacity` becomes
+   * a whole percent with a floor of 20, because at 0 a widget vanished.
+   */
+  3: (v2) => ({
+    ...v2,
+    version: 3,
+    profiles: Array.isArray(v2.profiles)
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        v2.profiles.map((profile: any) =>
+          Array.isArray(profile?.widgets)
+            ? { ...profile, widgets: profile.widgets.map(migrateFrameV3) }
+            : profile,
+        )
+      : v2.profiles,
+  }),
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrateFrameV3(widget: any): any {
+  if (typeof widget?.frame !== 'object' || widget.frame === null) return widget;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { padding, opacity, ...frame } = widget.frame;
+  if (typeof opacity === 'number' && Number.isFinite(opacity)) {
+    frame.opacity = Math.min(100, Math.max(20, Math.round(opacity * 100)));
+  }
+  return { ...widget, frame };
+}
 
 export class ConfigVersionError extends Error {
   constructor(

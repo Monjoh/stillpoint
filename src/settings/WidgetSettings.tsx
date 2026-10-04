@@ -14,7 +14,7 @@ import styles from './EditPanel.module.css';
  * something cannot be expressed here, that is a finding about the schema vocabulary,
  * not a licence to write JSX in a widget.
  *
- * Below the widget's own fields sits its Frame — card, padding, alignment, opacity —
+ * Below the widget's own fields sits its Frame — card, alignment, opacity —
  * generated from `frameSchema` and identical for every widget type. It is drawn here
  * rather than declared by each widget so that no widget can forget it and no two can
  * offer it differently.
