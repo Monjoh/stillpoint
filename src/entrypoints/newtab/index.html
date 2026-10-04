@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Tab</title>
+    <style>
+      /*
+        Critical path. Inlined deliberately: first paint must not wait on a stylesheet
+        request. This holds only what is needed to paint an empty but correctly-styled
+        page. Real token values arrive from the paint cache in M1 (boot.ts), which will
+        overwrite these on :root before first paint.
+      */
+      :root {
+        --sp-text: #f2f2f2;
+        --sp-text-muted: rgb(242 242 242 / 0.62);
+        --sp-accent: #7aa2f7;
+        --sp-font-body: 'Inter', system-ui, sans-serif;
+        --sp-scale: 1;
+        --sp-background: linear-gradient(160deg, #11131c 0%, #1d2033 100%);
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body,
+      #root {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--sp-background);
+        color: var(--sp-text);
+        font-family: var(--sp-font-body);
+        -webkit-font-smoothing: antialiased;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

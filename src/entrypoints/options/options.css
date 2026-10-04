@@ -1,0 +1,29 @@
+/*
+  Tool chrome only. These tokens deliberately do not follow the user's canvas theme —
+  a settings page that inherits a low-contrast custom palette becomes unusable exactly
+  when the user is trying to fix that palette. See docs/04-design-system.md.
+  Moves into src/core/theme/ in M4.
+*/
+:root {
+  --sp-ui-bg: #16161a;
+  --sp-ui-bg-raised: #1e1e24;
+  --sp-ui-text: #e8e8ea;
+  --sp-ui-text-muted: #9a9aa4;
+  --sp-ui-border: #2c2c34;
+  --sp-ui-accent: #7aa2f7;
+  --sp-ui-radius: 10px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--sp-ui-bg);
+  color: var(--sp-ui-text);
+  font-family: system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}

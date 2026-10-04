@@ -1,0 +1,19 @@
+.page {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem;
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.body {
+  margin: 0;
+  max-width: 34rem;
+  line-height: 1.6;
+  color: var(--sp-ui-text-muted);
+}

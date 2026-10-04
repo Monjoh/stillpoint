@@ -1,0 +1,8 @@
+node_modules/
+.output/
+.wxt/
+coverage/
+web-ext-artifacts/
+docs/
+.claude/
+package-lock.json

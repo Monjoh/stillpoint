@@ -17,6 +17,9 @@ CLAUDE.md
 .env.local
 .env.*.local
 
+# Local web-ext overrides (browser binary path, profile to reuse, …)
+web-ext.config.ts
+
 # Packaging artifacts
 web-ext-artifacts/
 *.xpi
@@ -26,6 +29,10 @@ web-ext-artifacts/
 coverage/
 .eslintcache
 .vitest/
+
+# Logs
+*.log
+npm-debug.log*
 
 # Editor / OS
 .DS_Store
