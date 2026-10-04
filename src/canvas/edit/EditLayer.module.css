@@ -1,0 +1,113 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+/* Cell corners, shown only during a drag. */
+.dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--sp-ui-dot) 1px, transparent 1.5px);
+  background-position: -1px -1px;
+  pointer-events: none;
+}
+
+.guide {
+  position: absolute;
+  z-index: 3;
+  pointer-events: none;
+  background: var(--sp-ui-guide);
+}
+
+.guide[data-axis='x'] {
+  width: 1px;
+}
+
+.guide[data-axis='y'] {
+  height: 1px;
+}
+
+/* A widget edge lining up is a hint; the canvas centre is a stronger one. */
+.guide[data-kind='widget'] {
+  opacity: 0.55;
+}
+
+.box {
+  position: absolute;
+  border: 1px solid transparent;
+  border-radius: var(--sp-ui-radius);
+  cursor: grab;
+}
+
+.box:hover {
+  border-color: var(--sp-ui-outline);
+}
+
+.box[data-selected] {
+  border: 1px dashed var(--sp-ui-accent);
+  background: rgb(122 162 247 / 0.08);
+}
+
+.box[data-dragging] {
+  cursor: grabbing;
+}
+
+.box:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 2px;
+}
+
+.handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--sp-ui-bg);
+  border-radius: 3px;
+  background: var(--sp-ui-accent);
+}
+
+.handle[data-handle='nw'] {
+  top: -5px;
+  left: -5px;
+  cursor: nwse-resize;
+}
+.handle[data-handle='n'] {
+  top: -5px;
+  left: 50%;
+  margin-left: -5px;
+  cursor: ns-resize;
+}
+.handle[data-handle='ne'] {
+  top: -5px;
+  right: -5px;
+  cursor: nesw-resize;
+}
+.handle[data-handle='e'] {
+  top: 50%;
+  right: -5px;
+  margin-top: -5px;
+  cursor: ew-resize;
+}
+.handle[data-handle='se'] {
+  right: -5px;
+  bottom: -5px;
+  cursor: nwse-resize;
+}
+.handle[data-handle='s'] {
+  bottom: -5px;
+  left: 50%;
+  margin-left: -5px;
+  cursor: ns-resize;
+}
+.handle[data-handle='sw'] {
+  bottom: -5px;
+  left: -5px;
+  cursor: nesw-resize;
+}
+.handle[data-handle='w'] {
+  top: 50%;
+  left: -5px;
+  margin-top: -5px;
+  cursor: ew-resize;
+}

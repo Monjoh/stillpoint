@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { browser } from 'wxt/browser';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
@@ -46,6 +47,28 @@ describe('NewTab', () => {
     );
   });
 
+  it('enters edit mode on "e" and loads the edit chunk only then', async () => {
+    const user = userEvent.setup();
+    render(<NewTab />);
+    await screen.findByText(/^\d{2}:\d{2}$/);
+
+    // Edit mode is a separate lazy import, so none of this exists until now.
+    expect(screen.queryByRole('toolbar')).toBeNull();
+
+    await user.keyboard('e');
+    expect(await screen.findByRole('toolbar', { name: 'Edit layout' })).toBeTruthy();
+
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('toolbar')).toBeNull();
+  });
+
+  it('offers a way in that does not require knowing the shortcut', async () => {
+    render(<NewTab />);
+    await screen.findByText(/^\d{2}:\d{2}$/);
+    // View mode shows nothing of ours, so the only visible affordance is this one.
+    expect(screen.getByRole('button', { name: 'Edit layout' })).toBeTruthy();
+  });
+
   it('shows the empty state when the profile has no widgets', async () => {
     await browser.storage.local.set({
       [StorageKeys.config]: {
@@ -58,6 +81,6 @@ describe('NewTab', () => {
     });
 
     render(<NewTab />);
-    expect(await screen.findByText('This profile has no widgets yet.')).toBeTruthy();
+    expect(await screen.findByText(/to add a widget/)).toBeTruthy();
   });
 });

@@ -1,0 +1,90 @@
+.toolbar {
+  position: fixed;
+  z-index: 10;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 12px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: var(--sp-ui-radius);
+  background: var(--sp-ui-bg);
+  box-shadow: var(--sp-ui-shadow);
+  font-family: system-ui, sans-serif;
+  font-size: 13px;
+  color: var(--sp-ui-text);
+}
+
+.action,
+.done {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 7px;
+  background: var(--sp-ui-bg-raised);
+  font: inherit;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.done {
+  border-color: transparent;
+  background: var(--sp-ui-accent);
+  color: #10131c;
+  font-weight: 500;
+}
+
+.action:hover {
+  border-color: var(--sp-ui-accent);
+}
+
+.done:hover {
+  filter: brightness(1.08);
+}
+
+.action:focus-visible,
+.done:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 2px;
+}
+
+.icon {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.separator {
+  width: 1px;
+  height: 18px;
+  background: var(--sp-ui-border);
+}
+
+.profile {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.hint {
+  color: var(--sp-ui-text-muted);
+  white-space: nowrap;
+}
+
+/* The hint is the first thing to go: the toolbar must stay usable on a narrow window,
+   and the shortcuts it names are a convenience, not the only way to do anything. */
+@media (max-width: 760px) {
+  .hint,
+  .separator:last-of-type {
+    display: none;
+  }
+}

@@ -43,3 +43,58 @@
   text-align: center;
   color: var(--sp-text-muted);
 }
+
+.kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
+  border-radius: 4px;
+  background: var(--sp-surface, rgb(255 255 255 / 0.06));
+  font-family: var(--sp-font-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+}
+
+/* The hover target is the strip; the button is what appears in it. Styled with canvas
+   tokens, not --sp-ui-*: this belongs to view mode, so it has to blend into the user's
+   background rather than announce itself, and the tool chrome tokens load lazily with
+   edit mode anyway. */
+.editZone {
+  position: fixed;
+  z-index: 4;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  height: 56px;
+  padding-top: 10px;
+}
+
+.editButton {
+  padding: 5px 14px;
+  border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
+  border-radius: 999px;
+  background: var(--sp-surface, rgb(255 255 255 / 0.06));
+  font: inherit;
+  font-size: calc(0.75rem * var(--sp-scale, 1));
+  color: var(--sp-text-muted);
+  cursor: pointer;
+  opacity: 0;
+  backdrop-filter: blur(8px);
+}
+
+.editZone:hover .editButton,
+.editButton:focus-visible {
+  opacity: 1;
+  color: var(--sp-text);
+}
+
+.editButton:focus-visible {
+  outline: 2px solid var(--sp-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .editButton {
+    transition: opacity 120ms ease-out;
+  }
+}

@@ -1,10 +1,19 @@
-import { useCallback, useEffect } from 'react';
+import { lazy, Suspense, useCallback, useEffect } from 'react';
 import { Background } from '@/canvas/Background';
 import { Canvas } from '@/canvas/Canvas';
 import { removeWidget, withProfile } from '@/canvas/operations';
+import { useEditSession } from '@/canvas/useEditSession';
 import { configStore, useConfig } from '@/core/config/store';
+import type { Profile } from '@/core/config/schema';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
 import styles from './NewTab.module.css';
+
+/**
+ * Edit mode is the whole of `src/canvas/edit` — toolbar, picker, drag arithmetic and
+ * tool chrome tokens — and none of it is fetched until someone edits. View mode runs
+ * on every new tab; editing runs almost never.
+ */
+const EditMode = lazy(() => import('@/canvas/edit/EditMode'));
 
 export function NewTab() {
   const config = useConfig((state) => state.config);
@@ -23,13 +32,27 @@ export function NewTab() {
     if (profile) applyCanvasTokens(profileToPaint(profile));
   }, [profile]);
 
+  /** Every layout edit funnels through here, so the store is the only writer. */
+  const handleProfileChange = useCallback((next: Profile) => {
+    configStore.getState().update((current) => withProfile(current, next));
+  }, []);
+
   const handleRemoveWidget = useCallback((instanceId: string) => {
     configStore.getState().update((current) => {
       const active = current.profiles.find((p) => p.id === current.activeProfileId);
-      if (!active) return current;
-      return withProfile(current, removeWidget(active, instanceId));
+      return active ? withProfile(current, removeWidget(active, instanceId)) : current;
     });
   }, []);
+
+  /** Writes are debounced; an interaction ending is the moment to stop waiting. */
+  const handleCommit = useCallback(() => {
+    void configStore.getState().flush();
+  }, []);
+
+  const session = useEditSession({
+    enabled: status === 'ready' && config?.app.editModeEnabled === true,
+    onExit: handleCommit,
+  });
 
   return (
     <>
@@ -42,10 +65,32 @@ export function NewTab() {
         <>
           <Canvas
             profile={profile}
-            isEditing={false}
+            isEditing={session.isEditing}
             onRemoveWidget={handleRemoveWidget}
+            overlay={
+              session.isEditing
+                ? (geometry) => (
+                    <Suspense fallback={null}>
+                      <EditMode
+                        geometry={geometry}
+                        profile={profile}
+                        selectedId={session.selectedId}
+                        onSelect={session.select}
+                        onChange={handleProfileChange}
+                        onCommit={handleCommit}
+                        onExit={session.exit}
+                      />
+                    </Suspense>
+                  )
+                : undefined
+            }
           />
-          {profile.widgets.length === 0 && <EmptyCanvas />}
+
+          {profile.widgets.length === 0 && !session.isEditing && <EmptyCanvas />}
+
+          {!session.isEditing && config?.app.editModeEnabled && (
+            <EditAffordance onEnter={session.enter} />
+          )}
         </>
       )}
 
@@ -68,7 +113,24 @@ function EmptyCanvas() {
   return (
     <div className={styles.empty}>
       <h1 className={styles.wordmark}>stillpoint</h1>
-      <p className={styles.hint}>This profile has no widgets yet.</p>
+      <p className={styles.hint}>
+        Press <kbd className={styles.kbd}>E</kbd> to add a widget.
+      </p>
+    </div>
+  );
+}
+
+/**
+ * View mode shows nothing of ours, which leaves the keyboard shortcut as the only way
+ * in — and a shortcut nobody can discover is not a way in. A strip along the top edge
+ * reveals the button on hover or on focus, and is otherwise invisible.
+ */
+function EditAffordance({ onEnter }: { onEnter: () => void }) {
+  return (
+    <div className={styles.editZone}>
+      <button type="button" className={styles.editButton} onClick={onEnter}>
+        Edit layout
+      </button>
     </div>
   );
 }

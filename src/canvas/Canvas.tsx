@@ -1,5 +1,6 @@
+import type { ReactNode } from 'react';
 import type { Profile } from '@/core/config/schema';
-import { computeGeometry } from './geometry';
+import { computeGeometry, type CanvasGeometry } from './geometry';
 import { useElementSize } from './useElementSize';
 import { WidgetFrame } from './WidgetFrame';
 import styles from './Canvas.module.css';
@@ -21,15 +22,26 @@ export interface CanvasProps {
   profile: Profile;
   isEditing: boolean;
   onRemoveWidget?: (instanceId: string) => void;
+  /**
+   * Rendered inside the canvas box, over the widgets, with the geometry they were laid
+   * out from. Edit mode uses it so that selection, handles, grid dots and alignment
+   * guides measure against exactly the same numbers the widgets did, rather than
+   * measuring the canvas a second time and drifting by a fraction of a pixel.
+   */
+  overlay?: (geometry: CanvasGeometry) => ReactNode;
 }
 
-export function Canvas({ profile, isEditing, onRemoveWidget }: CanvasProps) {
+export function Canvas({ profile, isEditing, onRemoveWidget, overlay }: CanvasProps) {
   const [canvasRef, size] = useElementSize<HTMLDivElement>();
   const geometry = size ? computeGeometry(profile.layout, size) : null;
 
   return (
     <div className={styles.stage}>
-      <div className={styles.canvas} ref={canvasRef}>
+      <div
+        className={styles.canvas}
+        ref={canvasRef}
+        data-editing={isEditing || undefined}
+      >
         {geometry &&
           profile.widgets.map((instance) => (
             <WidgetFrame
@@ -42,6 +54,7 @@ export function Canvas({ profile, isEditing, onRemoveWidget }: CanvasProps) {
               }
             />
           ))}
+        {geometry && overlay?.(geometry)}
       </div>
     </div>
   );

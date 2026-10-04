@@ -19,3 +19,11 @@
   max-width: var(--sp-canvas-max-width, 1600px);
   height: 100%;
 }
+
+/* In edit mode the widgets are scenery: every pointer event belongs to the edit
+   overlay above them. Without this, dragging a widget that happens to contain a link
+   or an input starts a text selection or follows the link instead. */
+.canvas[data-editing] > [data-widget-type] {
+  pointer-events: none;
+  user-select: none;
+}

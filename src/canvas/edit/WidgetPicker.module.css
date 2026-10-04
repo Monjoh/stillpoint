@@ -1,0 +1,82 @@
+.picker {
+  position: absolute;
+  z-index: 11;
+  top: calc(100% + 8px);
+  left: 0;
+  width: 300px;
+  max-height: min(60vh, 440px);
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: var(--sp-ui-radius);
+  background: var(--sp-ui-bg);
+  box-shadow: var(--sp-ui-shadow);
+  text-align: left;
+}
+
+.group + .group {
+  margin-top: 10px;
+}
+
+.groupTitle {
+  margin: 0;
+  padding: 6px 8px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sp-ui-text-muted);
+}
+
+.item {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+}
+
+.item:hover {
+  background: var(--sp-ui-bg-raised);
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: -2px;
+}
+
+.icon {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--sp-ui-accent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.itemText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemName {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.itemDescription {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--sp-ui-text-muted);
+}

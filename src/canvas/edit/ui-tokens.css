@@ -1,0 +1,30 @@
+/*
+  Tool chrome tokens.
+
+  Deliberately NOT user-themeable and deliberately not derived from the canvas theme:
+  a settings panel that inherits a low-contrast custom palette becomes unusable exactly
+  when the user is trying to fix that palette. See docs/04-design-system.md.
+
+  Loaded with the edit chunk, so none of this is on the new tab's critical path.
+
+  Dark only for v1. The obvious light variant would key off `prefers-color-scheme`,
+  but the canvas behind it is whatever background the user chose, so the OS setting is
+  a poor predictor of what would actually be legible here.
+*/
+:root {
+  --sp-ui-bg: #16161a;
+  --sp-ui-bg-raised: #1e1e24;
+  --sp-ui-text: #e8e8ea;
+  --sp-ui-text-muted: #9a9aa4;
+  --sp-ui-border: #2c2c34;
+  --sp-ui-accent: #7aa2f7;
+
+  --sp-ui-radius: 10px;
+  --sp-ui-shadow: 0 10px 34px rgb(0 0 0 / 0.45);
+
+  /* Marks drawn over the user's canvas rather than on tool chrome, so they are
+     white-on-anything rather than token-coloured. */
+  --sp-ui-dot: rgb(255 255 255 / 0.22);
+  --sp-ui-guide: #7aa2f7;
+  --sp-ui-outline: rgb(255 255 255 / 0.45);
+}
