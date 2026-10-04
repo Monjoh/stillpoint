@@ -6,25 +6,36 @@ import {
   type ThemeConfig,
 } from '@/core/config/schema';
 import { backgroundToCss } from '@/core/theme/background';
+import { backgroundContrast, MIN_CONTRAST } from '@/core/theme/contrast';
 import {
   GRADIENT_PRESETS,
   gradientToBackground,
   matchGradient,
 } from '@/core/theme/gradients';
-import { getPreset, THEME_PRESETS, type ThemePreset } from '@/core/theme/presets';
+import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
 import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
 
 /**
- * Theme and background, the two things the user came to change.
+ * Theme and background: two sections, two separate choices.
  *
- * Placed by hand rather than generated, and this is the case `control: 'custom'`
- * exists for: a theme is a look, and a `<select>` listing four names shows none of
- * it. Every swatch here is painted with the real tokens it would apply, so choosing
- * is looking rather than guessing-then-undoing. `fontScale` is an ordinary bounded
- * number and *is* generated, because a slider is already the right answer for it.
+ * A theme is type, colour and shape. A background is what is behind them. They were
+ * briefly one thing here — picking a theme also set a background it shipped with —
+ * and that was wrong twice over: it made two independent controls feel like one, and
+ * it meant choosing a typeface could silently throw away a background the user had
+ * picked. Backgrounds are the user's, and will soon include their own photographs.
+ *
+ * Nothing now prevents an unreadable pairing, so nothing has to pretend to. The
+ * contrast of the actual result is measured and reported, which is both more honest
+ * and more useful than a theme guessing at what should be behind it.
+ *
+ * Placed by hand rather than generated, and this is what `control: 'custom'` exists
+ * for: a theme is a look, and a `<select>` listing four names shows none of it. Every
+ * swatch is painted with the tokens it would apply, over the background actually in
+ * use, so choosing is looking. `fontScale` is an ordinary bounded number and *is*
+ * generated, because a slider is already the right answer for it.
  */
 
 export interface ThemeSettingsProps {
@@ -44,24 +55,12 @@ export function ThemeSettings({
   );
   const active = getPreset(profile.theme.preset);
   const activeGradient = matchGradient(profile.background);
-  const suggested = backgroundToCss(active.suggestedBackground);
-  const onSuggested = backgroundToCss(profile.background) === suggested;
 
-  /**
-   * Picking a theme also takes its background — but only when the background on the
-   * page is one of ours.
-   *
-   * Paper is dark text. Applied over the default near-black gradient it produces a
-   * page nobody can read, including the panel's own way back out, so a preset that
-   * can do that has to bring the thing that prevents it. The guard is what keeps that
-   * from being destructive: a background the user chose themselves is left alone and
-   * offered as a suggestion instead, because overwriting a deliberate choice to
-   * prevent a hypothetical one is the worse trade.
-   */
-  const choosePreset = (preset: ThemePreset) => {
-    onChangeTheme({ ...profile.theme, preset: preset.id });
-    if (activeGradient !== undefined) onChangeBackground(preset.suggestedBackground);
-  };
+  // The real background, so every tile previews this page rather than a showroom.
+  const canvas = backgroundToCss(profile.background) ?? undefined;
+
+  const contrast = backgroundContrast(active.tokens, profile.background);
+  const unreadable = contrast !== null && contrast < MIN_CONTRAST;
 
   return (
     <>
@@ -77,14 +76,15 @@ export function ThemeSettings({
               aria-checked={preset.id === active.id}
               className={styles.swatch}
               title={preset.description}
-              onClick={() => choosePreset(preset)}
+              onClick={() => onChangeTheme({ ...profile.theme, preset: preset.id })}
             >
-              {/* Painted with the preset's own tokens rather than described in
-                  words. The tile is a miniature of the page it would produce. */}
+              {/* Painted over the background that is actually on the page: this is a
+                  preview of the result, not of the theme in the abstract. A tile that
+                  is hard to read is telling the truth about the pairing. */}
               <span
                 className={styles.preview}
                 style={{
-                  background: backgroundToCss(preset.suggestedBackground) ?? undefined,
+                  background: canvas,
                   borderRadius: preset.tokens['--sp-radius'],
                 }}
                 aria-hidden="true"
@@ -109,18 +109,6 @@ export function ThemeSettings({
         </div>
 
         <p className={fields.help}>{active.description}</p>
-
-        {/* Only when the guard above declined to change it. Shows the user the thing
-            that was not done to them, instead of silently not doing it. */}
-        {!onSuggested && suggested !== null && (
-          <button
-            type="button"
-            className={styles.suggestion}
-            onClick={() => onChangeBackground(active.suggestedBackground)}
-          >
-            Use the background {active.name} was designed for
-          </button>
-        )}
 
         <GeneratedFields
           fields={themeFields}
@@ -161,9 +149,21 @@ export function ThemeSettings({
           ))}
         </div>
 
-        {/* A background that is not one of ours is a legitimate state — an import, a
-            hand-edited export, later an image. Saying so beats showing ten swatches
-            with none selected and leaving the user to wonder which one is on. */}
+        {/* A measured number, not a hunch about what looks dark. It fires on the
+            pairings that are genuinely illegible and stays quiet on the merely
+            unusual — and it says which two things are fighting, because the fix
+            might be either of them. */}
+        {unreadable && (
+          <p className={styles.warning} role="status">
+            {active.name} text is hard to read on this background
+            {contrast !== null && ` (contrast ${contrast.toFixed(1)}:1)`}. Pick a
+            lighter or darker background, or a theme that suits this one.
+          </p>
+        )}
+
+        {/* A background that is none of ours is a legitimate state — an import, a
+            hand-edited export, later a photograph. Saying so beats showing ten
+            swatches with none selected and leaving the user to wonder. */}
         {activeGradient === undefined && (
           <p className={fields.help}>
             This profile uses a background that is not one of these. Picking one

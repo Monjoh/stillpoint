@@ -1,4 +1,3 @@
-import type { BackgroundConfig } from '@/core/config/schema';
 import type { TokenSet } from './tokens';
 
 /**
@@ -11,6 +10,12 @@ import type { TokenSet } from './tokens';
  * `presets.test.ts` and the reason is in `tokens.ts`: inline properties on `:root`
  * are not cleared by a theme that neglects to mention them, so a partial preset
  * leaks into whatever is chosen next.
+ *
+ * A preset is type, colour and shape — and deliberately **not** a background. The two
+ * are chosen independently: a theme says how text and surfaces look, a background
+ * says what is behind them, and a theme that silently rewrote the background made the
+ * two feel like one muddled control. What stops the pair being unreadable is
+ * `contrast.ts`, which measures the result rather than preventing the combination.
  *
  * No preset names a font it has to download. Nothing on the newtab critical path may
  * hit the network, and a webfont is a network request in front of the first pixel —
@@ -25,15 +30,6 @@ export interface ThemePreset {
   /** One line, shown under the name in the picker. Character, not a spec. */
   description: string;
   tokens: TokenSet;
-  /**
-   * A background that suits this theme, offered when it is picked — never applied
-   * behind the user's back.
-   *
-   * Not decoration: `paper` is dark text, and choosing it over the default near-black
-   * gradient produces an unreadable page. A preset that can make the canvas illegible
-   * has to carry the thing that makes it legible.
-   */
-  suggestedBackground: BackgroundConfig;
 }
 
 const SANS = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
@@ -59,14 +55,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
       '--sp-font-mono': MONO,
       '--sp-radius': '10px',
     },
-    // The same gradient `createDefaultConfig` ships, so picking Midnight back after
-    // wandering off returns the page a fresh install actually had.
-    suggestedBackground: {
-      kind: 'gradient',
-      from: '#11131c',
-      to: '#1d2033',
-      angle: 160,
-    },
   },
   {
     id: 'paper',
@@ -84,12 +72,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
       '--sp-font-body': SERIF,
       '--sp-font-mono': MONO,
       '--sp-radius': '8px',
-    },
-    suggestedBackground: {
-      kind: 'gradient',
-      from: '#f7f2e8',
-      to: '#e8e0d1',
-      angle: 160,
     },
   },
   {
@@ -111,7 +93,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
       '--sp-font-mono': MONO,
       '--sp-radius': '0px',
     },
-    suggestedBackground: { kind: 'solid', color: '#0b0f0c' },
   },
   {
     id: 'glass',
@@ -131,14 +112,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
       '--sp-font-body': SANS,
       '--sp-font-mono': MONO,
       '--sp-radius': '16px',
-    },
-    // There is no image to suggest on a fresh profile, so this is the richest
-    // gradient that still shows what the frosting does.
-    suggestedBackground: {
-      kind: 'gradient',
-      from: '#2b5876',
-      to: '#4e4376',
-      angle: 160,
     },
   },
 ];

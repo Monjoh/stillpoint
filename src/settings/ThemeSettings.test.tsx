@@ -6,7 +6,6 @@ import {
   type BackgroundConfig,
   type Profile,
 } from '@/core/config/schema';
-import { getPreset } from '@/core/theme/presets';
 import { ThemeSettings } from './ThemeSettings';
 
 /**
@@ -89,55 +88,52 @@ describe('the theme picker', () => {
   });
 
   /**
-   * Paper is dark text. Landing on the default near-black gradient it produces a page
-   * nobody can read — including the panel's own way back out — so the preset brings
-   * the background that prevents it.
+   * The rule that replaced an auto-applied background. A theme and a background are
+   * independent choices, so changing one must not quietly discard the other — and
+   * what stops an unreadable page is measuring the result, not preventing the
+   * combination.
    */
-  it('brings the suggested background when the current one is a stock gradient', async () => {
+  it('never touches the background', async () => {
     const { onChangeBackground } = setup();
 
     await userEvent.click(within(themes()).getByRole('radio', { name: 'Paper' }));
-    expect(onChangeBackground).toHaveBeenCalledWith(
-      getPreset('paper').suggestedBackground,
-    );
-  });
-
-  // The other half of the same rule. Overwriting a deliberate choice to prevent a
-  // hypothetical problem is the worse trade, so it is offered instead.
-  it('leaves a background the user chose themselves alone', async () => {
-    const chosen: BackgroundConfig = { kind: 'solid', color: '#402030' };
-    const { onChangeBackground, onChangeTheme } = setup(
-      profile({ background: chosen }),
-    );
-
-    await userEvent.click(within(themes()).getByRole('radio', { name: 'Paper' }));
-    expect(onChangeTheme).toHaveBeenCalled();
     expect(onChangeBackground).not.toHaveBeenCalled();
-  });
-
-  it('offers the suggestion it declined to apply', async () => {
-    const { onChangeBackground } = setup(
-      profile({ preset: 'paper', background: { kind: 'solid', color: '#402030' } }),
-    );
-
-    await userEvent.click(
-      screen.getByRole('button', { name: /background Paper was designed for/i }),
-    );
-    expect(onChangeBackground).toHaveBeenCalledWith(
-      getPreset('paper').suggestedBackground,
-    );
-  });
-
-  it('says nothing about a suggestion once the page is already on it', () => {
-    setup(
-      profile({ preset: 'paper', background: getPreset('paper').suggestedBackground }),
-    );
-    expect(screen.queryByRole('button', { name: /designed for/i })).toBeNull();
   });
 
   it('generates the text size slider from the schema', () => {
     setup();
     expect(screen.getByLabelText('Text size')).toHaveProperty('type', 'range');
+  });
+});
+
+describe('the contrast warning', () => {
+  // Paper is dark text; the default gradient is near-black. Legitimate to choose,
+  // but the user should be told rather than left wondering why the page went blank.
+  it('fires on a pairing that is genuinely unreadable', () => {
+    setup(profile({ preset: 'paper' }));
+    expect(screen.getByRole('status').textContent).toMatch(
+      /Paper text is hard to read/,
+    );
+  });
+
+  it('quotes the measured ratio rather than just asserting it is bad', () => {
+    setup(profile({ preset: 'paper' }));
+    expect(screen.getByRole('status').textContent).toMatch(/contrast \d+\.\d:1/);
+  });
+
+  it('stays quiet on a pairing that works', () => {
+    setup(profile({ preset: 'midnight' }));
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
+  it('follows the background as well as the theme', () => {
+    setup(
+      profile({
+        preset: 'paper',
+        background: { kind: 'gradient', from: '#f7f2e8', to: '#e8e0d1', angle: 160 },
+      }),
+    );
+    expect(screen.queryByRole('status')).toBeNull();
   });
 });
 

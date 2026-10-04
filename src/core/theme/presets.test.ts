@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { backgroundSchema } from '@/core/config/schema';
 import { DEFAULT_PRESET_ID, getPreset, presetTokens, THEME_PRESETS } from './presets';
 import { isThemeableToken, THEME_TOKEN_NAMES } from './tokens';
 
@@ -43,9 +42,11 @@ describe('the built-in presets', () => {
     }
   });
 
-  it('suggests a background the schema accepts', () => {
+  // Type, colour and shape — and deliberately not a background. The two are chosen
+  // independently; `contrast.ts` measures the pairing instead of preventing it.
+  it('carries no background of its own', () => {
     for (const preset of THEME_PRESETS) {
-      expect(backgroundSchema.safeParse(preset.suggestedBackground).success).toBe(true);
+      expect(preset).not.toHaveProperty('suggestedBackground');
     }
   });
 
@@ -63,12 +64,9 @@ describe('the built-in presets', () => {
     }
   });
 
-  // Paper is dark text. Picked over the default near-black gradient it produces an
-  // unreadable page, which is why a suggestion exists at all.
-  it('gives the light themes a light background to suggest', () => {
-    const paper = getPreset('paper');
-    expect(paper.suggestedBackground.kind).toBe('gradient');
-    expect(paper.tokens['--sp-text']).toBe('#23201c');
+  it('spans light and dark text, so the set is not four dark themes', () => {
+    expect(getPreset('paper').tokens['--sp-text']).toBe('#23201c');
+    expect(getPreset('midnight').tokens['--sp-text']).toBe('#f2f2f2');
   });
 });
 
