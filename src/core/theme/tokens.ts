@@ -45,7 +45,7 @@ export const THEME_TOKENS: readonly TokenSpec[] = [
     token: '--sp-surface',
     label: 'Widget surface',
     kind: 'color',
-    help: 'Only visible on widgets whose frame background is switched on.',
+    help: 'Shows on widgets with Card switched on in their Frame settings, as do border, shadow, blur and corner radius.',
   },
   { token: '--sp-surface-border', label: 'Widget border', kind: 'color' },
   { token: '--sp-shadow', label: 'Widget shadow', kind: 'shadow' },

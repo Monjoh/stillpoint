@@ -124,6 +124,20 @@ export function updateWidgetSettings(
   };
 }
 
+/** Replace one widget's frame. Validation is the caller's — the panel parses first. */
+export function updateWidgetFrame(
+  profile: Profile,
+  instanceId: string,
+  frame: WidgetInstance['frame'],
+): Profile {
+  return {
+    ...profile,
+    widgets: profile.widgets.map((i) =>
+      i.instanceId === instanceId ? { ...i, frame } : i,
+    ),
+  };
+}
+
 /**
  * Change the grid, and bring every widget with it.
  *

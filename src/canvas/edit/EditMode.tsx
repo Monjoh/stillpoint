@@ -9,7 +9,12 @@ import type {
 import { widgetRegistry } from '@/core/registry';
 import { EditPanel } from '@/settings/EditPanel';
 import type { CanvasGeometry } from '../geometry';
-import { addWidget, setLayout, updateWidgetSettings } from '../operations';
+import {
+  addWidget,
+  setLayout,
+  updateWidgetSettings,
+  updateWidgetFrame,
+} from '../operations';
 import { EditLayer } from './EditLayer';
 import { EditToolbar } from './EditToolbar';
 import '@/core/theme/ui-tokens.css';
@@ -95,6 +100,9 @@ export default function EditMode({
             instance={selected}
             onChangeSettings={(instanceId, settings) =>
               onChange(updateWidgetSettings(profile, instanceId, settings))
+            }
+            onChangeFrame={(instanceId, frame) =>
+              onChange(updateWidgetFrame(profile, instanceId, frame))
             }
             onChangeLayout={(layout: LayoutConfig) =>
               onChange(setLayout(profile, layout))

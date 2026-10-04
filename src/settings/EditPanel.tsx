@@ -39,6 +39,7 @@ export interface EditPanelProps {
   /** The selected widget, or undefined for the page-level settings. */
   instance?: WidgetInstance;
   onChangeSettings: (instanceId: string, settings: unknown) => void;
+  onChangeFrame: (instanceId: string, frame: WidgetInstance['frame']) => void;
   onChangeLayout: (layout: LayoutConfig) => void;
   onChangeTheme: (theme: ThemeConfig) => void;
   onChangeBackground: (background: BackgroundConfig) => void;
@@ -57,6 +58,7 @@ export function EditPanel({
   profile,
   instance,
   onChangeSettings,
+  onChangeFrame,
   onChangeLayout,
   onChangeTheme,
   onChangeBackground,
@@ -130,6 +132,7 @@ export function EditPanel({
           key={instance.instanceId}
           instance={instance}
           onChangeSettings={onChangeSettings}
+          onChangeFrame={onChangeFrame}
           onCommit={onCommit}
         />
       ) : (

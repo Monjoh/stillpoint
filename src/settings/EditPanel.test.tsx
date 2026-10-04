@@ -51,6 +51,7 @@ function config(profiles: Profile[] = [profile()]): StillpointConfig {
 function setup(options: { instance?: WidgetInstance | null } = {}) {
   const handlers = {
     onChangeSettings: vi.fn(),
+    onChangeFrame: vi.fn(),
     onChangeLayout: vi.fn(),
     onChangeTheme: vi.fn(),
     onChangeBackground: vi.fn(),
@@ -159,6 +160,36 @@ describe('the clock’s generated panel', () => {
     await userEvent.click(screen.getByLabelText('Show seconds'));
     await userEvent.click(screen.getByRole('button', { name: 'elsewhere' }));
     expect(onCommit).toHaveBeenCalled();
+  });
+});
+
+describe('the frame', () => {
+  // Every widget gets it, and none declares it. The point is that it cannot be
+  // forgotten or offered differently by two widgets.
+  it('follows the widget’s own fields, generated from the frame schema', () => {
+    setup();
+    const heading = screen.getByRole('heading', { name: 'Frame' });
+    expect(heading).toBeTruthy();
+    expect(screen.getByLabelText('Card')).toHaveProperty('checked', false);
+    expect(screen.getByLabelText('Padding')).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Alignment' })).toBeTruthy();
+    expect(screen.getByLabelText('Opacity')).toBeTruthy();
+  });
+
+  it('turns the card on without touching the widget’s settings', async () => {
+    const { onChangeFrame, onChangeSettings } = setup();
+    await userEvent.click(screen.getByLabelText('Card'));
+
+    expect(onChangeFrame).toHaveBeenCalledWith(
+      'w1',
+      expect.objectContaining({ showBackground: true, align: 'center' }),
+    );
+    expect(onChangeSettings).not.toHaveBeenCalled();
+  });
+
+  it('is offered for an uninstalled type too, since the canvas draws it', () => {
+    setup({ instance: instance({}, 'someone.else') });
+    expect(screen.getByLabelText('Card')).toBeTruthy();
   });
 });
 

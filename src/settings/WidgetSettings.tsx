@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
-import type { WidgetInstance } from '@/core/config/schema';
+import { frameSchema, type WidgetInstance } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
 import { resolveSettings } from '@/core/registry/settings';
 import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
+import fieldStyles from './Fields.module.css';
 import styles from './EditPanel.module.css';
 
 /**
@@ -12,17 +13,24 @@ import styles from './EditPanel.module.css';
  * The claim this file exists to keep honest: a widget never hand-writes a form. If
  * something cannot be expressed here, that is a finding about the schema vocabulary,
  * not a licence to write JSX in a widget.
+ *
+ * Below the widget's own fields sits its Frame — card, padding, alignment, opacity —
+ * generated from `frameSchema` and identical for every widget type. It is drawn here
+ * rather than declared by each widget so that no widget can forget it and no two can
+ * offer it differently.
  */
 
 export interface WidgetSettingsProps {
   instance: WidgetInstance;
   onChangeSettings: (instanceId: string, settings: unknown) => void;
+  onChangeFrame: (instanceId: string, frame: WidgetInstance['frame']) => void;
   onCommit: () => void;
 }
 
 export function WidgetSettings({
   instance,
   onChangeSettings,
+  onChangeFrame,
   onCommit,
 }: WidgetSettingsProps) {
   const definition = widgetRegistry.get(instance.type);
@@ -31,6 +39,7 @@ export function WidgetSettings({
   const fields = useMemo(() => (schema ? describeSchema(schema) : []), [schema]);
   const resolved = schema ? resolveSettings(schema, instance.settings) : null;
   const values = (resolved?.settings ?? {}) as Record<string, unknown>;
+  const frameFields = useMemo(() => describeSchema(frameSchema), []);
 
   return (
     <>
@@ -40,10 +49,6 @@ export function WidgetSettings({
             This widget’s type (<code>{instance.type}</code>) is not installed, so its
             settings cannot be shown. They are kept untouched.
           </p>
-        )}
-
-        {definition && fields.length === 0 && (
-          <p className={styles.note}>This widget has nothing to configure.</p>
         )}
 
         {definition && fields.length > 0 && (
@@ -56,6 +61,23 @@ export function WidgetSettings({
             }
           />
         )}
+
+        {/* Shown for an uninstalled type too: the frame is drawn by the canvas, not by
+            the widget, so it still does something there. */}
+        <section className={fieldStyles.section} aria-labelledby="sp-frame-heading">
+          <h3 className={fieldStyles.sectionHeading} id="sp-frame-heading">
+            Frame
+          </h3>
+          <GeneratedFields
+            fields={frameFields}
+            values={instance.frame}
+            idPrefix={`sp-${instance.instanceId}-frame`}
+            onChange={(key, value) => {
+              const next = frameSchema.safeParse({ ...instance.frame, [key]: value });
+              if (next.success) onChangeFrame(instance.instanceId, next.data);
+            }}
+          />
+        </section>
       </div>
 
       {definition && fields.length > 0 && (

@@ -28,12 +28,38 @@ export const rectSchema = z.object({
   h: z.number().int().min(1),
 });
 
+/**
+ * How a widget sits in its cell — per instance, and the same for every widget type.
+ *
+ * The frame decides *whether* a widget has a card and where its content sits; the
+ * theme decides what a card *looks like*. That split is what keeps a page coherent:
+ * a widget can never pick its own corner radius or shadow, so every card on the page
+ * matches and a theme switch restyles them all. See docs/07-widget-design.md.
+ *
+ * Rendered by the panel below every widget's own settings, so no widget author has
+ * to remember it. `.meta()` only — no shape change.
+ */
 export const frameSchema = z
   .object({
-    showBackground: z.boolean().default(false),
-    opacity: z.number().min(0).max(1).default(1),
-    padding: z.number().min(0).max(64).default(0),
-    align: z.enum(['start', 'center', 'end']).default('center'),
+    showBackground: z.boolean().default(false).meta({
+      label: 'Card',
+      help: 'A surface behind the widget. Its colour, border, corners, shadow and blur come from the theme.',
+    }),
+    padding: z
+      .number()
+      .min(0)
+      .max(64)
+      .default(0)
+      .meta({ label: 'Padding', unit: 'px' }),
+    align: z
+      .enum(['start', 'center', 'end'])
+      .default('center')
+      .meta({
+        label: 'Alignment',
+        control: 'segmented',
+        options: { start: 'Start', center: 'Centre', end: 'End' },
+      }),
+    opacity: z.number().min(0).max(1).default(1).meta({ label: 'Opacity', step: 0.05 }),
   })
   .prefault({});
 

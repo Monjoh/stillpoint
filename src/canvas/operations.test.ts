@@ -9,6 +9,7 @@ import {
   placeWidget,
   removeWidget,
   setLayout,
+  updateWidgetFrame,
   updateWidgetSettings,
   withProfile,
 } from './operations';
@@ -206,5 +207,22 @@ describe('setLayout', () => {
     const back = setLayout(setLayout(p, grid(48, 24)), grid(24, 12));
 
     expect(back.widgets.map((w) => w.rect)).toEqual(p.widgets.map((w) => w.rect));
+  });
+});
+
+describe('updateWidgetFrame', () => {
+  it('replaces one widget’s frame and leaves the rest alone', () => {
+    const before = profile([at(0, 0, 4, 2, 'a'), at(4, 0, 4, 2, 'b')]);
+    const frame = {
+      showBackground: true,
+      opacity: 0.8,
+      padding: 12,
+      align: 'start' as const,
+    };
+    const after = updateWidgetFrame(before, 'a', frame);
+
+    expect(after.widgets[0]!.frame).toEqual(frame);
+    expect(after.widgets[0]!.rect).toEqual(before.widgets[0]!.rect);
+    expect(after.widgets[1]).toBe(before.widgets[1]);
   });
 });
