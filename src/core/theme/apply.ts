@@ -17,7 +17,6 @@ export interface CanvasPaint {
   background: BackgroundConfig;
   layout: LayoutConfig;
   preset: string;
-  fontScale: number;
   overrides: Record<string, string>;
 }
 
@@ -26,7 +25,6 @@ export function profileToPaint(profile: Profile): CanvasPaint {
     background: profile.background,
     layout: profile.layout,
     preset: profile.theme.preset,
-    fontScale: profile.theme.fontScale,
     overrides: profile.theme.overrides,
   };
 }
@@ -66,7 +64,6 @@ export function paintToTokens(paint: CanvasPaint): TokenSet {
   tokens['--sp-grid-gap'] = `${paint.layout.gap}px`;
   tokens['--sp-canvas-max-width'] =
     paint.layout.maxWidth === null ? 'none' : `${paint.layout.maxWidth}px`;
-  tokens['--sp-scale'] = String(paint.fontScale);
 
   return tokens;
 }

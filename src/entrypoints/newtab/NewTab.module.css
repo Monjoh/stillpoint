@@ -12,7 +12,7 @@
 
 .wordmark {
   margin: 0;
-  font-size: calc(2.5rem * var(--sp-scale));
+  font-size: 2.5rem;
   font-weight: 300;
   letter-spacing: 0.22em;
   text-indent: 0.22em;
@@ -21,7 +21,7 @@
 
 .hint {
   margin: 0;
-  font-size: calc(0.8125rem * var(--sp-scale));
+  font-size: 0.8125rem;
   letter-spacing: 0.04em;
   color: var(--sp-text-muted);
 }
@@ -38,7 +38,7 @@
   border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
   border-radius: var(--sp-radius, 10px);
   background: var(--sp-surface, rgb(255 255 255 / 0.06));
-  font-size: calc(0.8125rem * var(--sp-scale));
+  font-size: 0.8125rem;
   line-height: 1.5;
   text-align: center;
   color: var(--sp-text-muted);
@@ -75,7 +75,7 @@
   border-radius: 999px;
   background: var(--sp-surface, rgb(255 255 255 / 0.06));
   font: inherit;
-  font-size: calc(0.75rem * var(--sp-scale, 1));
+  font-size: 0.75rem;
   color: var(--sp-text-muted);
   cursor: pointer;
   opacity: 0;

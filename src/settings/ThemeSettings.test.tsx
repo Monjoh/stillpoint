@@ -73,7 +73,6 @@ describe('the theme picker', () => {
         name: 'Focus',
         theme: {
           preset: 'midnight',
-          fontScale: 1.4,
           overrides: { '--sp-accent': '#f00' },
         },
         background: { kind: 'solid', color: '#000' },
@@ -83,7 +82,6 @@ describe('the theme picker', () => {
     await userEvent.click(within(themes()).getByRole('radio', { name: 'Glass' }));
     expect(onChangeTheme).toHaveBeenCalledWith({
       preset: 'glass',
-      fontScale: 1.4,
       overrides: { '--sp-accent': '#f00' },
     });
   });
@@ -99,11 +97,6 @@ describe('the theme picker', () => {
 
     await userEvent.click(within(themes()).getByRole('radio', { name: 'Paper' }));
     expect(onChangeBackground).not.toHaveBeenCalled();
-  });
-
-  it('generates the text size slider from the schema', () => {
-    setup();
-    expect(screen.getByLabelText('Text size')).toHaveProperty('type', 'range');
   });
 });
 

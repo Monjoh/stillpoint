@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import {
-  themeSchema,
   type BackgroundConfig,
   type Profile,
   type ThemeConfig,
@@ -13,8 +11,6 @@ import {
   matchGradient,
 } from '@/core/theme/gradients';
 import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
-import { describeSchema } from './describe';
-import { GeneratedFields } from './generate';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
 
@@ -34,8 +30,7 @@ import styles from './ThemeSettings.module.css';
  * Placed by hand rather than generated, and this is what `control: 'custom'` exists
  * for: a theme is a look, and a `<select>` listing four names shows none of it. Every
  * swatch is painted with the tokens it would apply, over the background actually in
- * use, so choosing is looking. `fontScale` is an ordinary bounded number and *is*
- * generated, because a slider is already the right answer for it.
+ * use, so choosing is looking.
  */
 
 export interface ThemeFieldsProps {
@@ -49,10 +44,6 @@ export interface BackgroundFieldsProps {
 }
 
 export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
-  const themeFields = useMemo(
-    () => describeSchema(themeSchema).filter((f) => f.key === 'fontScale'),
-    [],
-  );
   const active = getPreset(profile.theme.preset);
 
   // The real background, so every tile previews this page rather than a showroom.
@@ -102,16 +93,6 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
       </div>
 
       <p className={fields.help}>{active.description}</p>
-
-      <GeneratedFields
-        fields={themeFields}
-        values={profile.theme}
-        idPrefix="sp-theme"
-        onChange={(key, value) => {
-          const next = themeSchema.safeParse({ ...profile.theme, [key]: value });
-          if (next.success) onChangeTheme(next.data);
-        }}
-      />
     </>
   );
 }

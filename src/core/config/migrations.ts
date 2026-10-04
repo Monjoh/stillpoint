@@ -22,7 +22,26 @@ export type Migration = (old: any) => any;
  *    parses against the current schema.
  */
 export const migrations: Record<number, Migration> = {
-  // 2: (v1) => ({ ...v1, version: 2, ... }),
+  /**
+   * v2 drops `theme.fontScale`, the page-wide text multiplier. It duplicated the size
+   * every widget sets for itself. Discarded on purpose rather than kept under
+   * `_unmigrated`: the control is gone, so there is nothing a kept value could mean.
+   */
+  2: (v1) => ({
+    ...v1,
+    version: 2,
+    // A malformed tree passes through for the schema to reject with a real message.
+    profiles: Array.isArray(v1.profiles)
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        v1.profiles.map((profile: any) => {
+          if (typeof profile?.theme !== 'object' || profile.theme === null)
+            return profile;
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { fontScale, ...theme } = profile.theme;
+          return { ...profile, theme };
+        })
+      : v1.profiles,
+  }),
 };
 
 export class ConfigVersionError extends Error {

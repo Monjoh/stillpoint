@@ -27,7 +27,7 @@ describe('configSchema', () => {
       gap: 12,
       maxWidth: 1600,
     });
-    expect(profile.theme).toEqual({ preset: 'midnight', overrides: {}, fontScale: 1 });
+    expect(profile.theme).toEqual({ preset: 'midnight', overrides: {} });
     expect(profile.widgets).toEqual([]);
     expect(profile.activation).toBeNull();
     expect(config.app.locale).toBe('en');

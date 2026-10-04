@@ -48,12 +48,6 @@ export interface FitTextOptions {
   heightRatio?: number;
   /** Share of the container's width one line may take. */
   widthRatio?: number;
-  /**
-   * Apply the global `--sp-scale` multiplier to the requested size. On by default:
-   * `--sp-scale` is the accessibility lever, so it scales intent — but not the two
-   * bounds, which are physical limits of the cell.
-   */
-  scaled?: boolean;
 }
 
 export function fitTextCss({
@@ -61,13 +55,11 @@ export function fitTextCss({
   text,
   heightRatio = 0.9,
   widthRatio = 1,
-  scaled = true,
 }: FitTextOptions): string {
-  const requested = scaled ? `calc(${maxPx}px * var(--sp-scale, 1))` : `${maxPx}px`;
   const byHeight = round(100 * heightRatio);
   const byWidth = round((100 * widthRatio) / Math.max(0.1, lineWidthEm(text)));
 
-  return `min(${requested}, ${byHeight}cqh, ${byWidth}cqw)`;
+  return `min(${maxPx}px, ${byHeight}cqh, ${byWidth}cqw)`;
 }
 
 function round(value: number): number {

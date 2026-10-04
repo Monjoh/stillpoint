@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import fixtureV1 from './__fixtures__/config-v1.json';
+import fixtureV2 from './__fixtures__/config-v2.json';
 import { createDefaultConfig } from './defaults';
 import {
   ConfigImportError,
@@ -12,7 +12,7 @@ import { CONFIG_VERSION, configSchema } from './schema';
 
 describe('export / import round trip', () => {
   it('imports back to an identical tree', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     const result = parseImport(exportConfig(config));
     expect(result.config).toEqual(config);
   });
@@ -31,7 +31,7 @@ describe('export / import round trip', () => {
   });
 
   it('accepts a bare config tree, since people hand-edit these', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     const result = parseImport(JSON.stringify(config));
     expect(result.config).toEqual(config);
     expect(result.assets).toEqual({});
@@ -50,12 +50,12 @@ describe('import rejection', () => {
   });
 
   it('refuses a config from a newer version', () => {
-    const text = JSON.stringify({ ...fixtureV1, version: CONFIG_VERSION + 1 });
+    const text = JSON.stringify({ ...fixtureV2, version: CONFIG_VERSION + 1 });
     expect(() => parseImport(text)).toThrow(/newer version of Stillpoint/);
   });
 
   it('rejects a structurally invalid config and points at the field', () => {
-    const broken = structuredClone(fixtureV1) as Record<string, unknown>;
+    const broken = structuredClone(fixtureV2) as Record<string, unknown>;
     (broken.profiles as Record<string, unknown>[])[0]!.name = '';
     try {
       parseImport(JSON.stringify(broken));
@@ -67,7 +67,7 @@ describe('import rejection', () => {
   });
 
   it('rejects a config whose activeProfileId points nowhere', () => {
-    const broken = { ...fixtureV1, activeProfileId: 'missing' };
+    const broken = { ...fixtureV2, activeProfileId: 'missing' };
     expect(() => parseImport(JSON.stringify(broken))).toThrow(ConfigImportError);
   });
 });
@@ -75,7 +75,7 @@ describe('import rejection', () => {
 describe('mergeProfiles', () => {
   it('adds profiles instead of replacing them', () => {
     const current = createDefaultConfig();
-    const incoming = configSchema.parse(fixtureV1);
+    const incoming = configSchema.parse(fixtureV2);
 
     const merged = mergeProfiles(current, incoming);
 
@@ -86,7 +86,7 @@ describe('mergeProfiles', () => {
 
   it('gives imported profiles fresh ids so a double import does not overwrite', () => {
     const current = createDefaultConfig();
-    const incoming = configSchema.parse(fixtureV1);
+    const incoming = configSchema.parse(fixtureV2);
 
     const once = mergeProfiles(current, incoming);
     const twice = mergeProfiles(once, incoming);
@@ -98,7 +98,7 @@ describe('mergeProfiles', () => {
 
   it('disambiguates colliding names', () => {
     const current = createDefaultConfig();
-    const incoming = configSchema.parse(fixtureV1);
+    const incoming = configSchema.parse(fixtureV2);
 
     const merged = mergeProfiles(mergeProfiles(current, incoming), incoming);
     const names = merged.profiles.map((p) => p.name);
@@ -109,7 +109,7 @@ describe('mergeProfiles', () => {
   });
 
   it('keeps the imported widgets intact', () => {
-    const merged = mergeProfiles(createDefaultConfig(), configSchema.parse(fixtureV1));
+    const merged = mergeProfiles(createDefaultConfig(), configSchema.parse(fixtureV2));
     const focus = merged.profiles.find((p) => p.name === 'Focus')!;
     expect(focus.widgets).toHaveLength(2);
   });
@@ -117,7 +117,7 @@ describe('mergeProfiles', () => {
 
 describe('exportFilename', () => {
   it('slugs the active profile name and dates the file', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     expect(exportFilename(config, new Date('2026-10-04T12:00:00Z'))).toBe(
       'stillpoint-focus-2026-10-04.json',
     );
@@ -125,10 +125,10 @@ describe('exportFilename', () => {
 
   it('survives a profile name with no usable characters', () => {
     const config = configSchema.parse({
-      ...fixtureV1,
+      ...fixtureV2,
       profiles: [
-        { ...(fixtureV1.profiles[0] as Record<string, unknown>), name: '•••' },
-        fixtureV1.profiles[1],
+        { ...(fixtureV2.profiles[0] as Record<string, unknown>), name: '•••' },
+        fixtureV2.profiles[1],
       ],
     });
     expect(exportFilename(config, new Date('2026-10-04T12:00:00Z'))).toBe(

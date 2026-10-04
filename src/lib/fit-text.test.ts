@@ -21,7 +21,7 @@ describe('lineWidthEm', () => {
 describe('fitTextCss', () => {
   it('caps at the requested size and at both axes of the cell', () => {
     const css = fitTextCss({ maxPx: 72, text: '23:04' });
-    expect(css).toBe('min(calc(72px * var(--sp-scale, 1)), 90cqh, 35.97cqw)');
+    expect(css).toBe('min(72px, 90cqh, 35.97cqw)');
   });
 
   it('allows less width when the string is longer', () => {
@@ -29,19 +29,6 @@ describe('fitTextCss', () => {
     const long = fitTextCss({ maxPx: 72, text: '11:04:07 PM' });
     const cqw = (css: string) => Number(/([\d.]+)cqw/.exec(css)?.[1]);
     expect(cqw(long)).toBeLessThan(cqw(short));
-  });
-
-  it('scales the requested size but never the cell bounds', () => {
-    // --sp-scale is the accessibility lever. It raises what the user asked for; it
-    // cannot make text overflow the cell it lives in.
-    const css = fitTextCss({ maxPx: 72, text: '23:04' });
-    expect(css).toContain('var(--sp-scale, 1)');
-    expect(css).not.toMatch(/--sp-scale[^)]*\)\s*,\s*[\d.]+cqh/);
-    expect(css).toMatch(/,\s*90cqh/);
-  });
-
-  it('can opt out of scaling', () => {
-    expect(fitTextCss({ maxPx: 40, text: 'x', scaled: false })).toContain('40px,');
   });
 
   it('does not divide by zero on empty text', () => {

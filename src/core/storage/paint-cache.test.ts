@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDefaultConfig } from '@/core/config/defaults';
 import { configSchema } from '@/core/config/schema';
-import fixtureV1 from '@/core/config/__fixtures__/config-v1.json';
+import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
 import {
   clearPaintCache,
   PAINT_CACHE_VERSION,
@@ -21,7 +21,7 @@ describe('paint cache', () => {
   });
 
   it('round-trips the paint-critical slice of the active profile', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     writePaintCache(config);
 
     const cache = readPaintCache();
@@ -32,7 +32,6 @@ describe('paint cache', () => {
     expect(cache!.tokens).toMatchObject({
       '--sp-background': 'linear-gradient(160deg, #11131c 0%, #1d2033 100%)',
       '--sp-grid-cols': '24',
-      '--sp-scale': '1.2',
       // The profile's own override, already merged over the preset.
       '--sp-accent': '#ff8800',
       // And a token the profile never mentions, from the preset underneath it.
@@ -46,7 +45,7 @@ describe('paint cache', () => {
 
   it('caches the ACTIVE profile, not the first one', () => {
     const config = configSchema.parse({
-      ...fixtureV1,
+      ...fixtureV2,
       activeProfileId: '44444444-4444-4444-8444-444444444444',
     });
     writePaintCache(config);
@@ -54,7 +53,7 @@ describe('paint cache', () => {
   });
 
   it('holds no user content — only geometry and colour', () => {
-    writePaintCache(configSchema.parse(fixtureV1));
+    writePaintCache(configSchema.parse(fixtureV2));
     const raw = localStorage.getItem(KEY)!;
     // Widget settings and names must not leak into a store we never validate.
     expect(raw).not.toContain('stillpoint.clock');
@@ -83,7 +82,7 @@ describe('paint cache', () => {
   });
 
   it('rejects a cache with a malformed rect', () => {
-    writePaintCache(configSchema.parse(fixtureV1));
+    writePaintCache(configSchema.parse(fixtureV2));
     const stored = JSON.parse(localStorage.getItem(KEY)!);
     stored.rects[0] = { x: 1, y: 2 };
     localStorage.setItem(KEY, JSON.stringify(stored));

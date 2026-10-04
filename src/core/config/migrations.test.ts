@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import fixtureV1 from './__fixtures__/config-v1.json';
+import fixtureV2 from './__fixtures__/config-v2.json';
 import { ConfigVersionError, migrations, runMigrations } from './migrations';
 import { CONFIG_VERSION, configSchema } from './schema';
 
@@ -87,5 +88,23 @@ describe('fixtures', () => {
       fontSize: 72,
     });
     expect(focus.theme.overrides).toEqual({ '--sp-accent': '#ff8800' });
+  });
+
+  it('config-v1 loses the page-wide text size and nothing else', () => {
+    const { config, applied } = runMigrations(fixtureV1);
+    expect(applied).toEqual([2]);
+    expect(config).toEqual(fixtureV2);
+  });
+
+  it('config-v2 is current and parses as-is', () => {
+    expect(runMigrations(fixtureV2).applied).toEqual([]);
+    expect(configSchema.safeParse(fixtureV2).success).toBe(true);
+  });
+});
+
+describe('migration 2', () => {
+  it('leaves a malformed tree for the schema to reject', () => {
+    expect(() => migrations[2]!({ version: 1, profiles: 'nope' })).not.toThrow();
+    expect(() => migrations[2]!({ version: 1, profiles: [null, {}] })).not.toThrow();
   });
 });

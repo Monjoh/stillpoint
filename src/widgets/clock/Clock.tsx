@@ -19,8 +19,7 @@ export default function Clock({ settings }: WidgetProps<ClockSettings>) {
         // `fontSize` is the size the user asked for, not a promise. The grid is
         // relative, so this cell is a different number of pixels on every window size;
         // `fitTextCss` keeps the requested size until the cell can no longer hold it
-        // and shrinks the line from there. It also applies --sp-scale, the global
-        // accessibility multiplier.
+        // and shrinks the line from there.
         fontSize: fitTextCss({ maxPx: settings.fontSize, text: time }),
         fontWeight: WEIGHT[settings.weight],
       }}

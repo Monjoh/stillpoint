@@ -64,14 +64,14 @@
 }
 
 .noticeTitle {
-  font-size: calc(0.8125rem * var(--sp-scale, 1));
+  font-size: 0.8125rem;
   font-weight: 500;
   color: var(--sp-text, #f2f2f2);
 }
 
 .noticeDetail {
   overflow: hidden;
-  font-size: calc(0.75rem * var(--sp-scale, 1));
+  font-size: 0.75rem;
   line-height: 1.4;
   color: var(--sp-text-muted, rgb(242 242 242 / 0.62));
 }
@@ -89,7 +89,7 @@
   border-radius: 6px;
   background: transparent;
   font: inherit;
-  font-size: calc(0.75rem * var(--sp-scale, 1));
+  font-size: 0.75rem;
   color: var(--sp-text, #f2f2f2);
   cursor: pointer;
 }

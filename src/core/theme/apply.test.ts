@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configSchema } from '@/core/config/schema';
-import fixtureV1 from '@/core/config/__fixtures__/config-v1.json';
+import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
 import { backgroundToCss } from './background';
 import { applyCanvasTokens, isThemeableToken, profileToPaint } from './apply';
 import { getPreset } from './presets';
@@ -49,8 +49,8 @@ describe('applyCanvasTokens', () => {
     root = document.createElement('div');
   });
 
-  it('writes background, grid geometry and scale', () => {
-    const config = configSchema.parse(fixtureV1);
+  it('writes background and grid geometry', () => {
+    const config = configSchema.parse(fixtureV2);
     applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
 
     expect(root.style.getPropertyValue('--sp-background')).toBe(
@@ -60,17 +60,16 @@ describe('applyCanvasTokens', () => {
     expect(root.style.getPropertyValue('--sp-grid-rows')).toBe('12');
     expect(root.style.getPropertyValue('--sp-grid-gap')).toBe('12px');
     expect(root.style.getPropertyValue('--sp-canvas-max-width')).toBe('1600px');
-    expect(root.style.getPropertyValue('--sp-scale')).toBe('1.2');
   });
 
   it('writes `none` for an uncapped canvas width', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     applyCanvasTokens(profileToPaint(config.profiles[1]!), root);
     expect(root.style.getPropertyValue('--sp-canvas-max-width')).toBe('none');
   });
 
   it('applies canvas overrides', () => {
-    const config = configSchema.parse(fixtureV1);
+    const config = configSchema.parse(fixtureV2);
     applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
     expect(root.style.getPropertyValue('--sp-accent')).toBe('#ff8800');
   });
@@ -81,7 +80,6 @@ describe('applyCanvasTokens', () => {
         background: { kind: 'solid', color: '#000' },
         layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
         preset: 'midnight',
-        fontScale: 1,
         overrides: { '--sp-ui-bg': '#ff00ff', '--sp-ui-text': '#ff00ff' },
       },
       root,
@@ -98,7 +96,6 @@ describe('applyCanvasTokens', () => {
         background: { kind: 'image', assetId: 'a1', fit: 'cover', blur: 0, dim: 0 },
         layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
         preset: 'midnight',
-        fontScale: 1,
         overrides: {},
       },
       root,
@@ -118,7 +115,6 @@ describe('presets', () => {
     background: { kind: 'solid' as const, color: '#000' },
     layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
     preset,
-    fontScale: 1,
     overrides,
   });
 

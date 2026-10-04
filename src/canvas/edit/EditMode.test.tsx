@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  CONFIG_VERSION,
   configSchema,
   profileSchema,
   type Profile,
@@ -115,7 +116,7 @@ function setup(initial: Profile, options: { panelOpen?: boolean } = {}) {
 /** The smallest config that holds this profile, so the panel has something to read. */
 function configFor(profile: Profile): StillpointConfig {
   return configSchema.parse({
-    version: 1,
+    version: CONFIG_VERSION,
     activeProfileId: profile.id,
     profiles: [profile],
     app: {},

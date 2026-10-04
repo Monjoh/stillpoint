@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import {
+  CONFIG_VERSION,
   configSchema,
   profileSchema,
   type Profile,
@@ -26,7 +27,7 @@ function profile(id = 'p1', name = 'Focus'): Profile {
 
 function config(profiles: Profile[] = [profile()]): StillpointConfig {
   return configSchema.parse({
-    version: 1,
+    version: CONFIG_VERSION,
     activeProfileId: profiles[0]!.id,
     profiles,
     app: {},
