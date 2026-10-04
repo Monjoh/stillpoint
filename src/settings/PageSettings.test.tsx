@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -32,8 +33,17 @@ function config(profiles: Profile[] = [profile()]): StillpointConfig {
   });
 }
 
+/**
+ * Opens one category, the way the panel does. Every test but the accordion's own
+ * names the section it is about, because a collapsed section renders no fields —
+ * which is the point of it.
+ */
 function setup(
-  options: { config?: StillpointConfig; onOpenOptions?: () => void } = {},
+  options: {
+    config?: StillpointConfig;
+    onOpenOptions?: () => void;
+    open?: string | null;
+  } = {},
 ) {
   const current = options.config ?? config();
   const active = current.profiles.find((p) => p.id === current.activeProfileId)!;
@@ -42,17 +52,28 @@ function setup(
   const onChangeBackground = vi.fn();
   const onChangeConfig = vi.fn();
 
-  render(
-    <PageSettings
-      config={current}
-      profile={active}
-      onChangeLayout={onChangeLayout}
-      onChangeTheme={onChangeTheme}
-      onChangeBackground={onChangeBackground}
-      onChangeConfig={onChangeConfig}
-      onOpenOptions={options.onOpenOptions}
-    />,
-  );
+  function Harness() {
+    const [openSection, setOpenSection] = useState<string | null>(
+      options.open === undefined ? null : options.open,
+    );
+    return (
+      <PageSettings
+        config={current}
+        profile={active}
+        onChangeLayout={onChangeLayout}
+        onChangeTheme={onChangeTheme}
+        onChangeBackground={onChangeBackground}
+        onChangeConfig={onChangeConfig}
+        onOpenOptions={options.onOpenOptions}
+        openSection={openSection}
+        onToggleSection={(id) =>
+          setOpenSection((current) => (current === id ? null : id))
+        }
+      />
+    );
+  }
+
+  render(<Harness />);
 
   /** Runs the recipe the panel handed back, so the assertion is about the result. */
   const applied = () => {
@@ -75,7 +96,7 @@ function setup(
 
 describe('the profile section', () => {
   it('offers no switcher when there is only one profile', () => {
-    setup();
+    setup({ open: 'profile' });
     expect(screen.queryByLabelText('Editing')).toBeNull();
     expect(screen.getByLabelText('Profile name')).toHaveProperty('value', 'Focus');
   });
@@ -83,6 +104,7 @@ describe('the profile section', () => {
   it('switches the active profile when there is a choice', async () => {
     const { applied } = setup({
       config: config([profile('p1', 'Focus'), profile('p2', 'Night')]),
+      open: 'profile',
     });
 
     await userEvent.selectOptions(screen.getByLabelText('Editing'), 'p2');
@@ -92,7 +114,7 @@ describe('the profile section', () => {
   // Every other control writes on each keystroke. This one cannot: `renameProfile`
   // refuses an empty name, so the store would fight the user over their own backspace.
   it('renames on the way out, not on every keystroke', async () => {
-    const { onChangeConfig, applied } = setup();
+    const { onChangeConfig, applied } = setup({ open: 'profile' });
 
     await userEvent.type(screen.getByLabelText('Profile name'), '!');
     expect(onChangeConfig).not.toHaveBeenCalled();
@@ -102,7 +124,7 @@ describe('the profile section', () => {
   });
 
   it('keeps the old name when the field is emptied', async () => {
-    const { onChangeConfig } = setup();
+    const { onChangeConfig } = setup({ open: 'profile' });
 
     await userEvent.clear(screen.getByLabelText('Profile name'));
     await userEvent.tab();
@@ -110,7 +132,7 @@ describe('the profile section', () => {
   });
 
   it('adds and copies profiles, and does not offer to delete one', async () => {
-    const { applied } = setup();
+    const { applied } = setup({ open: 'profile' });
 
     await userEvent.click(screen.getByRole('button', { name: 'New profile' }));
     expect(applied().profiles).toHaveLength(2);
@@ -127,7 +149,7 @@ describe('the profile section', () => {
 
 describe('the layout section', () => {
   it('generates the grid fields from the schema', () => {
-    setup();
+    setup({ open: 'layout' });
     expect(screen.getByLabelText('Columns')).toHaveProperty('value', '24');
     expect(screen.getByLabelText('Rows')).toHaveProperty('value', '12');
     expect(screen.getByLabelText('Gap')).toBeTruthy();
@@ -137,13 +159,13 @@ describe('the layout section', () => {
   // A min/max pair would otherwise infer a slider, and a slider drag fires once per
   // step — a hundred rescales compounding their rounding into a mangled layout.
   it('gives the grid size a number box rather than a slider', () => {
-    setup();
+    setup({ open: 'layout' });
     expect(screen.getByLabelText('Columns')).toHaveProperty('type', 'number');
     expect(screen.getByLabelText('Rows')).toHaveProperty('type', 'number');
   });
 
   it('passes a whole valid layout up, not the one field that changed', () => {
-    const { onChangeLayout } = setup();
+    const { onChangeLayout } = setup({ open: 'layout' });
 
     fireEvent.change(screen.getByLabelText('Columns'), { target: { value: '36' } });
     expect(onChangeLayout).toHaveBeenCalledWith(
@@ -155,7 +177,7 @@ describe('the layout section', () => {
   // only way a number field can say "no value", so it has to mean that where the
   // schema allows one — and go on meaning "still typing" where it does not.
   it('clears the maximum width to nothing, as its help text promises', () => {
-    const { onChangeLayout } = setup();
+    const { onChangeLayout } = setup({ open: 'layout' });
 
     fireEvent.change(screen.getByLabelText('Maximum width'), { target: { value: '' } });
     expect(onChangeLayout).toHaveBeenCalledWith(
@@ -164,14 +186,14 @@ describe('the layout section', () => {
   });
 
   it('writes nothing for an empty box the schema will not accept as empty', () => {
-    const { onChangeLayout } = setup();
+    const { onChangeLayout } = setup({ open: 'layout' });
 
     fireEvent.change(screen.getByLabelText('Columns'), { target: { value: '' } });
     expect(onChangeLayout).not.toHaveBeenCalled();
   });
 
   it('ignores a value the schema rejects instead of applying it', () => {
-    const { onChangeLayout } = setup();
+    const { onChangeLayout } = setup({ open: 'layout' });
 
     // Below the minimum of 4. A half-typed number must never reach the geometry.
     fireEvent.change(screen.getByLabelText('Columns'), { target: { value: '2' } });
@@ -181,7 +203,7 @@ describe('the layout section', () => {
 
 describe('the general section', () => {
   it('shows the app settings that are meant to be seen, and not the rest', async () => {
-    const { applied } = setup();
+    const { applied } = setup({ open: 'general' });
 
     const toggle = screen.getByLabelText('Allow editing the layout');
     expect(toggle).toHaveProperty('checked', true);
@@ -205,5 +227,77 @@ describe('the general section', () => {
   it('says nothing about an options page when there is none', () => {
     setup();
     expect(screen.queryByRole('button', { name: /all settings/i })).toBeNull();
+  });
+});
+
+/**
+ * The categories themselves. Five expanded at once were taller than the window, so
+ * each collapses to one row — and that row still carries its value, which is what
+ * keeps collapsing from being a hiding place.
+ */
+describe('the categories', () => {
+  const trigger = (name: string) =>
+    screen.getByRole('button', { name: new RegExp(`^${name}`) });
+
+  it('starts with every category closed', () => {
+    setup();
+    for (const name of ['Profile', 'Theme', 'Background', 'Layout', 'General']) {
+      expect(trigger(name).getAttribute('aria-expanded')).toBe('false');
+    }
+    // Closed means not rendered, so a collapsed category holds nothing focusable.
+    expect(screen.queryByLabelText('Columns')).toBeNull();
+  });
+
+  it('says what each one is set to without being opened', () => {
+    setup();
+    expect(trigger('Theme').textContent).toContain('Midnight');
+    // This fixture is a solid colour, which is none of the ten swatches.
+    expect(trigger('Background').textContent).toContain('Custom');
+    expect(trigger('Layout').textContent).toContain('24 \u00d7 12');
+    expect(trigger('General').textContent).toContain('Editing allowed');
+    expect(trigger('Profile').textContent).toContain('Focus');
+  });
+
+  it('opens one and closes it again', async () => {
+    setup();
+    await userEvent.click(trigger('Layout'));
+    expect(screen.getByLabelText('Columns')).toBeTruthy();
+
+    await userEvent.click(trigger('Layout'));
+    expect(screen.queryByLabelText('Columns')).toBeNull();
+  });
+
+  it('keeps only one open at a time', async () => {
+    setup();
+    await userEvent.click(trigger('Layout'));
+    await userEvent.click(trigger('General'));
+
+    expect(screen.queryByLabelText('Columns')).toBeNull();
+    expect(screen.getByLabelText('Allow editing the layout')).toBeTruthy();
+  });
+
+  // The value is the question's answer; once open, the section is saying it louder.
+  it('drops the value from the row it has expanded', async () => {
+    setup();
+    await userEvent.click(trigger('Layout'));
+    expect(trigger('Layout').textContent).not.toContain('24');
+  });
+
+  it('names the background when it is one of the curated ones', () => {
+    setup({
+      config: config([
+        profileSchema.parse({
+          id: 'p1',
+          name: 'Focus',
+          background: { kind: 'gradient', from: '#0f2027', to: '#2c5364', angle: 160 },
+        }),
+      ]),
+    });
+    expect(trigger('Background').textContent).toContain('Tide');
+  });
+
+  it('counts the profiles when there is more than one', () => {
+    setup({ config: config([profile('p1', 'Focus'), profile('p2', 'Night')]) });
+    expect(trigger('Profile').textContent).toContain('Focus of 2');
   });
 });

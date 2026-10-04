@@ -18,7 +18,10 @@ import {
 import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
 import { NameField } from './NameField';
-import { ThemeSettings } from './ThemeSettings';
+import { Section } from './Section';
+import { BackgroundFields, ThemeFields } from './ThemeSettings';
+import { getPreset } from '@/core/theme/presets';
+import { matchGradient } from '@/core/theme/gradients';
 // The section frame and the input chrome come from the two stylesheets the generator
 // already uses, so a hand-placed field beside a generated one is visually the same
 // field. Duplicating either here is how two settings surfaces start to drift apart.
@@ -35,6 +38,11 @@ import styles from './EditPanel.module.css';
  * anywhere before; the grid in particular is the most canvas-contextual setting there
  * is, and it was reachable only by hand-editing an export.
  *
+ * Every category is collapsed to a single row carrying its current value — Midnight,
+ * 24 × 12 — and only one opens at a time. Five expanded categories were taller than
+ * the window, and a sidebar you scroll to find what you came for is a worse sidebar.
+ * The collapsed rows still answer most questions without being opened.
+ *
  * Destructive profile operations are deliberately not here. Deleting the profile you
  * are standing inside, from the sidebar of the canvas you are editing, is more damage
  * than a side panel should be able to do; that, reordering and import/export stay on
@@ -49,6 +57,9 @@ export interface PageSettingsProps {
   onChangeBackground: (background: BackgroundConfig) => void;
   onChangeConfig: (recipe: (config: StillpointConfig) => StillpointConfig) => void;
   onOpenOptions?: () => void;
+  /** The one open category, or null. Held above this component — see `EditPanel`. */
+  openSection: string | null;
+  onToggleSection: (id: string) => void;
 }
 
 export function PageSettings({
@@ -59,16 +70,36 @@ export function PageSettings({
   onChangeBackground,
   onChangeConfig,
   onOpenOptions,
+  openSection,
+  onToggleSection,
 }: PageSettingsProps) {
   const layoutFields = useMemo(() => describeSchema(layoutSchema), []);
   const appFields = useMemo(() => describeSchema(appSettingsSchema), []);
 
+  const preset = getPreset(profile.theme.preset);
+  const gradient = matchGradient(profile.background);
+
+  /** Every category takes the same three props; only the body differs. */
+  const section = (id: string, title: string, value: string) => ({
+    id,
+    title,
+    value,
+    open: openSection === id,
+    onToggle: onToggleSection,
+  });
+
   return (
     <>
       <div className={styles.body}>
-        <section className={fields.section}>
-          <h3 className={fields.sectionHeading}>Profile</h3>
-
+        <Section
+          {...section(
+            'profile',
+            'Profile',
+            config.profiles.length > 1
+              ? `${profile.name} of ${config.profiles.length}`
+              : profile.name,
+          )}
+        >
           {/* Only offered when there is a choice to make. A select with one option is
               a control that cannot do anything. */}
           {config.profiles.length > 1 && (
@@ -83,6 +114,7 @@ export function PageSettings({
                 // Switching mid-edit is intentional: the canvas becomes the other
                 // profile and the selection falls away with the widgets that are no
                 // longer there, which puts the panel back on this view by itself.
+                //
                 // The id is read now, not inside the recipe: the recipe is a closure
                 // the caller may run later, and by then this controlled select has
                 // been re-rendered back to whatever the config still says.
@@ -131,16 +163,23 @@ export function PageSettings({
               Duplicate
             </button>
           </div>
-        </section>
+        </Section>
 
-        <ThemeSettings
-          profile={profile}
-          onChangeTheme={onChangeTheme}
-          onChangeBackground={onChangeBackground}
-        />
+        <Section {...section('theme', 'Theme', preset.name)}>
+          <ThemeFields profile={profile} onChangeTheme={onChangeTheme} />
+        </Section>
 
-        <section className={fields.section}>
-          <h3 className={fields.sectionHeading}>Layout</h3>
+        <Section {...section('background', 'Background', gradient?.name ?? 'Custom')}>
+          <BackgroundFields profile={profile} onChangeBackground={onChangeBackground} />
+        </Section>
+
+        <Section
+          {...section(
+            'layout',
+            'Layout',
+            `${profile.layout.columns} \u00d7 ${profile.layout.rows}`,
+          )}
+        >
           <GeneratedFields
             fields={layoutFields}
             values={profile.layout}
@@ -152,10 +191,15 @@ export function PageSettings({
               if (next.success) onChangeLayout(next.data);
             }}
           />
-        </section>
+        </Section>
 
-        <section className={fields.section}>
-          <h3 className={fields.sectionHeading}>General</h3>
+        <Section
+          {...section(
+            'general',
+            'General',
+            config.app.editModeEnabled ? 'Editing allowed' : 'Canvas locked',
+          )}
+        >
           <GeneratedFields
             fields={appFields}
             values={config.app}
@@ -167,7 +211,7 @@ export function PageSettings({
               })
             }
           />
-        </section>
+        </Section>
       </div>
 
       {onOpenOptions && (

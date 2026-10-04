@@ -6,7 +6,7 @@ import {
   type BackgroundConfig,
   type Profile,
 } from '@/core/config/schema';
-import { ThemeSettings } from './ThemeSettings';
+import { BackgroundFields, ThemeFields } from './ThemeSettings';
 
 /**
  * The picker, and the one rule in it with teeth: choosing Paper must not leave the
@@ -32,12 +32,13 @@ function profile(
 function setup(p: Profile = profile()) {
   const onChangeTheme = vi.fn();
   const onChangeBackground = vi.fn();
+  // Both bodies together: they are two sections in the panel, but the contrast
+  // warning is about the pairing, so the tests need them side by side.
   render(
-    <ThemeSettings
-      profile={p}
-      onChangeTheme={onChangeTheme}
-      onChangeBackground={onChangeBackground}
-    />,
+    <>
+      <ThemeFields profile={p} onChangeTheme={onChangeTheme} />
+      <BackgroundFields profile={p} onChangeBackground={onChangeBackground} />
+    </>,
   );
   return { onChangeTheme, onChangeBackground };
 }

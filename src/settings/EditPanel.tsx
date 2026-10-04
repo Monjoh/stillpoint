@@ -1,3 +1,4 @@
+import { useCallback, useState } from 'react';
 import type {
   BackgroundConfig,
   LayoutConfig,
@@ -65,6 +66,21 @@ export function EditPanel({
   onOpenOptions,
   onCommit,
 }: EditPanelProps) {
+  /**
+   * Which page-settings category is open. Held here rather than in `PageSettings`,
+   * where it belongs conceptually, because `PageSettings` unmounts the moment a
+   * widget is selected — and losing the open category every time the user glances at
+   * a widget is most of the friction the accordion was meant to remove.
+   *
+   * One at a time. Five open categories are taller than the window, which is the
+   * problem being solved.
+   */
+  const [openSection, setOpenSection] = useState<string | null>(null);
+  const toggleSection = useCallback(
+    (id: string) => setOpenSection((current) => (current === id ? null : id)),
+    [],
+  );
+
   const definition = instance ? widgetRegistry.get(instance.type) : undefined;
   const title = instance ? (definition?.name ?? instance.type) : 'Page settings';
 
@@ -125,6 +141,8 @@ export function EditPanel({
           onChangeBackground={onChangeBackground}
           onChangeConfig={onChangeConfig}
           onOpenOptions={onOpenOptions}
+          openSection={openSection}
+          onToggleSection={toggleSection}
         />
       )}
     </aside>

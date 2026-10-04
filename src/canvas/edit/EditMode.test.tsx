@@ -380,9 +380,12 @@ describe('the settings panel', () => {
   it('is open from the start, on the page settings, with nothing selected', () => {
     setup(profile([clock('a', 0, 0)]));
 
+    // Categories collapsed, each carrying its value. Five expanded at once were
+    // taller than the window.
     const panel = screen.getByRole('complementary', { name: 'Page settings' });
-    expect(within(panel).getByLabelText('Columns')).toBeTruthy();
-    expect(within(panel).getByLabelText('Profile name')).toBeTruthy();
+    expect(within(panel).getByRole('button', { name: /^Theme/ })).toBeTruthy();
+    expect(within(panel).getByRole('button', { name: /^Layout24 × 12/ })).toBeTruthy();
+    expect(within(panel).queryByLabelText('Columns')).toBeNull();
   });
 
   it('switches to the widget’s settings on selection, and back again', async () => {
@@ -406,8 +409,9 @@ describe('the settings panel', () => {
     expect(state.profile.widgets[0]?.rect).toEqual({ x: 2, y: 1, w: 8, h: 3 });
   });
 
-  it('changes the grid and brings the widgets with it', () => {
+  it('changes the grid and brings the widgets with it', async () => {
     const { state } = setup(profile([clock('a', 12, 0)]));
+    await userEvent.click(screen.getByRole('button', { name: /^Layout/ }));
 
     // One deliberate step, not a typed sequence: 24 → 4 → 48 would rescale twice and
     // round the widget away in between, which is the whole reason this is a number
