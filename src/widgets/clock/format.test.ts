@@ -1,0 +1,75 @@
+import { describe, expect, it } from 'vitest';
+import { clockSettingsSchema } from './definition';
+import { formatClock, tickIntervalMs } from './format';
+
+const settings = (overrides: Record<string, unknown> = {}) =>
+  clockSettingsSchema.parse(overrides);
+
+// 2026-03-15T23:04:07Z — late enough in the day that 24h and 12h clearly differ, and
+// that a westward time zone falls on the previous date.
+const instant = new Date('2026-03-15T23:04:07Z');
+
+describe('formatClock', () => {
+  it('renders midnight as 00:00 in 24h, not 24:00', () => {
+    // The reason this uses hourCycle rather than hour12: several locales render
+    // midnight as "24:00" under `hour12: false`.
+    const midnight = new Date('2026-03-15T00:00:00Z');
+    const text = formatClock(midnight, settings({ timezone: 'UTC' }), 'en-GB');
+    expect(text).toBe('00:00');
+  });
+
+  it('renders 12h with a meridiem', () => {
+    const text = formatClock(
+      instant,
+      settings({ format: '12h', timezone: 'UTC' }),
+      'en-US',
+    );
+    expect(text).toMatch(/^11:04\s*PM$/);
+  });
+
+  it('adds seconds only when asked', () => {
+    const base = settings({ timezone: 'UTC' });
+    expect(formatClock(instant, base, 'en-GB')).toBe('23:04');
+    expect(formatClock(instant, { ...base, showSeconds: true }, 'en-GB')).toBe(
+      '23:04:07',
+    );
+  });
+
+  it('honours an explicit time zone', () => {
+    expect(
+      formatClock(instant, settings({ timezone: 'America/New_York' }), 'en-GB'),
+    ).toBe('19:04');
+  });
+
+  it('falls back to local time for a time zone Intl rejects', () => {
+    // A profile imported from a browser with a larger zone database must not make the
+    // widget throw on every tick.
+    const local = formatClock(instant, settings(), 'en-GB');
+    expect(formatClock(instant, settings({ timezone: 'Mars/Olympus' }), 'en-GB')).toBe(
+      local,
+    );
+  });
+});
+
+describe('tickIntervalMs', () => {
+  it('ticks once a minute unless seconds are shown', () => {
+    expect(tickIntervalMs({ showSeconds: false })).toBe(60_000);
+    expect(tickIntervalMs({ showSeconds: true })).toBe(1_000);
+  });
+});
+
+describe('clockSettingsSchema', () => {
+  it('parses an empty object, which is what a newly added widget stores', () => {
+    expect(settings()).toEqual({
+      format: '24h',
+      showSeconds: false,
+      fontSize: 72,
+      weight: 'light',
+      timezone: null,
+    });
+  });
+
+  it('rejects a font size outside the slider range', () => {
+    expect(clockSettingsSchema.safeParse({ fontSize: 500 }).success).toBe(false);
+  });
+});

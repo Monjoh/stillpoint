@@ -1,0 +1,122 @@
+import type { ComponentType } from 'react';
+import type { z } from 'zod';
+
+/**
+ * The widget contract. See docs/03-widget-api.md — changes here are ADR-worthy.
+ *
+ * Note what a widget does NOT receive: no `onSettingsChange`, no store access, no
+ * `instanceId`, no theme object. A widget is a pure function of its props. Settings are
+ * written by the settings panel, theming arrives as CSS custom properties, and position
+ * is the canvas's business.
+ */
+
+export type WidgetCategory =
+  'time' | 'info' | 'navigation' | 'productivity' | 'decoration';
+
+export type ResourceState<D> =
+  /** Nothing cached yet; a fetch is in flight. */
+  | { status: 'empty' }
+  | { status: 'ready'; data: D; fetchedAt: number; stale: boolean }
+  /** May still carry stale data — showing yesterday's weather beats a spinner. */
+  | { status: 'error'; error: string; data?: D };
+
+export interface DataSourceSpec<S, D> {
+  /** Cache identity. Every setting that changes the result must appear here. */
+  key: (settings: S) => string;
+  fetch: (settings: S, signal: AbortSignal) => Promise<D>;
+  /** Serve cached data for this long before revalidating. */
+  ttlMs: number;
+  /** Beyond this, cached data is too old to show at all. */
+  maxAgeMs?: number;
+}
+
+export interface WidgetProps<S> {
+  settings: S;
+  /** The frame's content box in px, for widgets that scale their own type. */
+  size: { width: number; height: number };
+  /** True while the canvas is in edit mode: suppress autofocus, hide interactions. */
+  isEditing: boolean;
+  /** Resolved `dataSource` state. `undefined` when the widget declares none. */
+  data?: ResourceState<unknown>;
+}
+
+export interface WidgetDefinition<S = unknown> {
+  /** Stable, namespaced, never changes once released — it is part of stored config. */
+  id: string;
+  name: string;
+  description: string;
+  category: WidgetCategory;
+  /** Inline SVG path data for the picker, drawn on a 24×24 viewBox. No icon library. */
+  icon: string;
+
+  /** Single source of truth for this widget's settings, and for its settings UI. */
+  settingsSchema: z.ZodType<S>;
+
+  /** Grid units. */
+  defaultSize: { w: number; h: number };
+  minSize?: { w: number; h: number };
+
+  /** Lazy — only configured widget types are ever fetched. */
+  component: () => Promise<{ default: ComponentType<WidgetProps<S>> }>;
+
+  /** Declarative async data. Omit for widgets that need no network. */
+  dataSource?: DataSourceSpec<S, never>;
+
+  /** Optional host permissions, requested when the user adds the widget. */
+  permissions?: string[];
+}
+
+/**
+ * A definition with its settings type erased, which is what a heterogeneous registry
+ * has to store. `unknown` cannot stand in here: `component` is contravariant in `S`, so
+ * `WidgetDefinition<ClockSettings>` is not assignable to `WidgetDefinition<unknown>`.
+ *
+ * This is one of the project's few deliberate `any`s. It is contained to this alias —
+ * everything that reads a definition back out goes through `WidgetFrame`, which
+ * re-validates settings against the schema before they reach the component.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyWidgetDefinition = WidgetDefinition<any>;
+
+/**
+ * Presentation hints attached to a settings field with zod's `.meta()`, read back by
+ * the generator in M3. Declared here so widget authors get completion and type
+ * checking on `.meta()` today, before the generator exists.
+ *
+ * A type alias rather than an interface, and not by preference: zod's `.meta()` takes
+ * a record with an index signature, and TypeScript gives an implicit index signature
+ * to object type aliases but never to interfaces. As an interface this does not
+ * compile.
+ */
+export type FieldMeta = {
+  label: string;
+  help?: string;
+  control?:
+    | 'slider'
+    | 'select'
+    | 'segmented'
+    | 'color'
+    | 'font'
+    | 'timezone'
+    | 'textarea'
+    | 'custom';
+  /** Human labels for enum values, keyed by value. */
+  options?: Record<string, string>;
+  step?: number;
+  unit?: string;
+  /** Show this field only when another field has a given value. */
+  showIf?: { field: string; equals: unknown };
+  /** `control: 'custom'` — the widget supplies its own control component. */
+  component?: ComponentType<never>;
+  /** Group fields under a collapsible heading. */
+  group?: string;
+  order?: number;
+};
+
+/**
+ * Identity function that type-checks a `.meta()` payload as a `FieldMeta`.
+ * zod's `.meta()` accepts an open record, so without this a typo in `lable` is silent.
+ */
+export function field(meta: FieldMeta): FieldMeta {
+  return meta;
+}

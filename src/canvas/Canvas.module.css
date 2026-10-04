@@ -1,0 +1,21 @@
+/* The stage is the viewport. It owns the outer breathing room and the max-width cap,
+   so the canvas itself has no padding and its content box is exactly the grid. */
+.stage {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  height: 100%;
+  padding: var(--sp-space-4, 24px);
+  box-sizing: border-box;
+  /* The new tab must never scroll. If something inside tries, it loses. */
+  overflow: hidden;
+}
+
+.canvas {
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--sp-canvas-max-width, 1600px);
+  height: 100%;
+}

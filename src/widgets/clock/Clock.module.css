@@ -1,0 +1,10 @@
+.clock {
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  /* Stops the width jittering as digits change, which is very visible at 72px with
+     seconds on. */
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--sp-text, #f2f2f2);
+}

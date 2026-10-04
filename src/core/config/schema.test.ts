@@ -138,12 +138,16 @@ describe('createDefaultConfig', () => {
     expect(configSchema.safeParse(createDefaultConfig()).success).toBe(true);
   });
 
-  it('starts with one profile, a gradient and no widgets', () => {
+  it('starts with one profile, a gradient and a clock', () => {
+    // The clock is deliberate: Firefox asks the user whether to keep the new tab
+    // override, and an empty page is a bad case to make. See defaults.ts.
     const config = createDefaultConfig();
     expect(config.profiles).toHaveLength(1);
     expect(config.activeProfileId).toBe(config.profiles[0]!.id);
     expect(config.profiles[0]!.background.kind).toBe('gradient');
-    expect(config.profiles[0]!.widgets).toEqual([]);
+    expect(config.profiles[0]!.widgets.map((w) => w.type)).toEqual([
+      'stillpoint.clock',
+    ]);
   });
 
   it('gives each call distinct ids', () => {

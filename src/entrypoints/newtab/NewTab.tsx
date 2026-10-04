@@ -1,13 +1,11 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { Background } from '@/canvas/Background';
+import { Canvas } from '@/canvas/Canvas';
+import { removeWidget, withProfile } from '@/canvas/operations';
 import { configStore, useConfig } from '@/core/config/store';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
 import styles from './NewTab.module.css';
 
-/**
- * M1 placeholder. There is no canvas yet — this exists so the persistence spine is
- * observable: it proves the config loaded, the tokens applied, and cross-tab sync
- * works. The grid and widgets replace all of it in M2.
- */
 export function NewTab() {
   const config = useConfig((state) => state.config);
   const status = useConfig((state) => state.status);
@@ -25,22 +23,52 @@ export function NewTab() {
     if (profile) applyCanvasTokens(profileToPaint(profile));
   }, [profile]);
 
-  return (
-    <main className={styles.page}>
-      <h1 className={styles.wordmark}>stillpoint</h1>
+  const handleRemoveWidget = useCallback((instanceId: string) => {
+    configStore.getState().update((current) => {
+      const active = current.profiles.find((p) => p.id === current.activeProfileId);
+      if (!active) return current;
+      return withProfile(current, removeWidget(active, instanceId));
+    });
+  }, []);
 
-      {status === 'ready' && profile ? (
-        <p className={styles.hint}>
-          {profile.name} · {profile.layout.columns}×{profile.layout.rows} ·{' '}
-          {profile.widgets.length === 0
-            ? 'no widgets yet'
-            : `${profile.widgets.length} widget${profile.widgets.length === 1 ? '' : 's'}`}
-        </p>
-      ) : (
-        <p className={styles.hint}>&nbsp;</p>
+  return (
+    <>
+      <Background />
+
+      {/* Nothing is rendered over the background until the real config is in: a
+          placeholder that is replaced a frame later is a flicker on every new tab,
+          and boot.ts has already made the page look correct. */}
+      {status === 'ready' && profile && (
+        <>
+          <Canvas
+            profile={profile}
+            isEditing={false}
+            onRemoveWidget={handleRemoveWidget}
+          />
+          {profile.widgets.length === 0 && <EmptyCanvas />}
+        </>
       )}
 
-      {error && <p className={styles.error}>{error}</p>}
-    </main>
+      {error && (
+        <p className={styles.error} role="status">
+          {error}
+        </p>
+      )}
+    </>
+  );
+}
+
+/**
+ * A profile with no widgets is a legitimate state — the user may have removed them
+ * all — but a blank page with no visible way forward is not. This is the only place
+ * Stillpoint puts its own name on the canvas, and it disappears the moment there is
+ * anything to show.
+ */
+function EmptyCanvas() {
+  return (
+    <div className={styles.empty}>
+      <h1 className={styles.wordmark}>stillpoint</h1>
+      <p className={styles.hint}>This profile has no widgets yet.</p>
+    </div>
   );
 }

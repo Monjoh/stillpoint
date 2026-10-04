@@ -1,0 +1,8 @@
+.background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--sp-background);
+  /* Not animated: a background crossfade on every new tab is motion the user did not
+     ask for, on the one page they open hundreds of times a day. */
+}
