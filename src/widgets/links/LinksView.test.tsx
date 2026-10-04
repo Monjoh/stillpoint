@@ -61,6 +61,18 @@ describe('LinksView', () => {
     expect(again.container.querySelector('img')).toBeNull();
   });
 
+  it('never fetches an icon from a local address, which would make Firefox ask', () => {
+    const { container } = render(
+      <LinksView
+        settings={settings({ links: [{ url: '192.168.1.1', label: 'Router' }] })}
+        size={size}
+        isEditing={false}
+      />,
+    );
+    expect(container.querySelector('img')).toBeNull();
+    expect(screen.getByText('R')).toBeTruthy();
+  });
+
   it('names icon-only links for screen readers', () => {
     render(
       <LinksView

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseLink } from './link';
+import { isLocalHost, parseLink } from './link';
 
 describe('parseLink', () => {
   it('assumes https for an address typed without a scheme', () => {
@@ -8,6 +8,7 @@ describe('parseLink', () => {
       origin: 'https://github.com',
       host: 'github.com',
       label: 'github.com',
+      local: false,
     });
   });
 
@@ -31,5 +32,43 @@ describe('parseLink', () => {
     expect(parseLink('data:text/html,hi')).toBeNull();
     expect(parseLink('mailto:me@example.com')).toBeNull();
     expect(parseLink('https://')).toBeNull();
+  });
+});
+
+describe('isLocalHost', () => {
+  it('recognises this machine and the local network', () => {
+    for (const host of [
+      'localhost',
+      'app.localhost',
+      '127.0.0.1',
+      '10.0.0.5',
+      '172.16.0.1',
+      '172.31.255.255',
+      '192.168.1.1',
+      '169.254.10.1',
+      '100.100.1.1',
+      '0.0.0.0',
+      '[::1]',
+      '[fd12::1]',
+      '[fe80::1]',
+      'printer.local',
+      'router.lan',
+      'nas.home.arpa',
+      'intranet',
+    ]) {
+      expect(isLocalHost(host), host).toBe(true);
+    }
+  });
+
+  it('leaves public sites alone', () => {
+    for (const host of [
+      'github.com',
+      '8.8.8.8',
+      '172.32.0.1',
+      '192.169.0.1',
+      '[2606:4700::1111]',
+    ]) {
+      expect(isLocalHost(host), host).toBe(false);
+    }
   });
 });

@@ -76,7 +76,9 @@ export default function LinksView({
  * or missing icon shows a tile, never a hole.
  */
 function Favicon({ link }: { link: ParsedLink }) {
-  const [skip, setSkip] = useState(() => knownMisses(link.origin));
+  const [skip, setSkip] = useState(() =>
+    link.local ? ICON_PATHS.length : knownMisses(link.origin),
+  );
   const [loaded, setLoaded] = useState(false);
   const path = ICON_PATHS[skip];
 
