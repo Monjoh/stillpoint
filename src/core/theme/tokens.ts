@@ -24,6 +24,8 @@ export interface TokenSpec {
   /** How the override editor should offer it. */
   kind: 'color' | 'font' | 'length' | 'shadow';
   help?: string;
+  /** `length` tokens only: the editor's slider bounds, in px. */
+  range?: { min: number; max: number };
 }
 
 /**
@@ -52,11 +54,17 @@ export const THEME_TOKENS: readonly TokenSpec[] = [
     label: 'Surface blur',
     kind: 'length',
     help: 'Frosts whatever is behind a widget’s surface. Costs nothing at 0.',
+    range: { min: 0, max: 24 },
   },
   { token: '--sp-font-display', label: 'Display font', kind: 'font' },
   { token: '--sp-font-body', label: 'Body font', kind: 'font' },
   { token: '--sp-font-mono', label: 'Monospace font', kind: 'font' },
-  { token: '--sp-radius', label: 'Corner radius', kind: 'length' },
+  {
+    token: '--sp-radius',
+    label: 'Corner radius',
+    kind: 'length',
+    range: { min: 0, max: 24 },
+  },
 ];
 
 export const THEME_TOKEN_NAMES: readonly string[] = THEME_TOKENS.map((t) => t.token);

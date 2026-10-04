@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   type BackgroundConfig,
   type Profile,
@@ -10,7 +11,9 @@ import {
   gradientToBackground,
   matchGradient,
 } from '@/core/theme/gradients';
+import { themeTokens } from '@/core/theme/apply';
 import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
+import { TokenOverrides } from './TokenOverrides';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
 
@@ -45,6 +48,11 @@ export interface BackgroundFieldsProps {
 
 export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
   const active = getPreset(profile.theme.preset);
+  const changes = Object.keys(profile.theme.overrides).length;
+  // Closed by default: the swatches are what most visits are for, and eleven rows
+  // under them would push the rest of the panel out of reach. Local state, so it
+  // resets when the section closes — opening Theme again shows the swatches first.
+  const [customising, setCustomising] = useState(false);
 
   // The real background, so every tile previews this page rather than a showroom.
   const canvas = backgroundToCss(profile.background) ?? undefined;
@@ -93,6 +101,45 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
       </div>
 
       <p className={fields.help}>{active.description}</p>
+
+      <div className={styles.customiseRow}>
+        <button
+          type="button"
+          className={styles.customise}
+          aria-expanded={customising}
+          aria-controls="sp-theme-tokens"
+          onClick={() => setCustomising((open) => !open)}
+        >
+          <svg viewBox="0 0 24 24" className={styles.chevron} aria-hidden="true">
+            <path d="M9 6l6 6-6 6" />
+          </svg>
+          Customise
+          {changes > 0 && (
+            <span className={styles.count}>
+              {changes} {changes === 1 ? 'change' : 'changes'}
+            </span>
+          )}
+        </button>
+        {/* Out here rather than inside the editor, so a customised theme can be put
+            back without opening eleven rows to find what was changed. */}
+        {changes > 0 && (
+          <button
+            type="button"
+            className={styles.resetAll}
+            onClick={() => onChangeTheme({ ...profile.theme, overrides: {} })}
+          >
+            Reset all
+          </button>
+        )}
+      </div>
+
+      {customising && (
+        <div id="sp-theme-tokens">
+          {/* Overrides apply over whichever preset is chosen, and survive a switch:
+              an accent the user picked is theirs, not Midnight's. */}
+          <TokenOverrides theme={profile.theme} onChangeTheme={onChangeTheme} />
+        </div>
+      )}
     </>
   );
 }
@@ -104,7 +151,11 @@ export function BackgroundFields({
   const active = getPreset(profile.theme.preset);
   const activeGradient = matchGradient(profile.background);
 
-  const contrast = backgroundContrast(active.tokens, profile.background);
+  // The theme as painted, overrides included: a text colour the user changed is the
+  // one that has to be readable, not the preset's.
+  const tokens = themeTokens(profile.theme.preset, profile.theme.overrides);
+  const contrast = backgroundContrast(tokens, profile.background);
+  const ownText = '--sp-text' in profile.theme.overrides;
   const unreadable = contrast !== null && contrast < MIN_CONTRAST;
 
   return (
@@ -140,7 +191,8 @@ export function BackgroundFields({
             might be either of them. */}
       {unreadable && (
         <p className={styles.warning} role="status">
-          {active.name} text is hard to read on this background
+          {ownText ? 'Your text colour' : `${active.name} text`} is hard to read on this
+          background
           {contrast !== null && ` (contrast ${contrast.toFixed(1)}:1)`}. Pick a lighter
           or darker background, or a theme that suits this one.
         </p>

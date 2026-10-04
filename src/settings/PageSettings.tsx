@@ -165,7 +165,15 @@ export function PageSettings({
           </div>
         </Section>
 
-        <Section {...section('theme', 'Theme', preset.name)}>
+        <Section
+          {...section(
+            'theme',
+            'Theme',
+            Object.keys(profile.theme.overrides).length > 0
+              ? `${preset.name}, customised`
+              : preset.name,
+          )}
+        >
           <ThemeFields profile={profile} onChangeTheme={onChangeTheme} />
         </Section>
 

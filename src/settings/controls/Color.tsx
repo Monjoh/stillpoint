@@ -1,18 +1,28 @@
+import { useState } from 'react';
+import { colorAlpha, colorToHex, withAlpha } from '@/core/theme/color';
 import type { ControlProps } from '@/core/registry/types';
 import styles from './Controls.module.css';
 
-const HEX = /^#[0-9a-f]{6}$/i;
-
 /**
- * A native colour picker with the hex beside it.
+ * A native colour picker with the value beside it.
  *
  * Both halves are needed. `<input type="color">` cannot be typed into, and a user
  * matching a widget to a palette has the hex in their clipboard, not in their eye.
- * The swatch only ever receives a valid six-digit hex: Firefox silently rewrites
- * anything else to black, which would eat the user's value mid-keystroke.
+ *
+ * The text box takes hex or `rgb()`, and nothing reaches the config until it parses:
+ * `#7a` is a hex on its way somewhere, and writing it would repaint the page with a
+ * broken token on every keystroke. A draft holds the half-typed text, exactly as
+ * `NumberControl` does, and is dropped on blur or when the value moves on its own.
+ *
+ * The swatch only ever receives a valid six-digit hex — Firefox silently rewrites
+ * anything else to black — and a pick keeps the opacity of the colour it replaces,
+ * because the picker has no way to show alpha and must not quietly make a
+ * translucent surface opaque.
  */
 export function ColorControl({ id, value, onChange, field }: ControlProps<string>) {
-  const valid = HEX.test(value ?? '');
+  const [draft, setDraft] = useState<{ text: string; of: string } | null>(null);
+  const current = value ?? '';
+  const text = draft && draft.of === current ? draft.text : current;
 
   return (
     <div className={styles.colorRow} role="group" aria-labelledby={`${id}-label`}>
@@ -20,17 +30,25 @@ export function ColorControl({ id, value, onChange, field }: ControlProps<string
         id={id}
         type="color"
         className={styles.swatch}
-        value={valid ? value : '#000000'}
+        value={colorToHex(current) ?? '#000000'}
         aria-label={`${field.label}, colour picker`}
-        onChange={(event) => onChange(event.target.value)}
+        onChange={(event) =>
+          onChange(withAlpha(event.target.value, colorAlpha(current)))
+        }
       />
       <input
         type="text"
         className={`${styles.input} ${styles.hex}`}
-        value={value ?? ''}
+        value={text}
         spellCheck={false}
-        aria-label={`${field.label}, hex value`}
-        onChange={(event) => onChange(event.target.value)}
+        aria-label={`${field.label}, colour value`}
+        onChange={(event) => {
+          const raw = event.target.value;
+          const usable = colorToHex(raw) !== null;
+          setDraft({ text: raw, of: usable ? raw.trim() : current });
+          if (usable) onChange(raw.trim());
+        }}
+        onBlur={() => setDraft(null)}
       />
     </div>
   );

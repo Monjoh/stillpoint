@@ -100,6 +100,40 @@ describe('the theme picker', () => {
   });
 });
 
+describe('customising', () => {
+  it('keeps the token editor closed until asked', async () => {
+    setup();
+    expect(screen.queryByLabelText('Corner radius')).toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: /Customise/ }));
+    expect(screen.getByLabelText('Corner radius')).toBeTruthy();
+  });
+
+  it('counts the changes, and puts them all back in one click', async () => {
+    const p = profileSchema.parse({
+      id: 'p1',
+      name: 'Focus',
+      background: { kind: 'solid', color: '#000' },
+      theme: {
+        preset: 'glass',
+        overrides: { '--sp-accent': '#f00', '--sp-radius': '0px' },
+      },
+    });
+    const { onChangeTheme } = setup(p);
+    expect(screen.getByRole('button', { name: /Customise/ }).textContent).toMatch(
+      /2 changes/,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Reset all' }));
+    expect(onChangeTheme).toHaveBeenCalledWith({ preset: 'glass', overrides: {} });
+  });
+
+  it('offers no reset when there is nothing to reset', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: 'Reset all' })).toBeNull();
+  });
+});
+
 describe('the contrast warning', () => {
   // Paper is dark text; the default gradient is near-black. Legitimate to choose,
   // but the user should be told rather than left wondering why the page went blank.
@@ -164,5 +198,17 @@ describe('the background picker', () => {
     for (const radio of within(backgrounds()).getAllByRole('radio')) {
       expect(radio.getAttribute('aria-checked')).toBe('false');
     }
+  });
+
+  // The warning measures what is painted. An override is what is painted.
+  it('measures the user’s own text colour, not the preset’s', () => {
+    const p = profileSchema.parse({
+      id: 'p1',
+      name: 'Focus',
+      theme: { preset: 'midnight', overrides: { '--sp-text': '#151515' } },
+      background: { kind: 'solid', color: '#000000' },
+    });
+    setup(p);
+    expect(screen.getByRole('status').textContent).toMatch(/Your text colour/);
   });
 });

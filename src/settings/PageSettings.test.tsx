@@ -297,6 +297,20 @@ describe('the categories', () => {
     expect(trigger('Background').textContent).toContain('Tide');
   });
 
+  it('says when the theme has been customised', () => {
+    setup({
+      config: config([
+        profileSchema.parse({
+          id: 'p1',
+          name: 'Focus',
+          theme: { preset: 'paper', overrides: { '--sp-accent': '#f00' } },
+          background: { kind: 'solid', color: '#fff' },
+        }),
+      ]),
+    });
+    expect(trigger('Theme').textContent).toContain('Paper, customised');
+  });
+
   it('counts the profiles when there is more than one', () => {
     setup({ config: config([profile('p1', 'Focus'), profile('p2', 'Night')]) });
     expect(trigger('Profile').textContent).toContain('Focus of 2');

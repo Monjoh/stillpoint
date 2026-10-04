@@ -49,12 +49,7 @@ const PRESERVED_TOKENS = new Set(['--sp-background']);
  * `:root` is from a previous paint and has no business surviving this one.
  */
 export function paintToTokens(paint: CanvasPaint): TokenSet {
-  const tokens: TokenSet = { ...presetTokens(paint.preset) };
-
-  // Overrides last: a preset is a starting point and the user's own value wins.
-  for (const [token, value] of Object.entries(paint.overrides)) {
-    if (isThemeableToken(token)) tokens[token] = value;
-  }
+  const tokens = themeTokens(paint.preset, paint.overrides);
 
   const background = backgroundToCss(paint.background);
   if (background !== null) tokens['--sp-background'] = background;
@@ -65,6 +60,25 @@ export function paintToTokens(paint: CanvasPaint): TokenSet {
   tokens['--sp-canvas-max-width'] =
     paint.layout.maxWidth === null ? 'none' : `${paint.layout.maxWidth}px`;
 
+  return tokens;
+}
+
+/**
+ * A theme as it actually paints: the preset, then the user's overrides over it.
+ *
+ * Shared with the panel, so the contrast warning and the override editor measure
+ * the same colours the page is showing rather than the preset's.
+ */
+export function themeTokens(
+  preset: string,
+  overrides: Record<string, string>,
+): TokenSet {
+  const tokens: TokenSet = { ...presetTokens(preset) };
+
+  // Overrides last: a preset is a starting point and the user's own value wins.
+  for (const [token, value] of Object.entries(overrides)) {
+    if (isThemeableToken(token)) tokens[token] = value;
+  }
   return tokens;
 }
 

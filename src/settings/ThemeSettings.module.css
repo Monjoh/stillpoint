@@ -87,3 +87,75 @@
   line-height: 1.45;
   color: var(--sp-ui-text-muted);
 }
+
+/* Customise ------------------------------------------------------------------ */
+
+.customiseRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.customise {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+}
+
+.customise:hover {
+  color: var(--sp-ui-accent);
+}
+
+.customise:focus-visible,
+.resetAll:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.chevron {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  transition: transform 120ms ease;
+}
+
+.customise[aria-expanded='true'] .chevron {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+}
+
+.count {
+  font-weight: 400;
+  color: var(--sp-ui-text-muted);
+}
+
+.resetAll {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 11px;
+  color: var(--sp-ui-accent);
+  cursor: pointer;
+}
+
+.resetAll:hover {
+  text-decoration: underline;
+}
