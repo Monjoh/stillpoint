@@ -1,0 +1,289 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { StorageKeys, type StorageAdapter } from '@/core/storage/adapter';
+import { readPaintCache } from '@/core/storage/paint-cache';
+import fixtureV1 from './__fixtures__/config-v1.json';
+import { createConfigStore } from './store';
+import { CONFIG_VERSION, configSchema, type StillpointConfig } from './schema';
+
+/**
+ * An in-memory `StorageAdapter`. The real one is covered by `storage/local.test.ts`;
+ * using it here too would make these tests about `browser.storage` rather than about
+ * the store's own load / debounce / sync behaviour.
+ */
+function createMemoryAdapter() {
+  const data = new Map<string, unknown>();
+  const watchers = new Map<string, Set<(value: unknown) => void>>();
+  const sets = vi.fn<(key: string, value: unknown) => void>();
+
+  const adapter: StorageAdapter = {
+    async get<T>(key: string) {
+      return data.has(key) ? (data.get(key) as T) : null;
+    },
+    async set<T>(key: string, value: T) {
+      sets(key, value);
+      data.set(key, JSON.parse(JSON.stringify(value)) as unknown);
+      for (const cb of watchers.get(key) ?? []) cb(data.get(key));
+    },
+    async remove(key: string) {
+      data.delete(key);
+      for (const cb of watchers.get(key) ?? []) cb(null);
+    },
+    watch<T>(key: string, cb: (value: T | null) => void) {
+      const set = watchers.get(key) ?? new Set();
+      watchers.set(key, set);
+      set.add(cb as (value: unknown) => void);
+      return () => set.delete(cb as (value: unknown) => void);
+    },
+  };
+
+  return { adapter, data, sets };
+}
+
+const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
+
+describe('config store — load', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('seeds defaults on first run and persists them', async () => {
+    const { adapter, data } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+
+    await store.getState().load();
+
+    expect(store.getState().status).toBe('ready');
+    expect(store.getState().error).toBeNull();
+    expect(store.getState().config?.profiles).toHaveLength(1);
+    expect(data.get(StorageKeys.config)).toBeDefined();
+    expect(readPaintCache()).not.toBeNull();
+
+    store.getState().dispose();
+  });
+
+  it('loads an existing config without rewriting it', async () => {
+    const { adapter, data, sets } = createMemoryAdapter();
+    data.set(StorageKeys.config, fixtureV1);
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+
+    await store.getState().load();
+
+    expect(store.getState().config?.profiles).toHaveLength(2);
+    expect(sets).not.toHaveBeenCalled();
+    expect(readPaintCache()?.fontScale).toBe(1.2);
+
+    store.getState().dispose();
+  });
+
+  it('falls back to defaults and keeps a backup when the stored config is unreadable', async () => {
+    const { adapter, data } = createMemoryAdapter();
+    data.set(StorageKeys.config, { version: CONFIG_VERSION, profiles: 'not an array' });
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+
+    await store.getState().load();
+
+    // The page still renders.
+    expect(store.getState().status).toBe('ready');
+    expect(store.getState().config).not.toBeNull();
+    expect(store.getState().error).toMatch(/could not be read/i);
+
+    // And the user's data is still there.
+    expect(data.get(StorageKeys.configBackup(CONFIG_VERSION))).toEqual({
+      version: CONFIG_VERSION,
+      profiles: 'not an array',
+    });
+
+    store.getState().dispose();
+  });
+
+  it('refuses a config from a newer version and says so', async () => {
+    const { adapter, data } = createMemoryAdapter();
+    data.set(StorageKeys.config, { ...fixtureV1, version: CONFIG_VERSION + 1 });
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+
+    await store.getState().load();
+
+    expect(store.getState().error).toMatch(/newer version of Stillpoint/);
+    expect(store.getState().config).not.toBeNull();
+    expect(data.get(StorageKeys.configBackup(CONFIG_VERSION + 1))).toBeDefined();
+
+    store.getState().dispose();
+  });
+
+  it('renders defaults when storage itself throws', async () => {
+    const { adapter } = createMemoryAdapter();
+    const broken: StorageAdapter = {
+      ...adapter,
+      get: () => Promise.reject(new Error('storage is on fire')),
+    };
+    const store = createConfigStore({ adapter: broken, debounceMs: 0 });
+
+    await store.getState().load();
+
+    expect(store.getState().status).toBe('ready');
+    expect(store.getState().config).not.toBeNull();
+    expect(store.getState().error).toMatch(/storage is on fire/);
+
+    store.getState().dispose();
+  });
+});
+
+describe('config store — writes', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('debounces a burst of updates into one write', async () => {
+    const { adapter, sets } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 20 });
+    await store.getState().load();
+    sets.mockClear();
+
+    for (let i = 1; i <= 5; i++) {
+      store.getState().update((config) => renameProfile(config, `Name ${i}`));
+    }
+
+    expect(sets).not.toHaveBeenCalled();
+    await store.getState().flush();
+
+    expect(sets).toHaveBeenCalledTimes(1);
+    expect(store.getState().config?.profiles[0]!.name).toBe('Name 5');
+
+    store.getState().dispose();
+  });
+
+  it('refreshes the paint cache on every write', async () => {
+    const { adapter } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+
+    store.getState().update((config) => ({
+      ...config,
+      profiles: config.profiles.map((p) => ({
+        ...p,
+        background: { kind: 'solid' as const, color: '#123456' },
+      })),
+    }));
+    await store.getState().flush();
+
+    expect(readPaintCache()?.background).toEqual({ kind: 'solid', color: '#123456' });
+
+    store.getState().dispose();
+  });
+
+  it('refuses to persist a tree that no longer validates', async () => {
+    const { adapter, sets } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+    sets.mockClear();
+
+    store.getState().update((config) => ({ ...config, profiles: [] }));
+    await store.getState().flush();
+
+    expect(sets).not.toHaveBeenCalled();
+    expect(store.getState().error).toMatch(/invalid config/i);
+
+    store.getState().dispose();
+  });
+
+  it('ignores update() before load() has resolved', () => {
+    const { adapter, sets } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+
+    store.getState().update((config) => config);
+
+    expect(sets).not.toHaveBeenCalled();
+    expect(store.getState().config).toBeNull();
+
+    store.getState().dispose();
+  });
+
+  it('reset() returns to defaults and writes immediately', async () => {
+    const { adapter } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 1000 });
+    await store.getState().load();
+
+    store.getState().update((config) => renameProfile(config, 'Edited'));
+    await store.getState().reset();
+
+    expect(store.getState().config?.profiles[0]!.name).toBe('Default');
+
+    store.getState().dispose();
+  });
+});
+
+describe('config store — cross-tab sync', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('adopts a config written by another tab', async () => {
+    const { adapter } = createMemoryAdapter();
+
+    const tabA = createConfigStore({ adapter, debounceMs: 0 });
+    const tabB = createConfigStore({ adapter, debounceMs: 0 });
+    await tabA.getState().load();
+    await tabB.getState().load();
+
+    tabA.getState().update((config) => renameProfile(config, 'Renamed in tab A'));
+    await tabA.getState().flush();
+    await tick();
+
+    expect(tabB.getState().config?.profiles[0]!.name).toBe('Renamed in tab A');
+
+    tabA.getState().dispose();
+    tabB.getState().dispose();
+  });
+
+  it('ignores the echo of its own write', async () => {
+    const { adapter } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+
+    store.getState().update((config) => renameProfile(config, 'Mine'));
+    await store.getState().flush();
+    const afterWrite = store.getState().config;
+    await tick();
+
+    // Same object identity: the watcher did not replace state with a parsed copy.
+    expect(store.getState().config).toBe(afterWrite);
+
+    store.getState().dispose();
+  });
+
+  it('ignores an invalid config written by someone else', async () => {
+    const { adapter } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+    const before = store.getState().config;
+
+    await adapter.set(StorageKeys.config, { version: CONFIG_VERSION, profiles: [] });
+    await tick();
+
+    expect(store.getState().config).toBe(before);
+
+    store.getState().dispose();
+  });
+
+  it('stops syncing after dispose()', async () => {
+    const { adapter } = createMemoryAdapter();
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+    const before = store.getState().config;
+
+    store.getState().dispose();
+    await adapter.set(StorageKeys.config, configSchema.parse(fixtureV1));
+    await tick();
+
+    expect(store.getState().config).toBe(before);
+  });
+});
+
+function renameProfile(config: StillpointConfig, name: string): StillpointConfig {
+  return {
+    ...config,
+    profiles: config.profiles.map((profile, index) =>
+      index === 0 ? { ...profile, name } : profile,
+    ),
+  };
+}

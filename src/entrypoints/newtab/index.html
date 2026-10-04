@@ -8,8 +8,8 @@
       /*
         Critical path. Inlined deliberately: first paint must not wait on a stylesheet
         request. This holds only what is needed to paint an empty but correctly-styled
-        page. Real token values arrive from the paint cache in M1 (boot.ts), which will
-        overwrite these on :root before first paint.
+        page. boot.ts overwrites these on :root from the paint cache; what is written
+        here is the fallback for a cold profile that has no cache yet.
       */
       :root {
         --sp-text: #f2f2f2;
@@ -18,6 +18,10 @@
         --sp-font-body: 'Inter', system-ui, sans-serif;
         --sp-scale: 1;
         --sp-background: linear-gradient(160deg, #11131c 0%, #1d2033 100%);
+        --sp-canvas-max-width: 1600px;
+        --sp-grid-cols: 24;
+        --sp-grid-rows: 12;
+        --sp-grid-gap: 12px;
       }
 
       *,
@@ -40,6 +44,13 @@
         -webkit-font-smoothing: antialiased;
       }
     </style>
+
+    <!--
+      Blocking and classic on purpose: this must run before the body is parsed, and a
+      module script would be deferred AND merged into the page bundle. See
+      src/entrypoints/boot.ts.
+    -->
+    <script src="/boot.js"></script>
   </head>
   <body>
     <div id="root"></div>

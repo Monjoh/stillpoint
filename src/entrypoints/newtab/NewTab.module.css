@@ -22,3 +22,16 @@
   letter-spacing: 0.04em;
   color: var(--sp-text-muted);
 }
+
+.error {
+  max-width: 34rem;
+  margin: var(--sp-space-3, 16px) 0 0;
+  padding: var(--sp-space-2, 8px) var(--sp-space-3, 16px);
+  border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
+  border-radius: var(--sp-radius, 10px);
+  background: var(--sp-surface, rgb(255 255 255 / 0.06));
+  font-size: calc(0.8125rem * var(--sp-scale));
+  line-height: 1.5;
+  text-align: center;
+  color: var(--sp-text-muted);
+}
