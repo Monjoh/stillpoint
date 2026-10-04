@@ -1,0 +1,71 @@
+/* No background of its own: with Card off it is a line on the user's background, with
+   Card on the card is the field. The underline is the only chrome. */
+.search {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  width: 100cqw;
+  padding-block: 0.35em;
+  border-bottom: 1px solid color-mix(in srgb, var(--sp-text, #f2f2f2) 30%, transparent);
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  color: var(--sp-text, #f2f2f2);
+}
+
+.search:focus-within {
+  /* Thicker as well as accented, so focus is not shown by colour alone. */
+  border-bottom-color: var(--sp-accent, #7aa2f7);
+  box-shadow: 0 1px 0 var(--sp-accent, #7aa2f7);
+}
+
+.icon {
+  display: flex;
+  flex: none;
+  color: var(--sp-text-muted, #a0a3ad);
+}
+
+.icon svg {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  /* Focus is shown on the form instead: a thicker accent underline. */
+  outline: none;
+}
+
+.input::placeholder {
+  color: var(--sp-text-muted, #a0a3ad);
+  opacity: 1;
+}
+
+/* The browser's clear button is drawn in its own colours, which no theme controls. */
+.input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.notice {
+  margin: 0;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  font-size: min(14px, 30cqh, 6cqw);
+  color: var(--sp-text-muted, #a0a3ad);
+}
