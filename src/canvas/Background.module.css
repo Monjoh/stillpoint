@@ -1,8 +1,12 @@
 .background {
   position: fixed;
-  inset: 0;
+  /* Pushed past the viewport by twice the blur, because a blur fades its own edges to
+     transparent and a soft frame of the unblurred body would show around the page.
+     Nothing is lost: the page never scrolls, and the body clips. */
+  inset: calc(var(--sp-background-blur, 0px) * -2);
   z-index: 0;
   background: var(--sp-background);
+  filter: blur(var(--sp-background-blur, 0px));
   /* Not animated: a background crossfade on every new tab is motion the user did not
      ask for, on the one page they open hundreds of times a day. */
 }

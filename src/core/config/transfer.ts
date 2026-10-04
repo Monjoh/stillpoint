@@ -1,3 +1,4 @@
+import { isImageAsset, type ImageAsset } from '@/core/assets/image';
 import { CONFIG_VERSION, configSchema, type StillpointConfig } from './schema';
 import { ConfigVersionError, runMigrations } from './migrations';
 
@@ -19,14 +20,24 @@ export interface ExportFile {
   json: string;
 }
 
+/**
+ * Photographs travel under a top-level `assets` object, keyed by the id the config
+ * uses. In storage they live apart from the config so that it stays small; in a file
+ * self-containment matters more than size, and an export that silently left the
+ * user's photos behind would not be a backup.
+ */
+export type ExportAssets = Record<string, ImageAsset>;
+
 export function exportConfig(
   config: StillpointConfig,
   now: Date = new Date(),
+  assets: ExportAssets = {},
 ): ExportFile {
   const payload = {
     format: EXPORT_FORMAT,
     exportedAt: now.toISOString(),
     ...config,
+    ...(Object.keys(assets).length > 0 ? { assets } : {}),
   };
 
   return {
@@ -36,7 +47,13 @@ export function exportConfig(
 }
 
 export type ImportResult =
-  | { ok: true; config: StillpointConfig; migratedFrom: number | null }
+  | {
+      ok: true;
+      config: StillpointConfig;
+      migratedFrom: number | null;
+      /** Only the well-formed ones. A photo that fails the check is left behind. */
+      assets: ExportAssets;
+    }
   | { ok: false; error: string };
 
 /**
@@ -88,11 +105,13 @@ export function importConfig(raw: string): ImportResult {
     };
   }
 
-  // `format` and `exportedAt` are the export envelope, not part of the config.
-  // Dropped before validating, so the schema never has to know exports have one.
+  // `format`, `exportedAt` and `assets` are the export envelope, not part of the
+  // config. Dropped before validating, so the schema never has to know exports have one.
   const tree = { ...(migrated as Record<string, unknown>) };
+  const assets = readAssets(tree.assets);
   delete tree.format;
   delete tree.exportedAt;
+  delete tree.assets;
 
   const validated = configSchema.safeParse(tree);
   if (!validated.success) {
@@ -110,7 +129,17 @@ export function importConfig(raw: string): ImportResult {
     ok: true,
     config: validated.data,
     migratedFrom: applied.length > 0 ? found : null,
+    assets,
   };
+}
+
+function readAssets(raw: unknown): ExportAssets {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
+  const assets: ExportAssets = {};
+  for (const [id, asset] of Object.entries(raw)) {
+    if (id.length > 0 && isImageAsset(asset)) assets[id] = asset;
+  }
+  return assets;
 }
 
 /** Local date and time, not UTC: the filename is read by a person, in their timezone. */

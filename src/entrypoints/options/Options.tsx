@@ -10,6 +10,8 @@ import {
   setAppSettings,
 } from '@/core/config/profiles';
 import { configStore, useConfig } from '@/core/config/store';
+import { collectAssets, storeAssets } from '@/core/assets/transfer';
+import { localAdapter } from '@/core/storage/local';
 import {
   CURRENT_CONFIG_VERSION,
   exportConfig,
@@ -219,8 +221,12 @@ function Data({
 }) {
   const [confirmingReset, setConfirmingReset] = useState(false);
 
-  const download = () => {
-    const file = exportConfig(config);
+  const download = async () => {
+    const file = exportConfig(
+      config,
+      new Date(),
+      await collectAssets(localAdapter, config),
+    );
     const url = URL.createObjectURL(
       new Blob([file.json], { type: 'application/json' }),
     );
@@ -243,6 +249,16 @@ function Data({
       return;
     }
 
+    try {
+      await storeAssets(localAdapter, result.assets);
+    } catch {
+      setNotice({
+        tone: 'error',
+        text: 'The photos in that file could not be stored, so nothing was imported. There may not be enough storage space left.',
+      });
+      return;
+    }
+
     // Replaced wholesale rather than merged. A half-merged config is a state neither
     // the old nor the new file describes, and the user asked for the file.
     configStore.getState().set(result.config);
@@ -259,12 +275,12 @@ function Data({
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>Your data</h2>
       <p className={styles.sectionNote}>
-        An export is a plain JSON file holding every profile and setting. Importing one
-        replaces everything — export first if you want a way back.
+        An export is a plain JSON file holding every profile, setting and photo.
+        Importing one replaces everything — export first if you want a way back.
       </p>
 
       <div className={styles.actions}>
-        <button type="button" className={styles.button} onClick={download}>
+        <button type="button" className={styles.button} onClick={() => void download()}>
           Export to a file
         </button>
 

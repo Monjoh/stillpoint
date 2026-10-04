@@ -13,6 +13,9 @@ import {
 } from '@/core/theme/gradients';
 import { themeTokens } from '@/core/theme/apply';
 import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
+import { imageAssetId } from '@/core/assets/image';
+import { readImagePreview } from '@/core/storage/paint-cache';
+import { PhotoFields } from './PhotoFields';
 import { TokenOverrides } from './TokenOverrides';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
@@ -54,8 +57,14 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
   // resets when the section closes — opening Theme again shows the swatches first.
   const [customising, setCustomising] = useState(false);
 
-  // The real background, so every tile previews this page rather than a showroom.
-  const canvas = backgroundToCss(profile.background) ?? undefined;
+  // The real background, so every tile previews this page rather than a showroom. A
+  // photograph previews as its thumbnail, which at 46px is all a tile could show.
+  const assetId = imageAssetId(profile.background);
+  const canvas =
+    backgroundToCss(
+      profile.background,
+      (assetId !== null && readImagePreview(assetId)) || undefined,
+    ) ?? undefined;
 
   return (
     <>
@@ -160,6 +169,11 @@ export function BackgroundFields({
 
   return (
     <>
+      <PhotoFields
+        background={profile.background}
+        onChangeBackground={onChangeBackground}
+      />
+
       <div className={styles.grid} role="radiogroup" aria-label="Background">
         {GRADIENT_PRESETS.map((gradient) => (
           <button
@@ -201,7 +215,7 @@ export function BackgroundFields({
       {/* A background that is none of ours is a legitimate state — an import, a
             hand-edited export, later a photograph. Saying so beats showing ten
             swatches with none selected and leaving the user to wonder. */}
-      {activeGradient === undefined && (
+      {activeGradient === undefined && profile.background.kind !== 'image' && (
         <p className={fields.help}>
           This profile uses a background that is not one of these. Picking one replaces
           it.

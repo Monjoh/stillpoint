@@ -4,10 +4,36 @@ import { configSchema } from '@/core/config/schema';
 import fixtureV2 from '@/core/config/__fixtures__/config-v2.json';
 import {
   clearPaintCache,
+  forgetImagePreviews,
   PAINT_CACHE_VERSION,
+  readImagePreview,
   readPaintCache,
+  writeImagePreview,
   writePaintCache,
 } from './paint-cache';
+
+const preview = { color: '#336699', thumb: 'data:image/jpeg;base64,AA==' };
+
+function withPhoto(assetId: string) {
+  const config = configSchema.parse(fixtureV2);
+  const [first, ...rest] = config.profiles;
+  return {
+    ...config,
+    profiles: [
+      {
+        ...first!,
+        background: {
+          kind: 'image' as const,
+          assetId,
+          fit: 'cover' as const,
+          blur: 6,
+          dim: 0,
+        },
+      },
+      ...rest,
+    ],
+  };
+}
 
 const KEY = 'stillpoint.paint';
 
@@ -109,5 +135,46 @@ describe('paint cache', () => {
     expect(readPaintCache()).not.toBeNull();
     clearPaintCache();
     expect(readPaintCache()).toBeNull();
+  });
+});
+
+describe('image previews', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('round-trips per asset, and forgets on request', () => {
+    writeImagePreview('a', preview);
+    writeImagePreview('b', { ...preview, color: '#000000' });
+    expect(readImagePreview('a')).toEqual(preview);
+
+    forgetImagePreviews(['a']);
+    expect(readImagePreview('a')).toBeNull();
+    expect(readImagePreview('b')).not.toBeNull();
+  });
+
+  it('refuses a preview that is not one', () => {
+    localStorage.setItem(
+      'stillpoint.previews',
+      JSON.stringify({ a: { color: '#336699', thumb: 'https://example.com/x.jpg' } }),
+    );
+    expect(readImagePreview('a')).toBeNull();
+  });
+
+  // The whole point: a cold tab opens on the picture, not on the default gradient.
+  it('puts a photograph’s preview into the cached tokens', () => {
+    writeImagePreview('a', preview);
+    writePaintCache(withPhoto('a'));
+    const tokens = readPaintCache()!.tokens;
+    expect(tokens['--sp-background']).toContain('data:image/jpeg;base64,AA==');
+    expect(tokens['--sp-background']).toContain('#336699');
+    expect(tokens['--sp-background-blur']).toBe('6px');
+  });
+
+  // Without a preview there is nothing correct to paint, and the boot script leaves
+  // the background alone rather than painting something wrong.
+  it('leaves the background out when the preview is missing', () => {
+    writePaintCache(withPhoto('a'));
+    expect(readPaintCache()!.tokens['--sp-background']).toBeUndefined();
   });
 });

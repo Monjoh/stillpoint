@@ -1,5 +1,6 @@
+import type { ImageSource } from '@/core/assets/image';
 import type { BackgroundConfig, LayoutConfig, Profile } from '@/core/config/schema';
-import { backgroundToCss } from './background';
+import { backgroundBlur, backgroundToCss } from './background';
 import { presetTokens } from './presets';
 import { isThemeableToken, type TokenSet } from './tokens';
 
@@ -18,14 +19,21 @@ export interface CanvasPaint {
   layout: LayoutConfig;
   preset: string;
   overrides: Record<string, string>;
+  /**
+   * An image background's pixels, as far as they are resolved: the cached preview on
+   * the paint-cache write, the photograph's object URL as well once the page has it.
+   * Not part of the profile, because neither lives in the config.
+   */
+  image?: ImageSource;
 }
 
-export function profileToPaint(profile: Profile): CanvasPaint {
+export function profileToPaint(profile: Profile, image?: ImageSource): CanvasPaint {
   return {
     background: profile.background,
     layout: profile.layout,
     preset: profile.theme.preset,
     overrides: profile.theme.overrides,
+    image,
   };
 }
 
@@ -51,8 +59,9 @@ const PRESERVED_TOKENS = new Set(['--sp-background']);
 export function paintToTokens(paint: CanvasPaint): TokenSet {
   const tokens = themeTokens(paint.preset, paint.overrides);
 
-  const background = backgroundToCss(paint.background);
+  const background = backgroundToCss(paint.background, paint.image);
   if (background !== null) tokens['--sp-background'] = background;
+  tokens['--sp-background-blur'] = `${backgroundBlur(paint.background)}px`;
 
   tokens['--sp-grid-cols'] = String(paint.layout.columns);
   tokens['--sp-grid-rows'] = String(paint.layout.rows);

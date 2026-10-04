@@ -102,6 +102,32 @@ describe('applyCanvasTokens', () => {
     );
     expect(root.style.getPropertyValue('--sp-background')).toBe('the-default');
   });
+
+  it('paints a resolved photograph and writes its blur', () => {
+    applyCanvasTokens(
+      {
+        background: { kind: 'image', assetId: 'a1', fit: 'cover', blur: 8, dim: 0 },
+        layout: { columns: 24, rows: 12, gap: 12, maxWidth: null },
+        preset: 'midnight',
+        overrides: {},
+        image: {
+          color: '#336699',
+          thumb: 'data:image/jpeg;base64,AA==',
+          url: 'blob:x',
+        },
+      },
+      root,
+    );
+    expect(root.style.getPropertyValue('--sp-background')).toContain('url("blob:x")');
+    expect(root.style.getPropertyValue('--sp-background-blur')).toBe('8px');
+  });
+
+  // Always written, so the sweep never leaves a photo's blur on the gradient after it.
+  it('writes a zero blur for a background that is not a photo', () => {
+    const config = configSchema.parse(fixtureV2);
+    applyCanvasTokens(profileToPaint(config.profiles[0]!), root);
+    expect(root.style.getPropertyValue('--sp-background-blur')).toBe('0px');
+  });
 });
 
 describe('presets', () => {

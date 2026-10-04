@@ -2,7 +2,8 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { StorageKeys, type StorageAdapter } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
-import { writePaintCache } from '@/core/storage/paint-cache';
+import { assetIdsIn } from '@/core/assets/image';
+import { forgetImagePreviews, writePaintCache } from '@/core/storage/paint-cache';
 import { createDefaultConfig } from './defaults';
 import { ConfigVersionError, runMigrations } from './migrations';
 import { configSchema, type StillpointConfig } from './schema';
@@ -55,6 +56,28 @@ export function createConfigStore(
   let unwatch: (() => void) | null = null;
   /** Dedupes concurrent load() calls — React StrictMode mounts effects twice. */
   let loading: Promise<void> | null = null;
+  /** The tree as storage last had it, for working out which photographs it dropped. */
+  let persisted: StillpointConfig | null = null;
+
+  /**
+   * Remove the photographs `next` no longer refers to.
+   *
+   * Here, on the write, because every way a photograph stops being used ends in one:
+   * a new background, a deleted profile, an import that replaced everything, a reset.
+   * Done after the config is safely written, never before — a failed write must not
+   * leave the old config pointing at a deleted asset. Best effort: an asset that
+   * survives is a few wasted megabytes, not a fault.
+   */
+  async function pruneAssets(next: StillpointConfig): Promise<void> {
+    const keep = assetIdsIn(next);
+    const dropped = [...assetIdsIn(persisted)].filter((id) => !keep.has(id));
+    persisted = next;
+    if (dropped.length === 0) return;
+    forgetImagePreviews(dropped);
+    await Promise.all(
+      dropped.map((id) => adapter.remove(StorageKeys.asset(id)).catch(() => {})),
+    );
+  }
 
   const store = createStore<ConfigStore>((set, get) => {
     async function persist(): Promise<void> {
@@ -75,6 +98,7 @@ export function createConfigStore(
       lastWritten = serialized;
       await adapter.set(StorageKeys.config, parsed.data);
       writePaintCache(parsed.data);
+      await pruneAssets(parsed.data);
     }
 
     function schedulePersist(): void {
@@ -104,6 +128,7 @@ export function createConfigStore(
         // Adopt without re-persisting: whichever tab wrote this already did that, and
         // already refreshed the shared paint cache.
         lastWritten = JSON.stringify(parsed.data);
+        persisted = parsed.data;
         set({ config: parsed.data, status: 'ready' });
       });
     }
@@ -193,6 +218,7 @@ export function createConfigStore(
 
       set({ config: parsed.data, status: 'ready', error: null });
       lastWritten = JSON.stringify(parsed.data);
+      persisted = parsed.data;
 
       if (applied.length > 0) {
         await adapter.set(StorageKeys.config, parsed.data);
@@ -245,6 +271,7 @@ export function createConfigStore(
         lastWritten = JSON.stringify(config);
         await adapter.set(StorageKeys.config, config);
         writePaintCache(config);
+        await pruneAssets(config);
       },
 
       dispose() {

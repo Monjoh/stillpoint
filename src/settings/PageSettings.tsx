@@ -177,7 +177,15 @@ export function PageSettings({
           <ThemeFields profile={profile} onChangeTheme={onChangeTheme} />
         </Section>
 
-        <Section {...section('background', 'Background', gradient?.name ?? 'Custom')}>
+        <Section
+          {...section(
+            'background',
+            'Background',
+            profile.background.kind === 'image'
+              ? 'Photo'
+              : (gradient?.name ?? 'Custom'),
+          )}
+        >
           <BackgroundFields profile={profile} onChangeBackground={onChangeBackground} />
         </Section>
 

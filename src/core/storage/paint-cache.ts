@@ -1,3 +1,4 @@
+import { imageAssetId, isImagePreview, type ImagePreview } from '@/core/assets/image';
 import type { Rect, StillpointConfig } from '@/core/config/schema';
 import { paintToTokens, profileToPaint } from '@/core/theme/apply';
 import type { TokenSet } from '@/core/theme/tokens';
@@ -101,7 +102,9 @@ export function writePaintCache(config: StillpointConfig): void {
       v: PAINT_CACHE_VERSION,
       // Resolved here, on the write, because this runs after a config save where
       // nobody is waiting. Boot runs in front of the first pixel, where someone is.
-      tokens: paintToTokens(profileToPaint(profile)),
+      tokens: paintToTokens(
+        profileToPaint(profile, imagePreviewFor(profile.background)),
+      ),
       rects: profile.widgets.map((w) => w.rect),
     };
 
@@ -109,6 +112,63 @@ export function writePaintCache(config: StillpointConfig): void {
   } catch {
     // A cache we cannot write is a slower first paint, not a failure. Say nothing.
   }
+}
+
+/**
+ * Image previews, keyed by asset id, in their own key beside the paint cache.
+ *
+ * The cache is derived from the config, and the config holds only an asset id — the
+ * photograph lives in `storage.local`, which is async and so useless before the first
+ * pixel. Its average colour and a one-kilobyte thumbnail are what let a cold tab open
+ * on the right picture, and they have to be somewhere synchronous for that.
+ *
+ * Kept per asset rather than per profile, so switching to a profile with a different
+ * photograph resolves on the same write. Written by the upload and the import, and by
+ * the new tab if it ever loads a photograph whose preview is missing here — so a lost
+ * entry costs one cold tab, never a broken one.
+ */
+const PREVIEWS_KEY = 'stillpoint.previews';
+
+function readPreviews(): Record<string, ImagePreview> {
+  try {
+    const raw = localStorage.getItem(PREVIEWS_KEY);
+    const parsed: unknown = raw === null ? null : JSON.parse(raw);
+    return typeof parsed === 'object' && parsed !== null
+      ? (parsed as Record<string, ImagePreview>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function writePreviews(previews: Record<string, ImagePreview>): void {
+  try {
+    localStorage.setItem(PREVIEWS_KEY, JSON.stringify(previews));
+  } catch {
+    // As with the cache: a slower first paint, not a failure.
+  }
+}
+
+export function readImagePreview(assetId: string): ImagePreview | null {
+  const preview = readPreviews()[assetId];
+  return isImagePreview(preview) ? preview : null;
+}
+
+export function writeImagePreview(assetId: string, preview: ImagePreview): void {
+  writePreviews({ ...readPreviews(), [assetId]: preview });
+}
+
+export function forgetImagePreviews(assetIds: Iterable<string>): void {
+  const previews = readPreviews();
+  for (const id of assetIds) delete previews[id];
+  writePreviews(previews);
+}
+
+function imagePreviewFor(
+  background: StillpointConfig['profiles'][number]['background'],
+): ImagePreview | undefined {
+  const id = imageAssetId(background);
+  return (id !== null && readImagePreview(id)) || undefined;
 }
 
 export function clearPaintCache(): void {

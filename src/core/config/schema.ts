@@ -126,6 +126,31 @@ export const themeSchema = z
   })
   .prefault({});
 
+/**
+ * A photograph. Its own export so the panel can generate fit, blur and dim from it —
+ * `kind` and `assetId` are hidden, since the upload sets both. `.meta()` only: no
+ * shape change.
+ */
+export const imageBackgroundSchema = z.object({
+  kind: z.literal('image').meta({ hidden: true }),
+  /** Key into the asset store. Never a data: URI — see docs/02-data-model.md. */
+  assetId: z.string().min(1).meta({ hidden: true }),
+  fit: z
+    .enum(['cover', 'contain'])
+    .default('cover')
+    .meta({
+      label: 'Fit',
+      control: 'segmented',
+      options: { cover: 'Fill', contain: 'Whole image' },
+    }),
+  blur: z.number().min(0).max(40).default(0).meta({ label: 'Blur', unit: 'px' }),
+  dim: z.number().min(0).max(1).default(0).meta({
+    label: 'Dim',
+    step: 0.05,
+    help: 'Darkens the photo so text over it stays readable.',
+  }),
+});
+
 export const backgroundSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('solid'),
@@ -137,14 +162,7 @@ export const backgroundSchema = z.discriminatedUnion('kind', [
     to: z.string().min(1),
     angle: z.number().min(0).max(360).default(160),
   }),
-  z.object({
-    kind: z.literal('image'),
-    /** Key into the asset store. Never a data: URI — see docs/02-data-model.md. */
-    assetId: z.string().min(1),
-    fit: z.enum(['cover', 'contain']).default('cover'),
-    blur: z.number().min(0).max(40).default(0),
-    dim: z.number().min(0).max(1).default(0),
-  }),
+  imageBackgroundSchema,
   z.object({
     kind: z.literal('unsplash'),
     query: z.string().default('landscape'),
@@ -221,6 +239,7 @@ export type WidgetInstance = z.infer<typeof widgetInstanceSchema>;
 export type LayoutConfig = z.infer<typeof layoutSchema>;
 export type ThemeConfig = z.infer<typeof themeSchema>;
 export type BackgroundConfig = z.infer<typeof backgroundSchema>;
+export type ImageBackground = z.infer<typeof imageBackgroundSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 export type StillpointConfig = z.infer<typeof configSchema>;

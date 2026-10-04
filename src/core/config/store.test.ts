@@ -212,6 +212,96 @@ describe('config store — writes', () => {
   });
 });
 
+describe('config store — photographs', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  const photo = (assetId: string) => ({
+    kind: 'image' as const,
+    assetId,
+    fit: 'cover' as const,
+    blur: 0,
+    dim: 0,
+  });
+  const withBackground =
+    (background: StillpointConfig['profiles'][number]['background']) =>
+    (config: StillpointConfig): StillpointConfig => ({
+      ...config,
+      profiles: config.profiles.map((p) => ({ ...p, background })),
+    });
+
+  async function seeded() {
+    const memory = createMemoryAdapter();
+    memory.data.set(StorageKeys.asset('a'), { stored: 'a' });
+    memory.data.set(StorageKeys.asset('b'), { stored: 'b' });
+    localStorage.setItem(
+      'stillpoint.previews',
+      JSON.stringify({ a: { color: '#000000', thumb: 'data:image/jpeg;base64,AA==' } }),
+    );
+    const store = createConfigStore({ adapter: memory.adapter, debounceMs: 0 });
+    await store.getState().load();
+    store.getState().update(withBackground(photo('a')));
+    await store.getState().flush();
+    return { ...memory, store };
+  }
+
+  // Every way a photograph stops being used ends in a write, so the write is where it
+  // is let go: a new background, a deleted profile, an import, a reset.
+  it('deletes a photograph, and its preview, once no profile uses it', async () => {
+    const { store, data } = await seeded();
+    store.getState().update(withBackground({ kind: 'solid', color: '#000' }));
+    await store.getState().flush();
+
+    expect(data.has(StorageKeys.asset('a'))).toBe(false);
+    expect(localStorage.getItem('stillpoint.previews')).not.toContain('"a"');
+    // Never referenced by this store, so not its to delete.
+    expect(data.has(StorageKeys.asset('b'))).toBe(true);
+    store.getState().dispose();
+  });
+
+  it('keeps a photograph that is still in use', async () => {
+    const { store, data } = await seeded();
+    store.getState().update((config) => renameProfile(config, 'Renamed'));
+    await store.getState().flush();
+
+    expect(data.has(StorageKeys.asset('a'))).toBe(true);
+    store.getState().dispose();
+  });
+
+  it('deletes nothing when the write is refused', async () => {
+    const { store, data } = await seeded();
+    store.getState().update((config) => ({ ...config, profiles: [] }));
+    await store.getState().flush();
+
+    expect(data.has(StorageKeys.asset('a'))).toBe(true);
+    store.getState().dispose();
+  });
+
+  it('lets go of every photograph on reset', async () => {
+    const { store, data } = await seeded();
+    await store.getState().reset();
+
+    expect(data.has(StorageKeys.asset('a'))).toBe(false);
+    store.getState().dispose();
+  });
+
+  // A config that could not be read is kept as a backup, and its photographs with it:
+  // the store never knew them, so it never deletes them.
+  it('touches no photograph when the stored config was unreadable', async () => {
+    const { adapter, data } = createMemoryAdapter();
+    data.set(StorageKeys.config, { version: CONFIG_VERSION, garbage: true });
+    data.set(StorageKeys.asset('a'), { stored: 'a' });
+    const store = createConfigStore({ adapter, debounceMs: 0 });
+    await store.getState().load();
+    store.getState().update((config) => renameProfile(config, 'Fresh'));
+    await store.getState().flush();
+
+    expect(data.has(StorageKeys.asset('a'))).toBe(true);
+    store.getState().dispose();
+  });
+});
+
 describe('config store — cross-tab sync', () => {
   beforeEach(() => {
     localStorage.clear();

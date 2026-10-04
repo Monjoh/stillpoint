@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createDefaultConfig } from './defaults';
 import { createProfile } from './profiles';
 import { CONFIG_VERSION } from './schema';
+import { asset } from '@/core/assets/__fixtures__/asset';
 import { EXPORT_FORMAT, exportConfig, importConfig } from './transfer';
 
 describe('exportConfig', () => {
@@ -94,5 +95,56 @@ describe('importConfig refuses clearly', () => {
   it('on a file with no profiles at all', () => {
     const broken = { ...createDefaultConfig(), profiles: [] };
     expect(reason(JSON.stringify(broken))).toMatch(/does not fit the current format/);
+  });
+});
+
+describe('photographs in a file', () => {
+  const photoConfig = () => {
+    const config = createDefaultConfig();
+    return {
+      ...config,
+      profiles: config.profiles.map((p) => ({
+        ...p,
+        background: {
+          kind: 'image' as const,
+          assetId: 'a',
+          fit: 'cover' as const,
+          blur: 0,
+          dim: 0,
+        },
+      })),
+    };
+  };
+
+  // A backup that left the user's photos behind would not be a backup.
+  it('travel with the export and come back on import', () => {
+    const file = exportConfig(photoConfig(), new Date(), { a: asset });
+    expect(JSON.parse(file.json).assets.a).toEqual(asset);
+
+    const result = importConfig(file.json);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.assets).toEqual({ a: asset });
+    expect('assets' in result.config).toBe(false);
+  });
+
+  it('are left out of an export that has none', () => {
+    expect('assets' in JSON.parse(exportConfig(createDefaultConfig()).json)).toBe(
+      false,
+    );
+  });
+
+  // An imported file is a stranger, and its photographs end up inside a CSS `url()`.
+  it('are dropped on import when malformed, without refusing the rest', () => {
+    const tampered = JSON.parse(
+      exportConfig(photoConfig(), new Date(), { a: asset }).json,
+    );
+    tampered.assets.a.dataUrl = 'https://example.com/tracker.gif';
+    tampered.assets.b = 'not an asset';
+
+    const result = importConfig(JSON.stringify(tampered));
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.assets).toEqual({});
   });
 });

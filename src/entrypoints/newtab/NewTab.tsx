@@ -6,6 +6,8 @@ import { useEditSession } from '@/canvas/useEditSession';
 import { browser } from 'wxt/browser';
 import { configStore, useConfig } from '@/core/config/store';
 import type { Profile, StillpointConfig } from '@/core/config/schema';
+import { useBackgroundImage } from '@/core/assets/use-background-image';
+import { writePaintCache } from '@/core/storage/paint-cache';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
 import styles from './NewTab.module.css';
 
@@ -27,11 +29,14 @@ export function NewTab() {
 
   const profile = config?.profiles.find((p) => p.id === config.activeProfileId);
 
+  const image = useBackgroundImage(profile?.background, healPaintCache);
+
   useEffect(() => {
     // The second paint. boot.ts already did the first one from the cache; this is the
-    // authoritative pass, and it corrects the cache if the two ever disagree.
-    if (profile) applyCanvasTokens(profileToPaint(profile));
-  }, [profile]);
+    // authoritative pass, and it corrects the cache if the two ever disagree. An image
+    // background paints here twice: its preview first, its photograph once read.
+    if (profile) applyCanvasTokens(profileToPaint(profile, image));
+  }, [profile, image]);
 
   /** Every layout edit funnels through here, so the store is the only writer. */
   const handleProfileChange = useCallback((next: Profile) => {
@@ -129,6 +134,12 @@ export function NewTab() {
       )}
     </>
   );
+}
+
+/** A photograph's preview was missing from the paint cache and is back: re-derive it. */
+function healPaintCache() {
+  const config = configStore.getState().config;
+  if (config) writePaintCache(config);
 }
 
 /**
