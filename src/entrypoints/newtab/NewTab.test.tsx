@@ -84,3 +84,88 @@ describe('NewTab', () => {
     expect(await screen.findByText(/to add a widget/)).toBeTruthy();
   });
 });
+
+describe('typing in a generated settings field', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    configStore.getState().dispose();
+  });
+
+  /**
+   * A regression guard for a focus loss reported in Firefox: every character typed
+   * into the time zone field dropped focus. This reproduces the path end to end —
+   * real store, real debounce, real portal — and does **not** fail, which is the
+   * finding worth recording: whatever causes it is not visible to jsdom. Keep the
+   * test anyway; it fails loudly if the panel ever starts remounting for a reason
+   * jsdom *can* see, which is the cheapest of the candidate explanations to rule out.
+   */
+  /**
+   * The canvas gives up the panel's width instead of being covered by it. jsdom has
+   * no layout, so what is asserted is the signal the stylesheet keys off — the rule
+   * itself is in Canvas.module.css and only a browser can confirm it.
+   */
+  it('makes the stage reserve room for the panel, and give it back', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<NewTab />);
+    await screen.findByText(/^\d{2}:\d{2}$/);
+
+    const stage = container.querySelector('[class*="stage"]');
+    expect(stage?.hasAttribute('data-panel')).toBe(false);
+
+    await user.keyboard('e');
+    await screen.findByRole('toolbar', { name: 'Edit layout' });
+    // Edit mode alone must not move the canvas; only an open panel does.
+    expect(stage?.hasAttribute('data-panel')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: /^Clock, column/ }));
+    await screen.findByRole('complementary', { name: 'Clock settings' });
+    expect(stage?.hasAttribute('data-panel')).toBe(true);
+
+    // First Escape clears the selection, which closes the panel.
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(stage?.hasAttribute('data-panel')).toBe(false);
+  });
+
+  // Deleting the selected widget leaves its id in the session for a render. The gap
+  // must close with the panel, not a frame later.
+  it('closes the gap when the selected widget is deleted', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<NewTab />);
+    await screen.findByText(/^\d{2}:\d{2}$/);
+
+    await user.keyboard('e');
+    await screen.findByRole('toolbar', { name: 'Edit layout' });
+    const box = screen.getByRole('button', { name: /^Clock, column/ });
+    await user.click(box);
+
+    const stage = container.querySelector('[class*="stage"]');
+    expect(stage?.hasAttribute('data-panel')).toBe(true);
+
+    box.focus();
+    await user.keyboard('{Delete}');
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(stage?.hasAttribute('data-panel')).toBe(false);
+  });
+
+  it('keeps focus and accumulates the value across keystrokes', async () => {
+    const user = userEvent.setup();
+    render(<NewTab />);
+    await screen.findByText(/^\d{2}:\d{2}$/);
+
+    await user.keyboard('e');
+    await screen.findByRole('toolbar', { name: 'Edit layout' });
+    await user.click(screen.getByRole('button', { name: /^Clock, column/ }));
+
+    const input = await screen.findByLabelText('Time zone');
+    await user.click(input);
+    await user.keyboard('UTC');
+
+    expect(screen.getByLabelText('Time zone')).toHaveProperty('value', 'UTC');
+    expect(document.activeElement).toBe(screen.getByLabelText('Time zone'));
+  });
+});

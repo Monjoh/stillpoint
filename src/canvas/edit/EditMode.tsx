@@ -1,8 +1,9 @@
 import { createPortal } from 'react-dom';
 import type { Profile } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
+import { SettingsPanel } from '@/settings/SettingsPanel';
 import type { CanvasGeometry } from '../geometry';
-import { addWidget } from '../operations';
+import { addWidget, updateWidgetSettings } from '../operations';
 import { EditLayer } from './EditLayer';
 import { EditToolbar } from './EditToolbar';
 import './ui-tokens.css';
@@ -46,6 +47,8 @@ export default function EditMode({
     onSelect(next.widgets[next.widgets.length - 1]?.instanceId ?? null);
   };
 
+  const selected = profile.widgets.find((w) => w.instanceId === selectedId);
+
   return (
     <>
       {/* Portalled to the body rather than left where it is rendered. The edit layer
@@ -57,6 +60,23 @@ export default function EditMode({
         <EditToolbar profile={profile} onAdd={handleAdd} onExit={onExit} />,
         document.body,
       )}
+      {/* Portalled for the same reason as the toolbar, plus one of its own: the edit
+          layer deselects on any pointer down that is not on a widget, and the panel
+          has to be somewhere that is not inside it. The room it occupies is reserved
+          by the stage — `panelOpen` in NewTab.tsx. */}
+      {selected &&
+        createPortal(
+          <SettingsPanel
+            instance={selected}
+            onChangeSettings={(instanceId, settings) =>
+              onChange(updateWidgetSettings(profile, instanceId, settings))
+            }
+            onCommit={onCommit}
+            onClose={() => onSelect(null)}
+          />,
+          document.body,
+        )}
+
       <EditLayer
         geometry={geometry}
         profile={profile}

@@ -29,14 +29,27 @@ export interface CanvasProps {
    * measuring the canvas a second time and drifting by a fraction of a pixel.
    */
   overlay?: (geometry: CanvasGeometry) => ReactNode;
+  /**
+   * True while the settings panel is docked. The stage gives up that width instead of
+   * letting the panel cover widgets — see the note in Canvas.module.css. The canvas is
+   * then re-measured by the ResizeObserver and the grid recomputes itself, which is
+   * the whole benefit of deriving cell size from the measured box.
+   */
+  panelOpen?: boolean;
 }
 
-export function Canvas({ profile, isEditing, onRemoveWidget, overlay }: CanvasProps) {
+export function Canvas({
+  profile,
+  isEditing,
+  onRemoveWidget,
+  overlay,
+  panelOpen,
+}: CanvasProps) {
   const [canvasRef, size] = useElementSize<HTMLDivElement>();
   const geometry = size ? computeGeometry(profile.layout, size) : null;
 
   return (
-    <div className={styles.stage}>
+    <div className={styles.stage} data-panel={panelOpen || undefined}>
       <div
         className={styles.canvas}
         ref={canvasRef}

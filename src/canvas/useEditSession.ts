@@ -12,6 +12,9 @@ import { useCallback, useEffect, useState } from 'react';
  * bindings that have to work before edit mode exists: `e` to enter and `Escape` to
  * leave. Everything else — arrows, delete, duplicate — belongs to edit mode and loads
  * with it.
+ *
+ * Escape is two-stage once there is a settings panel to close: it clears the
+ * selection first and leaves edit mode second.
  */
 
 export interface EditSession {
@@ -45,12 +48,20 @@ export function useEditSession({ enabled, onExit }: EditSessionOptions): EditSes
     if (!enabled) return;
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isTypingTarget(event.target)) return;
+      if (event.defaultPrevented) return;
 
       if (event.key === 'Escape' && isEditing) {
-        exit();
+        // Two stages: the first Escape closes the settings panel, the second leaves
+        // edit mode. Checked before `isTypingTarget` on purpose — a text field the
+        // user cannot back out of with Escape is a trap, and the settings panel is
+        // full of text fields.
+        if (selectedId !== null) setSelectedId(null);
+        else exit();
         return;
       }
+
+      if (isTypingTarget(event.target)) return;
+
       // Bare `e` only. A modifier means the user is reaching for something else.
       if (
         event.key === 'e' &&
@@ -66,7 +77,7 @@ export function useEditSession({ enabled, onExit }: EditSessionOptions): EditSes
 
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [enabled, isEditing, enter, exit]);
+  }, [enabled, isEditing, selectedId, enter, exit]);
 
   return { isEditing, selectedId, enter, exit, select: setSelectedId };
 }

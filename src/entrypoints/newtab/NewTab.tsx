@@ -54,6 +54,17 @@ export function NewTab() {
     onExit: handleCommit,
   });
 
+  /**
+   * The panel is open exactly when edit mode has a selection that still exists. Asked
+   * here rather than inferred from `selectedId` alone, because deleting the selected
+   * widget leaves the id behind for a render — and the stage would then hold open a
+   * gap for a panel that is not there.
+   */
+  const panelOpen =
+    session.isEditing &&
+    session.selectedId !== null &&
+    profile?.widgets.some((w) => w.instanceId === session.selectedId) === true;
+
   return (
     <>
       <Background />
@@ -66,6 +77,7 @@ export function NewTab() {
           <Canvas
             profile={profile}
             isEditing={session.isEditing}
+            panelOpen={panelOpen}
             onRemoveWidget={handleRemoveWidget}
             overlay={
               session.isEditing

@@ -1,0 +1,141 @@
+/*
+  The generated settings panel. Tool chrome, so --sp-ui-* only.
+
+  Docked rather than floating or modal: the whole value of generated settings is that
+  every change previews live on the real canvas, which a dialog over the middle of the
+  screen would cover up.
+
+  It does not overlay the canvas either — the stage reserves this width while the panel
+  is open (see Canvas.module.css), so a widget is never hidden behind it.
+*/
+
+.panel {
+  position: fixed;
+  z-index: 9;
+  top: 72px;
+  right: var(--sp-ui-panel-gutter);
+  bottom: var(--sp-ui-panel-gutter);
+  width: var(--sp-ui-panel-width);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: var(--sp-ui-radius);
+  background: var(--sp-ui-bg);
+  box-shadow: var(--sp-ui-shadow);
+  font-family: system-ui, sans-serif;
+  color: var(--sp-ui-text);
+  overflow: hidden;
+}
+
+/* Below the width the stage can afford to give up, the panel goes back to overlaying:
+   reserving 320px of a 700px window would leave less canvas than panel. */
+@media (max-width: 759px) {
+  .panel {
+    width: min(var(--sp-ui-panel-width), calc(100vw - var(--sp-ui-panel-gutter) * 2));
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .panel {
+    animation: appear 120ms ease-out;
+  }
+}
+
+@keyframes appear {
+  from {
+    opacity: 0;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: none;
+  padding: 11px 9px 11px 14px;
+  border-bottom: 1px solid var(--sp-ui-border);
+}
+
+.title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.close {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--sp-ui-text-muted);
+  cursor: pointer;
+}
+
+.close:hover {
+  background: var(--sp-ui-bg-raised);
+  color: var(--sp-ui-text);
+}
+
+.close:focus-visible,
+.reset:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 1px;
+}
+
+.close svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  padding: 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.footer {
+  flex: none;
+  display: flex;
+  justify-content: flex-end;
+  padding: 9px 14px;
+  border-top: 1px solid var(--sp-ui-border);
+}
+
+.reset {
+  padding: 4px 9px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  font-size: 11.5px;
+  color: var(--sp-ui-text-muted);
+  cursor: pointer;
+}
+
+.reset:hover {
+  border-color: var(--sp-ui-border);
+  color: var(--sp-ui-text);
+}
+
+.note {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--sp-ui-text-muted);
+}

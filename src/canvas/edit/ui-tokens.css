@@ -20,6 +20,10 @@
   --sp-ui-accent: #7aa2f7;
 
   --sp-ui-radius: 10px;
+  /* Read by the settings panel and, through a fallback, by the canvas stage, which
+     reserves exactly this much room rather than letting the panel cover widgets. */
+  --sp-ui-panel-width: 288px;
+  --sp-ui-panel-gutter: 16px;
   --sp-ui-shadow: 0 10px 34px rgb(0 0 0 / 0.45);
 
   /* Marks drawn over the user's canvas rather than on tool chrome, so they are

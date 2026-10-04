@@ -1,6 +1,6 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { profileSchema, type Profile } from '@/core/config/schema';
 import { computeGeometry } from '../geometry';
 import EditMode from './EditMode';
@@ -97,14 +97,6 @@ function pointer(el: HTMLElement, type: string, x: number, y: number) {
     el.dispatchEvent(event);
   });
 }
-
-beforeEach(() => {
-  // jsdom implements neither pointer capture nor PointerEvent coordinates fully.
-  if (!Element.prototype.setPointerCapture) {
-    Element.prototype.setPointerCapture = () => {};
-    Element.prototype.releasePointerCapture = () => {};
-  }
-});
 
 describe('adding a widget', () => {
   it('lists the catalogue from the registry and adds what is picked', async () => {
@@ -335,5 +327,38 @@ describe('leaving', () => {
     const layer = widgetBox(0).parentElement!;
     pointer(layer, 'pointerdown', 500, 500);
     expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+});
+
+describe('the settings panel', () => {
+  it('is not there until a widget is selected', async () => {
+    setup(profile([clock('a', 0, 0)]));
+    expect(screen.queryByRole('complementary')).toBeNull();
+
+    await userEvent.click(widgetBox(0));
+    expect(screen.getByRole('complementary', { name: 'Clock settings' })).toBeTruthy();
+  });
+
+  it('writes a setting through to the profile, leaving the layout alone', async () => {
+    const { state } = setup(profile([clock('a', 2, 1)]));
+    await userEvent.click(widgetBox(0));
+    await userEvent.click(screen.getByLabelText('Show seconds'));
+
+    expect(state.profile.widgets[0]?.settings).toMatchObject({ showSeconds: true });
+    expect(state.profile.widgets[0]?.rect).toEqual({ x: 2, y: 1, w: 8, h: 3 });
+  });
+
+  it('closes when the selection is cleared', async () => {
+    setup(profile([clock('a', 0, 0)]));
+    await userEvent.click(widgetBox(0));
+    await userEvent.click(screen.getByRole('button', { name: 'Close settings' }));
+    expect(screen.queryByRole('complementary')).toBeNull();
+  });
+
+  it('does not deselect when the panel itself is clicked', async () => {
+    setup(profile([clock('a', 0, 0)]));
+    await userEvent.click(widgetBox(0));
+    await userEvent.click(screen.getByLabelText('Size'));
+    expect(screen.getByRole('complementary')).toBeTruthy();
   });
 });

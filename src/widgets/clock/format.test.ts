@@ -63,6 +63,7 @@ describe('clockSettingsSchema', () => {
     expect(settings()).toEqual({
       format: '24h',
       showSeconds: false,
+      showMeridiem: true,
       fontSize: 72,
       weight: 'light',
       timezone: null,
@@ -71,5 +72,43 @@ describe('clockSettingsSchema', () => {
 
   it('rejects a font size outside the slider range', () => {
     expect(clockSettingsSchema.safeParse({ fontSize: 500 }).success).toBe(false);
+  });
+});
+
+describe('the AM/PM suffix', () => {
+  const at = new Date(Date.UTC(2026, 0, 2, 23, 4));
+  const base = { showSeconds: false, timezone: 'UTC', showMeridiem: true } as const;
+
+  it('is there by default in 12-hour time', () => {
+    expect(formatClock(at, { ...base, format: '12h' }, 'en-US')).toMatch(/PM/);
+  });
+
+  it('can be dropped without disturbing the digits', () => {
+    const off = formatClock(
+      at,
+      { ...base, format: '12h', showMeridiem: false },
+      'en-US',
+    );
+    expect(off).toBe('11:04');
+  });
+
+  // Dropped by rebuilding from the formatted parts, not by stripping a trailing
+  // " PM" — in several locales the day period comes first.
+  it('drops a leading day period too', () => {
+    const on = formatClock(at, { ...base, format: '12h' }, 'ja-JP');
+    const off = formatClock(
+      at,
+      { ...base, format: '12h', showMeridiem: false },
+      'ja-JP',
+    );
+    expect(on).toMatch(/午後/);
+    expect(off).not.toMatch(/午後/);
+    expect(off).toMatch(/11/);
+  });
+
+  it('is irrelevant to 24-hour time', () => {
+    expect(
+      formatClock(at, { ...base, format: '24h', showMeridiem: false }, 'en-GB'),
+    ).toBe('23:04');
   });
 });

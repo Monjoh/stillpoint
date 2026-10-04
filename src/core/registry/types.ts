@@ -79,6 +79,44 @@ export interface WidgetDefinition<S = unknown> {
 export type AnyWidgetDefinition = WidgetDefinition<any>;
 
 /**
+ * What the generator has worked out about a field, handed to whichever control renders
+ * it. A control reads this rather than the schema: it is the generator's job to know
+ * what zod means, and a control's job to be a good input.
+ */
+export interface ControlField {
+  label: string;
+  help?: string;
+  /** Suffix shown next to the value, e.g. `px`. Presentational only. */
+  unit?: string;
+  min?: number;
+  max?: number;
+  step?: number;
+  maxLength?: number;
+  /** Already resolved to display labels; `FieldMeta.options` is the raw form. */
+  options?: { value: string; label: string }[];
+  /** When true the control may emit `null` — "unset" is a value the schema allows. */
+  nullable: boolean;
+}
+
+/**
+ * The contract for a settings control, including a widget's own `control: 'custom'`
+ * one. It lives here rather than in `src/settings` for a boundary reason: a widget may
+ * import from `src/core` and `src/lib` only, so a custom control could not name its
+ * own props type if it were declared next to the generator.
+ *
+ * The control renders the input and nothing else. The label, the help text and the
+ * `id` wiring are the generator's, so that every field gets them whether or not the
+ * control's author remembered — see docs/04-design-system.md.
+ */
+export interface ControlProps<T> {
+  /** Must land on the control's focusable element; the generated `<label>` points at it. */
+  id: string;
+  value: T;
+  onChange: (next: T) => void;
+  field: ControlField;
+}
+
+/**
  * Presentation hints attached to a settings field with zod's `.meta()`, read back by
  * the generator in M3. Declared here so widget authors get completion and type
  * checking on `.meta()` today, before the generator exists.
@@ -107,7 +145,8 @@ export type FieldMeta = {
   /** Show this field only when another field has a given value. */
   showIf?: { field: string; equals: unknown };
   /** `control: 'custom'` — the widget supplies its own control component. */
-  component?: ComponentType<never>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  component?: ComponentType<ControlProps<any>>;
   /** Group fields under a collapsible heading. */
   group?: string;
   order?: number;

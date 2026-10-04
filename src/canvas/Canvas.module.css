@@ -12,6 +12,31 @@
   overflow: hidden;
 }
 
+/*
+  While the settings panel is open the canvas gives up the width the panel occupies,
+  rather than being covered by it. Overlaying worked only as long as no widget was
+  wide: a full-row widget is partly hidden whichever side the panel picks, and the
+  side-switching then makes things worse by moving the obstruction around.
+
+  The grid is relative on both axes, so a narrower stage is a legitimate rendering of
+  the same layout, not a broken one — the honest cost is that the preview is this much
+  narrower than the real page while the panel is open.
+
+  No transition on the padding: it would re-measure the canvas on every animation
+  frame through the ResizeObserver, and relayout the whole grid each time.
+
+  The fallback matches --sp-ui-panel-width in edit/ui-tokens.css. That file ships with
+  the edit chunk, and this rule only ever applies once the chunk is loaded, so the
+  fallback is belt and braces — but the two numbers must not drift.
+*/
+@media (min-width: 760px) {
+  .stage[data-panel] {
+    padding-right: calc(
+      var(--sp-ui-panel-width, 288px) + var(--sp-ui-panel-gutter, 16px) * 2
+    );
+  }
+}
+
 .canvas {
   position: relative;
   flex: 1 1 auto;

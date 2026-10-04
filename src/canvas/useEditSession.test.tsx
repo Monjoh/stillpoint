@@ -94,3 +94,41 @@ describe('useEditSession', () => {
     expect(document.body.textContent).toBe('');
   });
 });
+
+describe('Escape is two-stage once there is a panel to close', () => {
+  it('clears the selection first and leaves edit mode second', async () => {
+    const user = userEvent.setup();
+    const onExit = vi.fn();
+    render(<Harness enabled onExit={onExit} />);
+
+    await user.keyboard('e');
+    await user.click(screen.getByRole('button', { name: 'select' }));
+    expect(screen.getByTestId('selected').textContent).toBe('w1');
+
+    await user.keyboard('{Escape}');
+    expect(screen.getByTestId('selected').textContent).toBe('none');
+    expect(mode()).toBe('editing');
+    expect(onExit).not.toHaveBeenCalled();
+
+    await user.keyboard('{Escape}');
+    expect(mode()).toBe('viewing');
+    expect(onExit).toHaveBeenCalledTimes(1);
+  });
+
+  // A text field the user cannot back out of with Escape is a trap, and the settings
+  // panel is full of text fields.
+  it('still works while the user is typing, unlike the letter shortcuts', async () => {
+    const user = userEvent.setup();
+    render(<Harness enabled />);
+
+    await user.keyboard('e');
+    await user.click(screen.getByRole('button', { name: 'select' }));
+    await user.click(screen.getByLabelText('field'));
+
+    await user.keyboard('{Escape}');
+    expect(screen.getByTestId('selected').textContent).toBe('none');
+
+    await user.keyboard('{Escape}');
+    expect(mode()).toBe('viewing');
+  });
+});

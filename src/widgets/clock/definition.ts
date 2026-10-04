@@ -23,6 +23,18 @@ export const clockSettingsSchema = z.object({
     .default(false)
     .meta(field({ label: 'Show seconds' })),
 
+  showMeridiem: z
+    .boolean()
+    .default(true)
+    .meta(
+      field({
+        label: 'Show AM/PM',
+        // Meaningless in 24-hour time, so the generator hides it there rather than
+        // offering a switch that does nothing.
+        showIf: { field: 'format', equals: '12h' },
+      }),
+    ),
+
   fontSize: z
     .number()
     .min(12)

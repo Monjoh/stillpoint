@@ -12,7 +12,7 @@ import type { ClockSettings } from './definition';
  */
 export function formatClock(
   date: Date,
-  settings: Pick<ClockSettings, 'format' | 'showSeconds' | 'timezone'>,
+  settings: Pick<ClockSettings, 'format' | 'showSeconds' | 'showMeridiem' | 'timezone'>,
   locale?: string,
 ): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -22,18 +22,31 @@ export function formatClock(
   };
   if (settings.showSeconds) options.second = '2-digit';
 
+  const format = (extra?: Intl.DateTimeFormatOptions) => {
+    const formatter = new Intl.DateTimeFormat(locale, { ...options, ...extra });
+    // The suffix is dropped by rebuilding from the parts rather than by stripping it
+    // from the string: it is not always a trailing " PM", and in several locales it
+    // comes first.
+    if (settings.format === '12h' && settings.showMeridiem === false) {
+      return formatter
+        .formatToParts(date)
+        .filter((part) => part.type !== 'dayPeriod')
+        .map((part) => part.value)
+        .join('')
+        .trim();
+    }
+    return formatter.format(date);
+  };
+
   if (settings.timezone) {
     try {
-      return new Intl.DateTimeFormat(locale, {
-        ...options,
-        timeZone: settings.timezone,
-      }).format(date);
+      return format({ timeZone: settings.timezone });
     } catch {
       // Fall through to local time.
     }
   }
 
-  return new Intl.DateTimeFormat(locale, options).format(date);
+  return format();
 }
 
 /** How often the display has to change, given the settings. */

@@ -38,3 +38,16 @@ class StubResizeObserver implements ResizeObserver {
 }
 
 globalThis.ResizeObserver ??= StubResizeObserver;
+
+/**
+ * jsdom implements no part of the Pointer Capture API. Edit mode takes capture on
+ * every pointer down, so without this any test that clicks a widget throws — and it
+ * throws asynchronously, out of the event handler, where it surfaces as an unhandled
+ * error beside a passing test rather than as a failure. Stubbed globally rather than
+ * per file so that a new test cannot quietly inherit the noise.
+ */
+Element.prototype.setPointerCapture ??= function setPointerCapture() {};
+Element.prototype.releasePointerCapture ??= function releasePointerCapture() {};
+Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
+  return false;
+};
