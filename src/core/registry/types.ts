@@ -18,11 +18,20 @@ export type ResourceState<D> =
   | { status: 'empty' }
   | { status: 'ready'; data: D; fetchedAt: number; stale: boolean }
   /** May still carry stale data — showing yesterday's weather beats a spinner. */
-  | { status: 'error'; error: string; data?: D };
+  | { status: 'error'; error: string; data?: D; fetchedAt?: number };
 
 export interface DataSourceSpec<S, D> {
-  /** Cache identity. Every setting that changes the result must appear here. */
-  key: (settings: S) => string;
+  /**
+   * Cache identity. Every setting that changes the result must appear here. `null`
+   * means there is nothing to fetch yet, because the widget is not configured. The
+   * widget then renders with `data` undefined and says what it needs.
+   */
+  key: (settings: S) => string | null;
+  /**
+   * Throw an `Error` whose message the user can read. It is shown as is, under any
+   * data still cached. Keep the network code behind a dynamic `import()` in here: the
+   * definition is on the new tab's critical path, and the fetch must not be.
+   */
   fetch: (settings: S, signal: AbortSignal) => Promise<D>;
   /** Serve cached data for this long before revalidating. */
   ttlMs: number;
@@ -30,17 +39,21 @@ export interface DataSourceSpec<S, D> {
   maxAgeMs?: number;
 }
 
-export interface WidgetProps<S> {
+export interface WidgetProps<S, D = unknown> {
   settings: S;
   /** The frame's content box in px, for widgets that scale their own type. */
   size: { width: number; height: number };
   /** True while the canvas is in edit mode: suppress autofocus, hide interactions. */
   isEditing: boolean;
-  /** Resolved `dataSource` state. `undefined` when the widget declares none. */
-  data?: ResourceState<unknown>;
+  /**
+   * Resolved `dataSource` state: `ready` or `error`, never `empty`, which the frame
+   * draws as a skeleton itself. `undefined` when the widget declares no data source,
+   * or its `key` is null.
+   */
+  data?: ResourceState<D>;
 }
 
-export interface WidgetDefinition<S = unknown> {
+export interface WidgetDefinition<S = unknown, D = unknown> {
   /** Stable, namespaced, never changes once released — it is part of stored config. */
   id: string;
   name: string;
@@ -57,10 +70,13 @@ export interface WidgetDefinition<S = unknown> {
   minSize?: { w: number; h: number };
 
   /** Lazy — only configured widget types are ever fetched. */
-  component: () => Promise<{ default: ComponentType<WidgetProps<S>> }>;
+  component: () => Promise<{ default: ComponentType<WidgetProps<S, D>> }>;
 
-  /** Declarative async data. Omit for widgets that need no network. */
-  dataSource?: DataSourceSpec<S, never>;
+  /**
+   * Declarative async data. Omit for widgets that need no network. Fetched, cached and
+   * revalidated by `core/data/resource.ts`, never by the widget.
+   */
+  dataSource?: DataSourceSpec<S, D>;
 
   /** Optional host permissions, requested when the user adds the widget. */
   permissions?: string[];
@@ -76,7 +92,7 @@ export interface WidgetDefinition<S = unknown> {
  * re-validates settings against the schema before they reach the component.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyWidgetDefinition = WidgetDefinition<any>;
+export type AnyWidgetDefinition = WidgetDefinition<any, any>;
 
 /**
  * What the generator has worked out about a field, handed to whichever control renders

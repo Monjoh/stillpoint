@@ -1,0 +1,127 @@
+/* Tool chrome: --sp-ui-* only. Matches the generated controls' inputs and buttons. */
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.current {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 30px;
+}
+
+.name {
+  overflow: hidden;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--sp-ui-text);
+}
+
+.input {
+  width: 100%;
+  min-height: 30px;
+  padding: 5px 9px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 7px;
+  background: var(--sp-ui-bg);
+  font: inherit;
+  font-size: 12px;
+  color: var(--sp-ui-text);
+}
+
+.input::placeholder {
+  color: var(--sp-ui-text-muted);
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 2px;
+  list-style: none;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 7px;
+  background: var(--sp-ui-bg);
+}
+
+.result {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 5px 8px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+}
+
+.result:hover {
+  background: var(--sp-ui-bg-raised);
+}
+
+.detail {
+  font-size: 11px;
+  color: var(--sp-ui-text-muted);
+}
+
+.status {
+  margin: 0;
+  font-size: 11px;
+  color: var(--sp-ui-text-muted);
+}
+
+.status:empty {
+  display: none;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.button {
+  flex: none;
+  min-height: 26px;
+  padding: 3px 10px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 7px;
+  background: var(--sp-ui-bg-raised);
+  font: inherit;
+  font-size: 12px;
+  color: var(--sp-ui-text);
+  cursor: pointer;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--sp-ui-accent);
+  cursor: pointer;
+}
+
+.input:focus-visible,
+.result:focus-visible,
+.button:focus-visible,
+.link:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 1px;
+}

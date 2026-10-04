@@ -1,0 +1,97 @@
+.weather {
+  display: flex;
+  flex-direction: column;
+  align-items: inherit;
+  gap: 0.6em;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.4;
+  color: var(--sp-text-muted, #a0a3ad);
+}
+
+.now {
+  display: flex;
+  align-items: center;
+  gap: 0.15em;
+  line-height: 1;
+  color: var(--sp-text, #f2f2f2);
+}
+
+.icon {
+  display: flex;
+  width: 1em;
+  height: 1em;
+}
+
+.icon svg,
+.dayIcon svg {
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.temperature {
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.line {
+  margin: 0;
+  overflow: hidden;
+  max-width: 100cqw;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.forecast {
+  display: flex;
+  gap: 1.2em;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2em;
+  color: var(--sp-text, #f2f2f2);
+  font-variant-numeric: tabular-nums;
+}
+
+.dayName {
+  color: var(--sp-text-muted, #a0a3ad);
+}
+
+.dayIcon {
+  display: flex;
+  width: 1.3em;
+  height: 1.3em;
+}
+
+.low {
+  color: var(--sp-text-muted, #a0a3ad);
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.notice {
+  margin: 0;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  font-size: min(14px, 30cqh, 6cqw);
+  color: var(--sp-text-muted, #a0a3ad);
+}

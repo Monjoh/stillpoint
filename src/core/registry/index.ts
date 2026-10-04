@@ -3,6 +3,7 @@ import { dateDefinition } from '@/widgets/date/definition';
 import { linksDefinition } from '@/widgets/links/definition';
 import { quoteDefinition } from '@/widgets/quote/definition';
 import { searchDefinition } from '@/widgets/search/definition';
+import { weatherDefinition } from '@/widgets/weather/definition';
 import { createRegistry } from './registry';
 import type { AnyWidgetDefinition } from './types';
 
@@ -17,6 +18,7 @@ export const widgetDefinitions = [
   quoteDefinition,
   searchDefinition,
   linksDefinition,
+  weatherDefinition,
 ] as const satisfies readonly AnyWidgetDefinition[];
 
 /**

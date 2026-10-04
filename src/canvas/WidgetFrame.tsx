@@ -1,6 +1,15 @@
-import { Component, Suspense, useMemo, type ErrorInfo, type ReactNode } from 'react';
+import {
+  Component,
+  Suspense,
+  useMemo,
+  type ComponentType,
+  type ErrorInfo,
+  type ReactNode,
+} from 'react';
 import type { WidgetInstance } from '@/core/config/schema';
+import { useResource } from '@/core/data/resource';
 import { widgetRegistry } from '@/core/registry';
+import type { DataSourceSpec, WidgetProps } from '@/core/registry/types';
 import { resolveSettings } from '@/core/registry/settings';
 import { rectToPixels, type CanvasGeometry } from './geometry';
 import styles from './WidgetFrame.module.css';
@@ -77,8 +86,19 @@ export function WidgetFrame({
             returns the same lazy component for a given id on every call, memoised
             inside the registry, precisely so a clock does not remount every render.
             `registry.test.ts` pins that identity. */}
-        {/* eslint-disable-next-line react-hooks/static-components */}
-        <Widget settings={resolved.settings} size={size} isEditing={isEditing} />
+        {definition.dataSource ? (
+          <WithData
+            widgetType={definition.id}
+            spec={definition.dataSource}
+            Widget={Widget}
+            settings={resolved.settings}
+            size={size}
+            isEditing={isEditing}
+          />
+        ) : (
+          // eslint-disable-next-line react-hooks/static-components
+          <Widget settings={resolved.settings} size={size} isEditing={isEditing} />
+        )}
       </Suspense>
     );
   }
@@ -130,6 +150,36 @@ export function WidgetFrame({
       </div>
     </div>
   );
+}
+
+/**
+ * A widget with a `dataSource`. The frame resolves the data, so the widget never
+ * touches the network or the cache, and draws `empty` as the same skeleton as a
+ * loading chunk: a widget needs no loading state of its own.
+ */
+function WithData({
+  widgetType,
+  spec,
+  Widget,
+  settings,
+  size,
+  isEditing,
+}: {
+  widgetType: string;
+  spec: DataSourceSpec<unknown, unknown>;
+  Widget: ComponentType<WidgetProps<unknown>>;
+  settings: unknown;
+  size: WidgetProps<unknown>['size'];
+  isEditing: boolean;
+}) {
+  const data = useResource(widgetType, spec, settings);
+  // Reading the cache: a few milliseconds, drawn as nothing rather than a skeleton
+  // that flashes on every tab.
+  if (data === null) return null;
+  if (data?.status === 'empty') {
+    return <div className={styles.skeleton} aria-hidden="true" />;
+  }
+  return <Widget settings={settings} size={size} isEditing={isEditing} data={data} />;
 }
 
 /**
