@@ -51,3 +51,11 @@ Element.prototype.releasePointerCapture ??= function releasePointerCapture() {};
 Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
   return false;
 };
+
+/**
+ * No test reaches the network. Unsplash code takes an injectable `fetch`; anything
+ * that falls through to the global one is a test that would pass or fail on someone
+ * else's server, and fails here instead, loudly.
+ */
+globalThis.fetch = () =>
+  Promise.reject(new Error('A test tried to reach the network. Inject a fetch.'));

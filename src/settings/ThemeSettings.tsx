@@ -15,7 +15,9 @@ import { themeTokens } from '@/core/theme/apply';
 import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
 import { imageAssetId } from '@/core/assets/image';
 import { readImagePreview } from '@/core/storage/paint-cache';
+import { UNSPLASH_PREVIEW_ID } from '@/core/unsplash/state';
 import { PhotoFields } from './PhotoFields';
+import { UnsplashFields } from './UnsplashFields';
 import { TokenOverrides } from './TokenOverrides';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
@@ -47,6 +49,8 @@ export interface ThemeFieldsProps {
 export interface BackgroundFieldsProps {
   profile: Profile;
   onChangeBackground: (background: BackgroundConfig) => void;
+  /** The global Unsplash key. Decides between Unsplash search and Picsum. */
+  unsplashAccessKey?: string | null;
 }
 
 export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
@@ -59,7 +63,10 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
 
   // The real background, so every tile previews this page rather than a showroom. A
   // photograph previews as its thumbnail, which at 46px is all a tile could show.
-  const assetId = imageAssetId(profile.background);
+  const assetId =
+    profile.background.kind === 'unsplash'
+      ? UNSPLASH_PREVIEW_ID
+      : imageAssetId(profile.background);
   const canvas =
     backgroundToCss(
       profile.background,
@@ -156,6 +163,7 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
 export function BackgroundFields({
   profile,
   onChangeBackground,
+  unsplashAccessKey = null,
 }: BackgroundFieldsProps) {
   const active = getPreset(profile.theme.preset);
   const activeGradient = matchGradient(profile.background);
@@ -172,6 +180,12 @@ export function BackgroundFields({
       <PhotoFields
         background={profile.background}
         onChangeBackground={onChangeBackground}
+      />
+
+      <UnsplashFields
+        background={profile.background}
+        onChangeBackground={onChangeBackground}
+        accessKey={unsplashAccessKey}
       />
 
       <div className={styles.grid} role="radiogroup" aria-label="Background">
@@ -215,12 +229,14 @@ export function BackgroundFields({
       {/* A background that is none of ours is a legitimate state — an import, a
             hand-edited export, later a photograph. Saying so beats showing ten
             swatches with none selected and leaving the user to wonder. */}
-      {activeGradient === undefined && profile.background.kind !== 'image' && (
-        <p className={fields.help}>
-          This profile uses a background that is not one of these. Picking one replaces
-          it.
-        </p>
-      )}
+      {activeGradient === undefined &&
+        profile.background.kind !== 'image' &&
+        profile.background.kind !== 'unsplash' && (
+          <p className={fields.help}>
+            This profile uses a background that is not one of these. Picking one
+            replaces it.
+          </p>
+        )}
     </>
   );
 }

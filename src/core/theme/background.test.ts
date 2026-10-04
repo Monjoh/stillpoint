@@ -46,8 +46,6 @@ describe('backgroundToCss — images', () => {
 describe('backgroundBlur', () => {
   it('is the photo’s blur, and zero for everything that is not a photo', () => {
     expect(backgroundBlur({ ...photo, blur: 12 })).toBe(12);
-    expect(backgroundBlur({ kind: 'solid', color: '#000' })).toBe(0);
-    // Not painted yet, so its blur would land on the fallback instead.
     expect(
       backgroundBlur({
         kind: 'unsplash',
@@ -56,6 +54,12 @@ describe('backgroundBlur', () => {
         blur: 9,
         dim: 0,
       }),
-    ).toBe(0);
+    ).toBe(9);
+    expect(backgroundBlur({ kind: 'solid', color: '#000' })).toBe(0);
+  });
+
+  // Its blur belongs to the photo, not to whatever is standing in for it.
+  it('is zero while the photo has nothing painted', () => {
+    expect(backgroundBlur({ ...photo, blur: 12 }, false)).toBe(0);
   });
 });

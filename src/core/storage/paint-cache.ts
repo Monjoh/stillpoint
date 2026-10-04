@@ -1,5 +1,6 @@
 import { imageAssetId, isImagePreview, type ImagePreview } from '@/core/assets/image';
 import type { Rect, StillpointConfig } from '@/core/config/schema';
+import { UNSPLASH_PREVIEW_ID } from '@/core/unsplash/state';
 import { paintToTokens, profileToPaint } from '@/core/theme/apply';
 import type { TokenSet } from '@/core/theme/tokens';
 
@@ -167,7 +168,8 @@ export function forgetImagePreviews(assetIds: Iterable<string>): void {
 function imagePreviewFor(
   background: StillpointConfig['profiles'][number]['background'],
 ): ImagePreview | undefined {
-  const id = imageAssetId(background);
+  const id =
+    background.kind === 'unsplash' ? UNSPLASH_PREVIEW_ID : imageAssetId(background);
   return (id !== null && readImagePreview(id)) || undefined;
 }
 

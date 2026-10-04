@@ -122,6 +122,28 @@ describe('applyCanvasTokens', () => {
     expect(root.style.getPropertyValue('--sp-background-blur')).toBe('8px');
   });
 
+  // With nothing downloaded yet, an Unsplash background waits rather than painting
+  // something wrong: the last background stays until the first photo arrives.
+  it('keeps what is on screen until an Unsplash photo is in', () => {
+    root.style.setProperty('--sp-background', 'url("blob:old-photo")');
+    const config = configSchema.parse(fixtureV2);
+    const profile = {
+      ...config.profiles[0]!,
+      background: {
+        kind: 'unsplash' as const,
+        query: 'x',
+        refresh: 'daily' as const,
+        blur: 10,
+        dim: 0,
+      },
+    };
+    applyCanvasTokens(profileToPaint(profile), root);
+    expect(root.style.getPropertyValue('--sp-background')).toBe(
+      'url("blob:old-photo")',
+    );
+    expect(root.style.getPropertyValue('--sp-background-blur')).toBe('0px');
+  });
+
   // Always written, so the sweep never leaves a photo's blur on the gradient after it.
   it('writes a zero blur for a background that is not a photo', () => {
     const config = configSchema.parse(fixtureV2);

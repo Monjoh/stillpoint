@@ -22,4 +22,8 @@ export const StorageKeys = {
   configBackup: (version: number) => `config.backup.v${version}`,
   asset: (assetId: string) => `assets/${assetId}`,
   widgetCache: (widgetType: string, hash: string) => `cache/${widgetType}/${hash}`,
+  /** Unsplash's rotation state: which photo is up, which is next, the batch left. */
+  unsplash: 'cache/unsplash',
+  /** A downloaded Unsplash photo, as an `ImageAsset`. Disposable, like all of `cache/`. */
+  unsplashImage: (photoId: string) => `cache/unsplash/${photoId}`,
 } as const;

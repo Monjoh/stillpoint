@@ -151,6 +151,33 @@ export const imageBackgroundSchema = z.object({
   }),
 });
 
+/**
+ * A photograph from Unsplash, chosen at random for `query`. The same export-and-hide
+ * arrangement as `imageBackgroundSchema`. `.meta()` only: no shape change.
+ */
+export const unsplashBackgroundSchema = z.object({
+  kind: z.literal('unsplash').meta({ hidden: true }),
+  query: z.string().default('landscape').meta({
+    label: 'Search',
+    help: 'Photos are picked at random from Unsplash results for this. Try “mountains”, “ocean” or “architecture”.',
+  }),
+  refresh: z
+    .enum(['tab', 'hourly', 'daily'])
+    .default('daily')
+    .meta({
+      label: 'New photo',
+      control: 'segmented',
+      options: { tab: 'Every tab', hourly: 'Hourly', daily: 'Daily' },
+      help: 'A new photo appears on the next tab you open, never under the one you are looking at.',
+    }),
+  blur: z.number().min(0).max(40).default(0).meta({ label: 'Blur', unit: 'px' }),
+  dim: z.number().min(0).max(1).default(0).meta({
+    label: 'Dim',
+    step: 0.05,
+    help: 'Darkens the photo so text over it stays readable.',
+  }),
+});
+
 export const backgroundSchema = z.discriminatedUnion('kind', [
   z.object({
     kind: z.literal('solid'),
@@ -163,13 +190,7 @@ export const backgroundSchema = z.discriminatedUnion('kind', [
     angle: z.number().min(0).max(360).default(160),
   }),
   imageBackgroundSchema,
-  z.object({
-    kind: z.literal('unsplash'),
-    query: z.string().default('landscape'),
-    refresh: z.enum(['tab', 'hourly', 'daily']).default('daily'),
-    blur: z.number().min(0).max(40).default(0),
-    dim: z.number().min(0).max(1).default(0),
-  }),
+  unsplashBackgroundSchema,
 ]);
 
 export const profileSchema = z.object({
@@ -199,13 +220,11 @@ export const appSettingsSchema = z
       // Nothing reads this yet — the clock formats with the browser's own locale.
       // Offered to the user when something does. See M5.
       .meta({ label: 'Language', hidden: true }),
-    /** User-supplied; Unsplash backgrounds are off until it is set. */
-    unsplashAccessKey: z
-      .string()
-      .nullable()
-      .default(null)
-      // Unsplash backgrounds are M4. Shown when there is something for a key to do.
-      .meta({ label: 'Unsplash access key', hidden: true }),
+    /** User-supplied. Without it, Unsplash backgrounds use Lorem Picsum. */
+    unsplashAccessKey: z.string().nullable().default(null).meta({
+      label: 'Unsplash access key',
+      help: 'Only needed for Unsplash backgrounds. Free from unsplash.com/developers: create an app and copy its Access Key.',
+    }),
     hasCompletedFirstRun: z
       .boolean()
       .default(false)
@@ -240,6 +259,7 @@ export type LayoutConfig = z.infer<typeof layoutSchema>;
 export type ThemeConfig = z.infer<typeof themeSchema>;
 export type BackgroundConfig = z.infer<typeof backgroundSchema>;
 export type ImageBackground = z.infer<typeof imageBackgroundSchema>;
+export type UnsplashBackground = z.infer<typeof unsplashBackgroundSchema>;
 export type Profile = z.infer<typeof profileSchema>;
 export type AppSettings = z.infer<typeof appSettingsSchema>;
 export type StillpointConfig = z.infer<typeof configSchema>;

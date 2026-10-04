@@ -1,0 +1,39 @@
+.credit {
+  position: fixed;
+  left: 12px;
+  bottom: 8px;
+  z-index: 2;
+  margin: 0;
+  font-family: var(--sp-font-body);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--sp-text);
+  /* Over a photograph there is no colour that is always readable; a shadow is. */
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.6);
+  opacity: 0.55;
+  transition: opacity 150ms ease;
+}
+
+.credit:hover,
+.credit:focus-within {
+  opacity: 1;
+}
+
+.credit a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: rgb(255 255 255 / 0.35);
+  text-underline-offset: 2px;
+}
+
+.credit a:focus-visible {
+  outline: 2px solid var(--sp-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .credit {
+    transition: none;
+  }
+}

@@ -224,3 +224,15 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+.sourceHeading {
+  margin: 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--sp-ui-text);
+}
+
+.customise:disabled {
+  cursor: progress;
+  color: var(--sp-ui-text-muted);
+}

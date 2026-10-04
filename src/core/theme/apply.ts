@@ -61,7 +61,8 @@ export function paintToTokens(paint: CanvasPaint): TokenSet {
 
   const background = backgroundToCss(paint.background, paint.image);
   if (background !== null) tokens['--sp-background'] = background;
-  tokens['--sp-background-blur'] = `${backgroundBlur(paint.background)}px`;
+  tokens['--sp-background-blur'] =
+    `${backgroundBlur(paint.background, background !== null)}px`;
 
   tokens['--sp-grid-cols'] = String(paint.layout.columns);
   tokens['--sp-grid-rows'] = String(paint.layout.rows);

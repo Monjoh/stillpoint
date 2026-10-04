@@ -177,4 +177,25 @@ describe('image previews', () => {
     writePaintCache(withPhoto('a'));
     expect(readPaintCache()!.tokens['--sp-background']).toBeUndefined();
   });
+
+  // With or without a key: without one the photos come from Picsum, but they are
+  // still photos, and the next tab should still open on one.
+  it('caches the Unsplash photo the next tab should open on', () => {
+    writeImagePreview('unsplash', preview);
+    const config = configSchema.parse(fixtureV2);
+    writePaintCache({
+      ...config,
+      profiles: config.profiles.map((p) => ({
+        ...p,
+        background: {
+          kind: 'unsplash' as const,
+          query: 'x',
+          refresh: 'daily' as const,
+          blur: 0,
+          dim: 0,
+        },
+      })),
+    });
+    expect(readPaintCache()!.tokens['--sp-background']).toContain('#336699');
+  });
 });

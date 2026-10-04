@@ -146,8 +146,14 @@ describe('general settings', () => {
   it('leaves hidden fields out of the form', async () => {
     await openPage();
     expect(screen.queryByLabelText(/Has completed first run/i)).toBeNull();
-    expect(screen.queryByLabelText(/Unsplash/i)).toBeNull();
     expect(screen.queryByLabelText(/Language/i)).toBeNull();
+  });
+});
+
+describe('the Unsplash key', () => {
+  it('is offered, now that it enables something', async () => {
+    await openPage();
+    expect(screen.getByLabelText('Unsplash access key')).toBeTruthy();
   });
 });
 

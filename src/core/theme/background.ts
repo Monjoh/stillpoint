@@ -7,7 +7,8 @@ import type { BackgroundConfig } from '@/core/config/schema';
  * An image background needs its `ImageSource`. Without one there is nothing to paint
  * — the photograph is in async storage and no preview is cached — and `null` tells the
  * caller to keep whatever is already on screen: a wrong-but-pleasant background beats
- * a white flash. Unsplash is still to come and resolves to `null` the same way.
+ * a white flash. Unsplash works the same way, with the photo it last downloaded —
+ * from Unsplash with a key, from Lorem Picsum without one, so it never runs dry.
  *
  * An image is painted as layers, top first:
  *
@@ -30,28 +31,36 @@ export function backgroundToCss(
       return background.color;
     case 'gradient':
       return `linear-gradient(${background.angle}deg, ${background.from} 0%, ${background.to} 100%)`;
-    case 'image': {
-      if (!image) return null;
-      const layers: string[] = [];
-      if (background.dim > 0) {
-        const shade = `rgb(0 0 0 / ${background.dim})`;
-        layers.push(`linear-gradient(${shade}, ${shade})`);
-      }
-      if (image.url)
-        layers.push(`url("${image.url}") center / ${background.fit} no-repeat`);
-      layers.push(`url("${image.thumb}") center / cover no-repeat`);
-      return `${layers.join(', ')}, ${image.color}`;
-    }
+    case 'image':
+      return image ? photoLayers(background.dim, background.fit, image) : null;
     case 'unsplash':
-      return null;
+      return image ? photoLayers(background.dim, 'cover', image) : null;
   }
 }
 
+function photoLayers(
+  dim: number,
+  fit: 'cover' | 'contain',
+  image: ImageSource,
+): string {
+  const layers: string[] = [];
+  if (dim > 0) {
+    const shade = `rgb(0 0 0 / ${dim})`;
+    layers.push(`linear-gradient(${shade}, ${shade})`);
+  }
+  if (image.url) layers.push(`url("${image.url}") center / ${fit} no-repeat`);
+  layers.push(`url("${image.thumb}") center / cover no-repeat`);
+  return `${layers.join(', ')}, ${image.color}`;
+}
+
 /**
- * The background blur in px, as `--sp-background-blur` wants it. Unsplash is left at
- * zero until it paints something: blurring the fallback it currently shows instead
- * would be a setting applied to the wrong picture.
+ * The background blur in px, as `--sp-background-blur` wants it. Zero while a photo
+ * background has no pixels: its blur belongs to the photo, not to whatever is showing
+ * in its place.
  */
-export function backgroundBlur(background: BackgroundConfig): number {
-  return background.kind === 'image' ? background.blur : 0;
+export function backgroundBlur(background: BackgroundConfig, painted = true): number {
+  if (!painted) return 0;
+  return background.kind === 'image' || background.kind === 'unsplash'
+    ? background.blur
+    : 0;
 }

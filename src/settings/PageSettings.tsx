@@ -186,7 +186,11 @@ export function PageSettings({
               : (gradient?.name ?? 'Custom'),
           )}
         >
-          <BackgroundFields profile={profile} onChangeBackground={onChangeBackground} />
+          <BackgroundFields
+            profile={profile}
+            onChangeBackground={onChangeBackground}
+            unsplashAccessKey={config.app.unsplashAccessKey}
+          />
         </Section>
 
         <Section

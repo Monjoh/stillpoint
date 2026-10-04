@@ -6,7 +6,9 @@ import { useEditSession } from '@/canvas/useEditSession';
 import { browser } from 'wxt/browser';
 import { configStore, useConfig } from '@/core/config/store';
 import type { Profile, StillpointConfig } from '@/core/config/schema';
+import { UnsplashCredit } from '@/canvas/UnsplashCredit';
 import { useBackgroundImage } from '@/core/assets/use-background-image';
+import { useUnsplash } from '@/core/unsplash/use-unsplash';
 import { writePaintCache } from '@/core/storage/paint-cache';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
 import styles from './NewTab.module.css';
@@ -29,11 +31,14 @@ export function NewTab() {
 
   const profile = config?.profiles.find((p) => p.id === config.activeProfileId);
 
-  const image = useBackgroundImage(profile?.background, healPaintCache);
+  const photo = useBackgroundImage(profile?.background, healPaintCache);
+  const unsplashKey = config?.app.unsplashAccessKey ?? null;
+  const unsplash = useUnsplash(profile?.background, unsplashKey, healPaintCache);
+  const image = profile?.background.kind === 'unsplash' ? unsplash.source : photo;
 
   useEffect(() => {
     // The second paint. boot.ts already did the first one from the cache; this is the
-    // authoritative pass, and it corrects the cache if the two ever disagree. An image
+    // authoritative pass, and it corrects the cache if the two ever disagree. A photo
     // background paints here twice: its preview first, its photograph once read.
     if (profile) applyCanvasTokens(profileToPaint(profile, image));
   }, [profile, image]);
@@ -125,6 +130,10 @@ export function NewTab() {
             <EditAffordance onEnter={session.enter} />
           )}
         </>
+      )}
+
+      {status === 'ready' && unsplash.credit && (
+        <UnsplashCredit credit={unsplash.credit} />
       )}
 
       {error && (
