@@ -41,6 +41,10 @@ export interface EditPanelProps {
   instance?: WidgetInstance;
   onChangeSettings: (instanceId: string, settings: unknown) => void;
   onChangeFrame: (instanceId: string, frame: WidgetInstance['frame']) => void;
+  /** Copies the widget beside itself. The original stays selected. */
+  onDuplicate: (instanceId: string) => void;
+  /** Removes the widget; the panel returns to the page settings. */
+  onRemove: (instanceId: string) => void;
   onChangeLayout: (layout: LayoutConfig) => void;
   onChangeTheme: (theme: ThemeConfig) => void;
   onChangeBackground: (background: BackgroundConfig) => void;
@@ -60,6 +64,8 @@ export function EditPanel({
   instance,
   onChangeSettings,
   onChangeFrame,
+  onDuplicate,
+  onRemove,
   onChangeLayout,
   onChangeTheme,
   onChangeBackground,
@@ -136,6 +142,8 @@ export function EditPanel({
           instance={instance}
           onChangeSettings={onChangeSettings}
           onChangeFrame={onChangeFrame}
+          onDuplicate={onDuplicate}
+          onRemove={onRemove}
           onCommit={onCommit}
         />
       ) : (

@@ -52,6 +52,8 @@ function setup(options: { instance?: WidgetInstance | null } = {}) {
   const handlers = {
     onChangeSettings: vi.fn(),
     onChangeFrame: vi.fn(),
+    onDuplicate: vi.fn(),
+    onRemove: vi.fn(),
     onChangeLayout: vi.fn(),
     onChangeTheme: vi.fn(),
     onChangeBackground: vi.fn(),
@@ -194,6 +196,32 @@ describe('the frame', () => {
   });
 });
 
+describe('the footer', () => {
+  it('asks before removing, and Cancel keeps the widget', async () => {
+    const { onRemove } = setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(onRemove).not.toHaveBeenCalled();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('button', { name: 'Remove widget' })).toBeNull();
+    expect(onRemove).not.toHaveBeenCalled();
+
+    // A double click on Remove only opens the question, with Cancel focused.
+    await userEvent.dblClick(screen.getByRole('button', { name: 'Remove' }));
+    expect(onRemove).not.toHaveBeenCalled();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove widget' }));
+    expect(onRemove).toHaveBeenCalledWith('w1');
+  });
+
+  it('duplicates the widget', async () => {
+    const { onDuplicate } = setup();
+    await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+    expect(onDuplicate).toHaveBeenCalledWith('w1');
+  });
+});
+
 describe('a widget type that is not installed', () => {
   // The instance survives a downgrade; so must its settings.
   it('says so and offers no controls rather than editing a guess', () => {
@@ -203,5 +231,7 @@ describe('a widget type that is not installed', () => {
     expect(screen.getByText(/is not installed/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Reset to defaults' })).toBeNull();
     expect(onChangeSettings).not.toHaveBeenCalled();
+    // It can still be removed: it is the user's to get rid of.
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeTruthy();
   });
 });

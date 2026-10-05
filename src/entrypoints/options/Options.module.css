@@ -133,8 +133,8 @@
 }
 
 .button[data-danger]:hover:not(:disabled) {
-  border-color: #e06c75;
-  color: #e06c75;
+  border-color: var(--sp-ui-danger);
+  color: var(--sp-ui-danger);
 }
 
 .iconButton {
@@ -182,7 +182,7 @@
 }
 
 .status[data-tone='error'] {
-  border-color: #e06c75;
+  border-color: var(--sp-ui-danger);
   color: #e9a0a6;
 }
 

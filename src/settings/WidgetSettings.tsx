@@ -1,6 +1,6 @@
 import { i18n } from '#i18n';
 import { richText } from '@/lib/rich-text';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { frameSchema, type WidgetInstance } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
 import { resolveSettings } from '@/core/registry/settings';
@@ -20,12 +20,18 @@ import styles from './EditPanel.module.css';
  * generated from `frameSchema` and identical for every widget type. It is drawn here
  * rather than declared by each widget so that no widget can forget it and no two can
  * offer it differently.
+ *
+ * The footer holds what acts on the widget itself: Duplicate and Remove (also on
+ * ⌘D and Delete, which nobody finds unaided), and Reset. Remove asks once, because
+ * there is no undo.
  */
 
 export interface WidgetSettingsProps {
   instance: WidgetInstance;
   onChangeSettings: (instanceId: string, settings: unknown) => void;
   onChangeFrame: (instanceId: string, frame: WidgetInstance['frame']) => void;
+  onDuplicate: (instanceId: string) => void;
+  onRemove: (instanceId: string) => void;
   onCommit: () => void;
 }
 
@@ -33,8 +39,11 @@ export function WidgetSettings({
   instance,
   onChangeSettings,
   onChangeFrame,
+  onDuplicate,
+  onRemove,
   onCommit,
 }: WidgetSettingsProps) {
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const definition = widgetRegistry.get(instance.type);
   const schema = definition?.settingsSchema;
 
@@ -83,22 +92,66 @@ export function WidgetSettings({
         </section>
       </div>
 
-      {definition && fields.length > 0 && (
-        <footer className={styles.footer}>
-          <button
-            type="button"
-            className={styles.quiet}
-            // `{}` rather than a built object: the schema's own defaults are the
-            // definition of "default", and rebuilding them here would drift.
-            onClick={() => {
-              onChangeSettings(instance.instanceId, {});
-              onCommit();
-            }}
-          >
-            {i18n.t('widgetSettings.reset')}
-          </button>
-        </footer>
-      )}
+      <footer className={styles.footer}>
+        {confirmingRemove ? (
+          <>
+            <button
+              key="confirm"
+              type="button"
+              className={styles.quiet}
+              data-danger
+              onClick={() => onRemove(instance.instanceId)}
+            >
+              {i18n.t('widgetSettings.confirmRemove')}
+            </button>
+            <button
+              key="cancel"
+              type="button"
+              className={styles.quiet}
+              // Focus goes to Cancel, not to the destructive choice: a held Enter or
+              // a double click on Remove must not remove. Keyed, so this is a fresh
+              // element rather than the Remove button reused in place.
+              autoFocus
+              onClick={() => setConfirmingRemove(false)}
+            >
+              {i18n.t('widgetSettings.cancel')}
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              className={styles.quiet}
+              onClick={() => onDuplicate(instance.instanceId)}
+            >
+              {i18n.t('widgetSettings.duplicate')}
+            </button>
+            <button
+              type="button"
+              className={styles.quiet}
+              data-danger
+              onClick={() => setConfirmingRemove(true)}
+            >
+              {i18n.t('widgetSettings.remove')}
+            </button>
+            {definition && fields.length > 0 && (
+              <button
+                type="button"
+                className={styles.quiet}
+                data-push
+                // `{}` rather than a built object: the schema's own defaults are the
+                // definition of "default", and rebuilding them here would drift.
+                onClick={() => {
+                  onChangeSettings(instance.instanceId, {});
+                  onCommit();
+                }}
+              >
+                {i18n.t('widgetSettings.reset')}
+              </button>
+            )}
+          </>
+        )}
+      </footer>
     </>
   );
 }

@@ -245,6 +245,10 @@ widgetSettings:
   notInstalled: 'This widget’s type ([[type]]) is not installed, so its settings cannot be shown. They are kept untouched.'
   frame: 'Frame'
   reset: 'Reset to defaults'
+  duplicate: 'Duplicate'
+  remove: 'Remove'
+  confirmRemove: 'Remove widget'
+  cancel: 'Cancel'
 
 # Generated settings controls.
 controls:

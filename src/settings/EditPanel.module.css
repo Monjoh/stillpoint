@@ -126,7 +126,8 @@
 .footer {
   flex: none;
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 4px;
   padding: 9px 14px;
   border-top: 1px solid var(--sp-ui-border);
 }
@@ -145,6 +146,17 @@
 .quiet:hover {
   border-color: var(--sp-ui-border);
   color: var(--sp-ui-text);
+}
+
+.quiet[data-danger]:hover,
+.quiet[data-danger]:focus-visible {
+  border-color: var(--sp-ui-danger);
+  color: var(--sp-ui-danger);
+}
+
+/* Reset sits apart, at the far end: it acts on the settings, not the widget. */
+.quiet[data-push] {
+  margin-left: auto;
 }
 
 .note {

@@ -401,6 +401,27 @@ describe('the settings panel', () => {
     expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
   });
 
+  it('removes the selected widget from the panel, after asking once', async () => {
+    const { state, onSelect } = setup(profile([clock('a', 0, 0), clock('b', 10, 0)]));
+    await userEvent.click(widgetBox(0));
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(state.profile.widgets).toHaveLength(2);
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove widget' }));
+    expect(state.profile.widgets.map((w) => w.instanceId)).toEqual(['b']);
+    expect(onSelect).toHaveBeenLastCalledWith(null);
+  });
+
+  it('duplicates the selected widget from the panel', async () => {
+    const { state } = setup(profile([clock('a', 0, 0)]));
+    await userEvent.click(widgetBox(0));
+    await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
+
+    expect(state.profile.widgets).toHaveLength(2);
+    expect(state.profile.widgets[1]!.type).toBe('stillpoint.clock');
+  });
+
   it('writes a setting through to the profile, leaving the layout alone', async () => {
     const { state } = setup(profile([clock('a', 2, 1)]));
     await userEvent.click(widgetBox(0));

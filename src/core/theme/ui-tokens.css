@@ -23,6 +23,8 @@
   --sp-ui-text-muted: #9a9aa4;
   --sp-ui-border: #2c2c34;
   --sp-ui-accent: #7aa2f7;
+  /* Destructive actions: removing a widget, deleting everything. */
+  --sp-ui-danger: #e06c75;
 
   --sp-ui-radius: 10px;
   /* Read by the settings panel and, through a fallback, by the canvas stage, which

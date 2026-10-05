@@ -11,6 +11,8 @@ import { EditPanel } from '@/settings/EditPanel';
 import type { CanvasGeometry } from '../geometry';
 import {
   addWidget,
+  duplicateWidget,
+  removeWidget,
   setLayout,
   updateWidgetSettings,
   updateWidgetFrame,
@@ -104,6 +106,16 @@ export default function EditMode({
             onChangeFrame={(instanceId, frame) =>
               onChange(updateWidgetFrame(profile, instanceId, frame))
             }
+            // The same operations as Delete and ⌘D on the canvas (EditLayer).
+            onDuplicate={(instanceId) => {
+              onChange(duplicateWidget(profile, instanceId));
+              onCommit();
+            }}
+            onRemove={(instanceId) => {
+              onChange(removeWidget(profile, instanceId));
+              onSelect(null);
+              onCommit();
+            }}
             onChangeLayout={(layout: LayoutConfig) =>
               onChange(setLayout(profile, layout))
             }
