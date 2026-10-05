@@ -3,6 +3,7 @@ import fixtureV1 from './__fixtures__/config-v1.json';
 import fixtureV2 from './__fixtures__/config-v2.json';
 import fixtureV3 from './__fixtures__/config-v3.json';
 import fixtureV4 from './__fixtures__/config-v4.json';
+import fixtureV5 from './__fixtures__/config-v5.json';
 import { ConfigVersionError, migrations, runMigrations } from './migrations';
 import { CONFIG_VERSION, configSchema } from './schema';
 
@@ -94,23 +95,28 @@ describe('fixtures', () => {
 
   it('config-v1 loses the page-wide text size and nothing else', () => {
     expect(migrations[2]!(fixtureV1)).toEqual(fixtureV2);
-    expect(runMigrations(fixtureV1).applied).toEqual([2, 3, 4]);
+    expect(runMigrations(fixtureV1).applied).toEqual([2, 3, 4, 5]);
   });
 
   it('config-v2 loses the frame padding and gets opacity in percent', () => {
     expect(migrations[3]!(fixtureV2)).toEqual(fixtureV3);
-    expect(runMigrations(fixtureV2).applied).toEqual([3, 4]);
+    expect(runMigrations(fixtureV2).applied).toEqual([3, 4, 5]);
   });
 
   it('config-v3 has no web-photo background, so only its version changes', () => {
-    const { config, applied } = runMigrations(fixtureV3);
-    expect(applied).toEqual([4]);
-    expect(config).toEqual(fixtureV4);
+    expect(migrations[4]!(fixtureV3)).toEqual(fixtureV4);
+    expect(runMigrations(fixtureV3).applied).toEqual([4, 5]);
   });
 
-  it('config-v4 is current and parses as-is', () => {
-    expect(runMigrations(fixtureV4).applied).toEqual([]);
-    expect(configSchema.safeParse(fixtureV4).success).toBe(true);
+  it('config-v4 loses the canvas lock and nothing else', () => {
+    const { config, applied } = runMigrations(fixtureV4);
+    expect(applied).toEqual([5]);
+    expect(config).toEqual(fixtureV5);
+  });
+
+  it('config-v5 is current and parses as-is', () => {
+    expect(runMigrations(fixtureV5).applied).toEqual([]);
+    expect(configSchema.safeParse(fixtureV5).success).toBe(true);
   });
 });
 
@@ -178,5 +184,22 @@ describe('migration 4', () => {
   it('leaves a malformed tree for the schema to reject', () => {
     expect(() => migrations[4]!({ version: 3, profiles: 'nope' })).not.toThrow();
     expect(() => migrations[4]!({ version: 3, profiles: [null] })).not.toThrow();
+  });
+});
+
+describe('migration 5', () => {
+  it('unlocks a locked canvas by dropping the switch', () => {
+    const out = migrations[5]!({
+      version: 4,
+      app: { locale: 'en', editModeEnabled: false },
+    });
+    expect(out).toEqual({ version: 5, app: { locale: 'en' } });
+  });
+
+  it('leaves a tree with no app settings for the schema to fill in', () => {
+    expect(migrations[5]!({ version: 4, profiles: [] })).toEqual({
+      version: 5,
+      profiles: [],
+    });
   });
 });

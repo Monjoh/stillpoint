@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { browser } from 'wxt/browser';
@@ -134,11 +134,12 @@ describe('general settings', () => {
     const user = userEvent.setup();
     await openPage();
 
-    const toggle = screen.getByLabelText('Allow editing the layout');
-    expect(toggle).toHaveProperty('checked', true);
-
-    await user.click(toggle);
-    expect((await stored()).app.editModeEnabled).toBe(false);
+    await user.type(screen.getByLabelText('Unsplash access key'), 'abc');
+    await waitFor(async () =>
+      expect((await stored()).app.unsplashAccessKey).toBe('abc'),
+    );
+    // The canvas lock went in config v5: it hid the only way back into edit mode.
+    expect(screen.queryByLabelText('Allow editing the layout')).toBeNull();
   });
 
   // Internal state and options for features that do not exist yet are carried by the

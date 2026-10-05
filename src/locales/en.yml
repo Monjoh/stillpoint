@@ -198,8 +198,6 @@ page:
     title: 'Layout'
   general:
     title: 'General'
-    unlocked: 'Editing allowed'
-    locked: 'Canvas locked'
   allSettings: 'All settings and backups…'
 
 background:
@@ -312,9 +310,6 @@ config:
       help: 'Only needed for Unsplash backgrounds. Free from unsplash.com/developers: create an app and copy its Access Key.'
     firstRun:
       label: 'Has completed first run'
-    editMode:
-      label: 'Allow editing the layout'
-      help: 'Turn this off to lock the canvas. The “Edit layout” button and the E shortcut stop responding.'
   photo:
     blur: 'Blur'
     dim: 'Dim'

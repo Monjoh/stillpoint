@@ -5,8 +5,9 @@ import { useCallback, useEffect, useState } from 'react';
  *
  * Whether this tab is being edited is not something the user would want synced to
  * their other tabs or restored on a cold start — a new tab that opens in edit mode
- * because you were editing an hour ago is a bug, not a feature. `app.editModeEnabled`
- * in the config is a different question: whether editing is offered at all.
+ * because you were editing an hour ago is a bug, not a feature. (There was also a
+ * config switch to lock editing altogether; it hid the only way back in, and went in
+ * config v5.)
  *
  * This hook is **not** part of the lazily loaded edit chunk, and only handles the two
  * bindings that have to work before edit mode exists: `e` to enter and `Escape` to

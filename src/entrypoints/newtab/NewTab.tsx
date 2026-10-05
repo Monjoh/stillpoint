@@ -63,7 +63,7 @@ export function NewTab() {
   }, []);
 
   const session = useEditSession({
-    enabled: status === 'ready' && config?.app.editModeEnabled === true,
+    enabled: status === 'ready',
     onExit: handleCommit,
   });
 
@@ -144,7 +144,7 @@ export function NewTab() {
 
           {profile.widgets.length === 0 && !session.isEditing && <EmptyCanvas />}
 
-          {!session.isEditing && config?.app.editModeEnabled && (
+          {!session.isEditing && (
             <EditAffordance
               onEnter={session.enter}
               firstRun={firstRun}

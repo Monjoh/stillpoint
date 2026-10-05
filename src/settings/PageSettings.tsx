@@ -1,7 +1,6 @@
 import { i18n } from '#i18n';
 import { useMemo } from 'react';
 import {
-  appSettingsSchema,
   layoutSchema,
   type BackgroundConfig,
   type LayoutConfig,
@@ -82,15 +81,6 @@ export function PageSettings({
   onToggleSection,
 }: PageSettingsProps) {
   const layoutFields = useMemo(() => describeSchema(layoutSchema), []);
-  // The Unsplash key is offered under Background → Unsplash, where it is used. The
-  // options page still lists it with the other app-wide settings.
-  const appFields = useMemo(
-    () =>
-      describeSchema(appSettingsSchema).filter(
-        (field) => field.key !== 'unsplashAccessKey',
-      ),
-    [],
-  );
 
   const preset = getPreset(profile.theme.preset);
   const gradient = matchGradient(profile.background);
@@ -232,28 +222,6 @@ export function PageSettings({
               const next = layoutSchema.safeParse({ ...profile.layout, [key]: value });
               if (next.success) onChangeLayout(next.data);
             }}
-          />
-        </Section>
-
-        <Section
-          {...section(
-            'general',
-            i18n.t('page.general.title'),
-            config.app.editModeEnabled
-              ? i18n.t('page.general.unlocked')
-              : i18n.t('page.general.locked'),
-          )}
-        >
-          <GeneratedFields
-            fields={appFields}
-            values={config.app}
-            idPrefix="sp-app"
-            onChange={(key, value) =>
-              onChangeConfig((c) => {
-                const next = appSettingsSchema.safeParse({ ...c.app, [key]: value });
-                return next.success ? setAppSettings(c, next.data) : c;
-              })
-            }
           />
         </Section>
       </div>

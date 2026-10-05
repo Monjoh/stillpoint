@@ -83,6 +83,18 @@ export const migrations: Record<number, Migration> = {
         : v3.profiles,
     };
   },
+
+  /**
+   * v5 drops `app.editModeEnabled`, the canvas lock. Locking hid the only way back
+   * into edit mode, and the switch to undo it was on the options page, where nothing
+   * pointed. A locked install comes back unlocked.
+   */
+  5: (v4) => {
+    if (typeof v4?.app !== 'object' || v4.app === null) return { ...v4, version: 5 };
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { editModeEnabled, ...app } = v4.app;
+    return { ...v4, version: 5, app };
+  },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

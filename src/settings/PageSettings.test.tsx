@@ -203,17 +203,12 @@ describe('the layout section', () => {
 });
 
 describe('the general section', () => {
-  it('shows the app settings that are meant to be seen, and not the rest', async () => {
-    const { applied } = setup({ open: 'general' });
-
-    const toggle = screen.getByLabelText('Allow editing the layout');
-    expect(toggle).toHaveProperty('checked', true);
-    expect(screen.queryByLabelText('Language')).toBeNull();
-    // Under Background → Unsplash since S22, where it is used.
-    expect(screen.queryByLabelText('Unsplash access key')).toBeNull();
-
-    await userEvent.click(toggle);
-    expect(applied().app.editModeEnabled).toBe(false);
+  // Its last setting, the canvas lock, went in config v5; the Unsplash key is under
+  // Background. An empty section would be a row that opens onto nothing.
+  it('is gone', () => {
+    setup();
+    expect(screen.getByRole('button', { name: /^Layout/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^General/ })).toBeNull();
   });
 
   it('offers the full options page only where there is one to open', async () => {
@@ -243,7 +238,7 @@ describe('the categories', () => {
 
   it('starts with every category closed', () => {
     setup();
-    for (const name of ['Profile', 'Theme', 'Background', 'Layout', 'General']) {
+    for (const name of ['Profile', 'Theme', 'Background', 'Layout']) {
       expect(trigger(name).getAttribute('aria-expanded')).toBe('false');
     }
     // Closed means not rendered, so a collapsed category holds nothing focusable.
@@ -256,7 +251,6 @@ describe('the categories', () => {
     // This fixture is a solid colour, which is none of the ten swatches.
     expect(trigger('Background').textContent).toContain('Custom');
     expect(trigger('Layout').textContent).toContain('24 \u00d7 12');
-    expect(trigger('General').textContent).toContain('Editing allowed');
     expect(trigger('Profile').textContent).toContain('Focus');
   });
 
@@ -272,10 +266,10 @@ describe('the categories', () => {
   it('keeps only one open at a time', async () => {
     setup();
     await userEvent.click(trigger('Layout'));
-    await userEvent.click(trigger('General'));
+    await userEvent.click(trigger('Theme'));
 
     expect(screen.queryByLabelText('Columns')).toBeNull();
-    expect(screen.getByLabelText('Allow editing the layout')).toBeTruthy();
+    expect(screen.getByRole('radiogroup', { name: 'Theme' })).toBeTruthy();
   });
 
   // The value is the question's answer; once open, the section is saying it louder.

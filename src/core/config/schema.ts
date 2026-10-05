@@ -16,7 +16,7 @@ z.config({ jitless: true });
  * Bump for ANY shape change, including additive ones, and write a migration.
  * Two releases sharing a version number with different shapes is unrecoverable.
  */
-export const CONFIG_VERSION = 4;
+export const CONFIG_VERSION = 5;
 
 /**
  * A position on the canvas in grid cells, not pixels. Both axes are relative:
@@ -299,13 +299,6 @@ export const appSettingsSchema = z
       .boolean()
       .default(false)
       .meta({ label: i18n.t('config.app.firstRun.label'), hidden: true }),
-    editModeEnabled: z
-      .boolean()
-      .default(true)
-      .meta({
-        label: i18n.t('config.app.editMode.label'),
-        help: i18n.t('config.app.editMode.help'),
-      }),
   })
   .prefault({});
 
