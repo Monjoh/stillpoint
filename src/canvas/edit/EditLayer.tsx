@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useCallback, useState } from 'react';
 import type { Profile, Rect } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
@@ -240,9 +241,13 @@ export function EditLayer({
             // focus is visible, and a screen reader is told what each box is.
             tabIndex={0}
             role="button"
-            aria-label={`${name}, column ${instance.rect.x + 1}, row ${
-              instance.rect.y + 1
-            }, ${instance.rect.w} by ${instance.rect.h} cells`}
+            aria-label={i18n.t('edit.widgetBox', {
+              name,
+              column: instance.rect.x + 1,
+              row: instance.rect.y + 1,
+              width: instance.rect.w,
+              height: instance.rect.h,
+            })}
             aria-pressed={selected}
             style={{
               left: `${box.left}px`,

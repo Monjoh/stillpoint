@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { lazy, Suspense, useCallback, useEffect } from 'react';
 import { Background } from '@/canvas/Background';
 import { Canvas } from '@/canvas/Canvas';
@@ -11,6 +12,7 @@ import { useBackgroundImage } from '@/core/assets/use-background-image';
 import { useUnsplash } from '@/core/unsplash/use-unsplash';
 import { writePaintCache } from '@/core/storage/paint-cache';
 import { applyCanvasTokens, profileToPaint } from '@/core/theme/apply';
+import { richText } from '@/lib/rich-text';
 import styles from './NewTab.module.css';
 
 /**
@@ -180,9 +182,12 @@ function healPaintCache() {
 function EmptyCanvas() {
   return (
     <div className={styles.empty}>
+      {/* eslint-disable-next-line no-restricted-syntax -- the wordmark, not language */}
       <h1 className={styles.wordmark}>stillpoint</h1>
       <p className={styles.hint}>
-        Press <kbd className={styles.kbd}>E</kbd> to add a widget.
+        {richText(i18n.t('newtab.emptyHint'), {
+          key: <kbd className={styles.kbd}>E</kbd>,
+        })}
       </p>
     </div>
   );
@@ -210,13 +215,15 @@ function EditAffordance({
   return (
     <div className={styles.editZone} data-first-run={firstRun || undefined}>
       <button type="button" className={styles.editButton} onClick={onEnter}>
-        Edit layout
+        {i18n.t('newtab.editLayout')}
       </button>
       {firstRun && (
         <p className={styles.firstRun}>
-          or press <kbd className={styles.kbd}>E</kbd> to customise this page
+          {richText(i18n.t('newtab.firstRunHint'), {
+            key: <kbd className={styles.kbd}>E</kbd>,
+          })}
           <button type="button" className={styles.dismiss} onClick={onDismiss}>
-            Got it
+            {i18n.t('newtab.gotIt')}
           </button>
         </p>
       )}

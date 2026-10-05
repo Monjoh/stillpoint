@@ -274,7 +274,7 @@ describe('the list control', () => {
         }),
       )
       .default([])
-      .meta(field({ label: 'Links' })),
+      .meta(field({ label: 'Links', itemLabel: 'link' })),
   });
 
   it('adds a row seeded from the row fields’ defaults', async () => {

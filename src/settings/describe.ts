@@ -50,6 +50,8 @@ export interface FieldDescriptor extends ControlField {
   hidden?: boolean;
   /** `group`: the nested fields. `list`: the fields of one row. */
   fields?: FieldDescriptor[];
+  /** `list`: what one row is called. Defaults to `label`. */
+  itemLabel?: string;
   /** `custom`: the widget's own control. */
   component?: FieldMeta['component'];
 }
@@ -97,6 +99,7 @@ export function describeField(
     group: meta?.group,
     order: meta?.order,
     hidden: meta?.hidden,
+    itemLabel: meta?.itemLabel,
   };
 
   // An explicit `control` in the metadata wins over anything inferred — that is the

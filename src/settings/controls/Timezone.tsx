@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useId, useMemo } from 'react';
 import { timezoneNames } from '../timezones';
 import type { ControlProps } from '@/core/registry/types';
@@ -57,7 +58,7 @@ export function TimezoneControl({
         type="button"
         className={styles.iconButton}
         disabled={value === null || value === ''}
-        aria-label={`Use this device’s time zone for ${field.label.toLowerCase()}`}
+        aria-label={i18n.t('controls.timezone.useDevice', { label: field.label })}
         onClick={() => onChange(null)}
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -70,8 +71,11 @@ export function TimezoneControl({
 
 function localZone(): string {
   try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Device time zone';
+    return (
+      Intl.DateTimeFormat().resolvedOptions().timeZone ||
+      i18n.t('controls.timezone.device')
+    );
   } catch {
-    return 'Device time zone';
+    return i18n.t('controls.timezone.device');
   }
 }

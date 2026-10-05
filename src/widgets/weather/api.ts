@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { RateLimitError } from '@/core/data/errors';
 import type { WeatherLocation } from './definition';
 import type { Units } from './units';
 
@@ -49,16 +51,19 @@ export async function fetchWeather(
     response = await fetcher(url.href, { signal, credentials: 'omit' });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new Error('The weather service could not be reached.', { cause: error });
+    throw new Error(i18n.t('widget.weather.error.unreachable'), { cause: error });
   }
-  if (!response.ok) throw new Error('The weather service is not answering right now.');
+  if (response.status === 429) {
+    throw new RateLimitError(i18n.t('widget.weather.error.down'));
+  }
+  if (!response.ok) throw new Error(i18n.t('widget.weather.error.down'));
 
   const body = (await response.json().catch(() => null)) as Record<
     string,
     unknown
   > | null;
   const data = body ? parse(body, units) : null;
-  if (!data) throw new Error('The weather service sent something unreadable.');
+  if (!data) throw new Error(i18n.t('widget.weather.error.unreadable'));
   return data;
 }
 

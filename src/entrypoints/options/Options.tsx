@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useEffect, useMemo, useState } from 'react';
 import { appSettingsSchema, type StillpointConfig } from '@/core/config/schema';
 import {
@@ -51,11 +52,11 @@ export function Options() {
   if (status !== 'ready' || !config) {
     return (
       <main className={styles.page}>
-        <h1 className={styles.title}>Stillpoint</h1>
+        <h1 className={styles.title}>{i18n.t('manifest.name')}</h1>
         <p className={styles.body}>
           {status === 'error'
-            ? 'Settings could not be loaded.'
-            : 'Loading your settings…'}
+            ? i18n.t('options.loadFailed')
+            : i18n.t('options.loading')}
         </p>
       </main>
     );
@@ -63,11 +64,8 @@ export function Options() {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>Stillpoint</h1>
-      <p className={styles.body}>
-        Everything here is stored on this device only. Nothing is sent anywhere, and
-        there is no account.
-      </p>
+      <h1 className={styles.title}>{i18n.t('manifest.name')}</h1>
+      <p className={styles.body}>{i18n.t('options.intro')}</p>
 
       {storeError && (
         <p className={styles.status} data-tone="error" role="status">
@@ -79,7 +77,9 @@ export function Options() {
       <General config={config} write={write} />
       <Data config={config} notice={notice} setNotice={setNotice} />
 
-      <p className={styles.footnote}>Config format version {CURRENT_CONFIG_VERSION}.</p>
+      <p className={styles.footnote}>
+        {i18n.t('options.configVersion', { version: CURRENT_CONFIG_VERSION })}
+      </p>
     </main>
   );
 }
@@ -98,11 +98,8 @@ function Profiles({ config, write }: { config: StillpointConfig; write: Write })
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>Profiles</h2>
-      <p className={styles.sectionNote}>
-        Each profile is a whole new tab page: its own layout, widgets, background and
-        theme. One is active at a time.
-      </p>
+      <h2 className={styles.sectionTitle}>{i18n.t('options.profiles.title')}</h2>
+      <p className={styles.sectionNote}>{i18n.t('options.profiles.note')}</p>
 
       <ul className={styles.profiles}>
         {config.profiles.map((profile, index) => (
@@ -116,44 +113,42 @@ function Profiles({ config, write }: { config: StillpointConfig; write: Write })
               name="active-profile"
               className={styles.radio}
               checked={profile.id === config.activeProfileId}
-              aria-label={`Use ${profile.name}`}
+              aria-label={i18n.t('options.profiles.use', { name: profile.name })}
               onChange={() => write((c) => setActiveProfile(c, profile.id))}
             />
 
             <NameField
               id={`profile-name-${profile.id}`}
               className={styles.name}
-              label={`Name of profile ${profile.name}`}
+              label={i18n.t('options.profiles.nameOf', { name: profile.name })}
               value={profile.name}
               onCommit={(name) => write((c) => renameProfile(c, profile.id, name))}
             />
 
             <span className={styles.count}>
-              {profile.widgets.length === 1
-                ? '1 widget'
-                : `${profile.widgets.length} widgets`}
+              {i18n.t('options.profiles.widgets', profile.widgets.length)}
             </span>
 
             <div className={styles.rowActions}>
               <IconButton
-                label={`Move ${profile.name} up`}
+                label={i18n.t('options.profiles.moveUp', { name: profile.name })}
                 disabled={index === 0}
                 onClick={() => write((c) => moveProfile(c, profile.id, -1))}
                 path="M6 14l6-6 6 6"
               />
               <IconButton
-                label={`Move ${profile.name} down`}
+                label={i18n.t('options.profiles.moveDown', { name: profile.name })}
                 disabled={index === config.profiles.length - 1}
                 onClick={() => write((c) => moveProfile(c, profile.id, 1))}
                 path="M6 10l6 6 6-6"
               />
               <IconButton
-                label={`Duplicate ${profile.name}`}
+                label={i18n.t('options.profiles.duplicate', { name: profile.name })}
                 onClick={() => write((c) => duplicateProfile(c, profile.id))}
                 path="M9 9h10v10H9zM5 15V5h10"
               />
               <IconButton
-                label={`Delete ${profile.name}`}
+                label={i18n.t('options.profiles.delete', { name: profile.name })}
                 // The schema requires at least one profile. Deleting the last would
                 // produce a config that fails to parse and is replaced by defaults on
                 // the next load — the user's whole setup gone to an ordinary button.
@@ -171,7 +166,7 @@ function Profiles({ config, write }: { config: StillpointConfig; write: Write })
         className={styles.button}
         onClick={() => write((c) => createProfile(c))}
       >
-        New profile
+        {i18n.t('page.profile.new')}
       </button>
     </section>
   );
@@ -184,11 +179,8 @@ function General({ config, write }: { config: StillpointConfig; write: Write }) 
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>General</h2>
-      <p className={styles.sectionNote}>
-        Applies to every profile. Generated from the same schema the new tab validates
-        against, by the same code that draws a widget’s settings.
-      </p>
+      <h2 className={styles.sectionTitle}>{i18n.t('page.general.title')}</h2>
+      <p className={styles.sectionNote}>{i18n.t('options.general.note')}</p>
 
       <GeneratedFields
         fields={fields}
@@ -237,7 +229,10 @@ function Data({
     // Revoked on the next turn of the loop: Firefox needs the URL to still resolve
     // when it starts the download, which happens after click() returns.
     setTimeout(() => URL.revokeObjectURL(url), 0);
-    setNotice({ tone: 'success', text: `Saved ${file.filename}.` });
+    setNotice({
+      tone: 'success',
+      text: i18n.t('options.data.saved', { file: file.filename }),
+    });
   };
 
   const upload = async (file: File | undefined) => {
@@ -254,7 +249,7 @@ function Data({
     } catch {
       setNotice({
         tone: 'error',
-        text: 'The photos in that file could not be stored, so nothing was imported. There may not be enough storage space left.',
+        text: i18n.t('options.data.photosFailed'),
       });
       return;
     }
@@ -266,26 +261,23 @@ function Data({
     setNotice({
       tone: 'success',
       text: result.migratedFrom
-        ? `Imported, and upgraded from config version ${result.migratedFrom}.`
-        : 'Imported.',
+        ? i18n.t('options.data.importedUpgraded', { version: result.migratedFrom })
+        : i18n.t('options.data.imported'),
     });
   };
 
   return (
     <section className={styles.section}>
-      <h2 className={styles.sectionTitle}>Your data</h2>
-      <p className={styles.sectionNote}>
-        An export is a plain JSON file holding every profile, setting and photo.
-        Importing one replaces everything — export first if you want a way back.
-      </p>
+      <h2 className={styles.sectionTitle}>{i18n.t('options.data.title')}</h2>
+      <p className={styles.sectionNote}>{i18n.t('options.data.note')}</p>
 
       <div className={styles.actions}>
         <button type="button" className={styles.button} onClick={() => void download()}>
-          Export to a file
+          {i18n.t('options.data.export')}
         </button>
 
         <label className={styles.button}>
-          Import a file
+          {i18n.t('options.data.import')}
           <input
             type="file"
             accept="application/json,.json"
@@ -307,17 +299,17 @@ function Data({
               onClick={() => {
                 void configStore.getState().reset();
                 setConfirmingReset(false);
-                setNotice({ tone: 'success', text: 'Reset to a fresh install.' });
+                setNotice({ tone: 'success', text: i18n.t('options.data.wasReset') });
               }}
             >
-              Delete everything, really
+              {i18n.t('options.data.confirmReset')}
             </button>
             <button
               type="button"
               className={styles.button}
               onClick={() => setConfirmingReset(false)}
             >
-              Cancel
+              {i18n.t('options.data.cancel')}
             </button>
           </>
         ) : (
@@ -327,7 +319,7 @@ function Data({
             data-danger
             onClick={() => setConfirmingReset(true)}
           >
-            Reset everything
+            {i18n.t('options.data.reset')}
           </button>
         )}
       </div>

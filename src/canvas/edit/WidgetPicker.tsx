@@ -1,5 +1,7 @@
+import { i18n } from '#i18n';
 import { useEffect, useRef } from 'react';
 import { widgetRegistry } from '@/core/registry';
+import type { WidgetCategory } from '@/core/registry/types';
 import styles from './WidgetPicker.module.css';
 
 /**
@@ -8,13 +10,9 @@ import styles from './WidgetPicker.module.css';
  * with its own copy of the catalogue would quietly break it on the first new widget.
  */
 
-const CATEGORY_LABELS: Record<string, string> = {
-  time: 'Time',
-  info: 'Information',
-  navigation: 'Navigation',
-  productivity: 'Productivity',
-  decoration: 'Decoration',
-};
+/** The category's name, in the browser's language. Typed: a new category needs one. */
+const categoryLabel = (category: WidgetCategory): string =>
+  i18n.t(`picker.category.${category}`);
 
 export interface WidgetPickerProps {
   onPick: (widgetId: string) => void;
@@ -46,12 +44,12 @@ export function WidgetPicker({ onPick, onClose }: WidgetPickerProps) {
       ref={panel}
       className={styles.picker}
       role="menu"
-      aria-label="Add a widget"
+      aria-label={i18n.t('picker.label')}
       onPointerDown={(event) => event.stopPropagation()}
     >
       {widgetRegistry.byCategory().map(({ category, widgets }) => (
         <section key={category} className={styles.group}>
-          <h2 className={styles.groupTitle}>{CATEGORY_LABELS[category] ?? category}</h2>
+          <h2 className={styles.groupTitle}>{categoryLabel(category)}</h2>
           {widgets.map((widget) => (
             <button
               key={widget.id}

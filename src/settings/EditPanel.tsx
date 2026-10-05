@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useCallback, useState } from 'react';
 import type {
   BackgroundConfig,
@@ -84,7 +85,9 @@ export function EditPanel({
   );
 
   const definition = instance ? widgetRegistry.get(instance.type) : undefined;
-  const title = instance ? (definition?.name ?? instance.type) : 'Page settings';
+  const title = instance
+    ? (definition?.name ?? instance.type)
+    : i18n.t('panel.pageSettings');
 
   return (
     <aside
@@ -92,7 +95,7 @@ export function EditPanel({
       // `complementary`, not `dialog`: the canvas beside it stays live and the user is
       // meant to keep working there. A dialog would imply a focus trap and a modal
       // backdrop, both of which would get in the way of the live preview.
-      aria-label={instance ? `${title} settings` : title}
+      aria-label={instance ? i18n.t('panel.widgetSettings', { name: title }) : title}
       // Writes are debounced by the store; focus leaving the panel is the moment to
       // stop waiting. Nothing is lost without it — the debounce fires on its own, and
       // leaving edit mode flushes — but a setting that reaches disk when the user
@@ -104,7 +107,7 @@ export function EditPanel({
           <button
             type="button"
             className={styles.back}
-            aria-label="Back to page settings"
+            aria-label={i18n.t('panel.back')}
             onClick={onBack}
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -118,7 +121,7 @@ export function EditPanel({
         <button
           type="button"
           className={styles.close}
-          aria-label="Hide settings"
+          aria-label={i18n.t('panel.hide')}
           onClick={onHide}
         >
           <svg viewBox="0 0 24 24" aria-hidden="true">

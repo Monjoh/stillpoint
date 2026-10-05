@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import type { ReactNode } from 'react';
 import styles from './Controls.module.css';
 
@@ -32,7 +33,9 @@ export function ListControl({
 }: ListControlProps) {
   return (
     <div className={styles.list} id={id}>
-      {rows.length === 0 && <p className={styles.listEmpty}>Nothing here yet.</p>}
+      {rows.length === 0 && (
+        <p className={styles.listEmpty}>{i18n.t('controls.list.empty')}</p>
+      )}
 
       {rows.map((_, index) => (
         <div key={index} className={styles.row}>
@@ -42,7 +45,7 @@ export function ListControl({
               type="button"
               className={styles.iconButton}
               disabled={index === 0}
-              aria-label={`Move ${label} ${index + 1} up`}
+              aria-label={i18n.t('controls.list.moveUp', { item: label, n: index + 1 })}
               onClick={() => onMove(index, -1)}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -53,7 +56,10 @@ export function ListControl({
               type="button"
               className={styles.iconButton}
               disabled={index === rows.length - 1}
-              aria-label={`Move ${label} ${index + 1} down`}
+              aria-label={i18n.t('controls.list.moveDown', {
+                item: label,
+                n: index + 1,
+              })}
               onClick={() => onMove(index, 1)}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -63,7 +69,7 @@ export function ListControl({
             <button
               type="button"
               className={styles.iconButton}
-              aria-label={`Remove ${label} ${index + 1}`}
+              aria-label={i18n.t('controls.list.remove', { item: label, n: index + 1 })}
               onClick={() => onRemove(index)}
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -75,7 +81,7 @@ export function ListControl({
       ))}
 
       <button type="button" className={styles.addRow} onClick={onAdd}>
-        + Add {label.toLowerCase()}
+        {i18n.t('controls.list.add', { item: label })}
       </button>
     </div>
   );

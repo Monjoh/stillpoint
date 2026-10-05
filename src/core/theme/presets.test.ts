@@ -12,13 +12,10 @@ describe('the built-in presets', () => {
     ]);
   });
 
-  it('has a unique id and a non-empty name and description for each', () => {
+  // Names and descriptions are checked in settings/names.test.ts.
+  it('has a unique id for each', () => {
     const ids = THEME_PRESETS.map((p) => p.id);
     expect(new Set(ids).size).toBe(ids.length);
-    for (const preset of THEME_PRESETS) {
-      expect(preset.name.length).toBeGreaterThan(0);
-      expect(preset.description.length).toBeGreaterThan(0);
-    }
   });
 
   /**
@@ -72,7 +69,7 @@ describe('the built-in presets', () => {
 
 describe('getPreset', () => {
   it('finds a preset by id', () => {
-    expect(getPreset('terminal').name).toBe('Terminal');
+    expect(getPreset('terminal').id).toBe('terminal');
   });
 
   // `themeSchema.preset` is a bare string, so an unknown id is an ordinary thing to

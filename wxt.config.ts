@@ -11,12 +11,14 @@ const GECKO_ID = 'stillpoint@monjoh';
 // https://wxt.dev/api/config.html
 export default defineConfig({
   srcDir: 'src',
-  modules: ['@wxt-dev/module-react'],
+  modules: ['@wxt-dev/module-react', '@wxt-dev/i18n/module'],
   manifestVersion: 3,
   manifest: ({ browser }) => ({
-    name: 'Stillpoint',
-    short_name: 'Stillpoint',
-    description: 'A quiet, personalizable new tab page.',
+    // Strings live in src/locales/<lang>.yml; the browser picks the language.
+    default_locale: 'en',
+    name: '__MSG_manifest_name__',
+    short_name: '__MSG_manifest_name__',
+    description: '__MSG_manifest_description__',
     permissions: ['storage'],
     // Asked for only when a widget needs one, from a click; never at install. Each
     // widget declares the origins it uses in its definition's `origins`.

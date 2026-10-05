@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 import { newId } from '@/lib/id';
 import { runMigrations } from './migrations';
@@ -74,7 +75,7 @@ export function parseImport(text: string): ImportResult {
     raw = JSON.parse(text);
   } catch (error) {
     throw new ConfigImportError(
-      'That file is not valid JSON.',
+      i18n.t('importError.notJson'),
       error instanceof Error ? error.message : undefined,
     );
   }
@@ -89,14 +90,14 @@ export function parseImport(text: string): ImportResult {
     migrated = result.applied;
   } catch (error) {
     throw new ConfigImportError(
-      error instanceof Error ? error.message : 'Could not read that config.',
+      error instanceof Error ? error.message : i18n.t('importError.unreadable'),
     );
   }
 
   const parsed = configSchema.safeParse(migratedTree);
   if (!parsed.success) {
     throw new ConfigImportError(
-      'That file is not a valid Stillpoint config.',
+      i18n.t('importError.invalid'),
       z.prettifyError(parsed.error),
     );
   }

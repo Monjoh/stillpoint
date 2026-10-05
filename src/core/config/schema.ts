@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 
 /**
@@ -41,17 +42,24 @@ export const rectSchema = z.object({
  */
 export const frameSchema = z
   .object({
-    showBackground: z.boolean().default(false).meta({
-      label: 'Card',
-      help: 'A surface behind the widget. Its colour, border, corners, shadow and blur come from the theme.',
-    }),
+    showBackground: z
+      .boolean()
+      .default(false)
+      .meta({
+        label: i18n.t('config.frame.card.label'),
+        help: i18n.t('config.frame.card.help'),
+      }),
     align: z
       .enum(['start', 'center', 'end'])
       .default('center')
       .meta({
-        label: 'Alignment',
+        label: i18n.t('config.frame.align.label'),
         control: 'segmented',
-        options: { start: 'Start', center: 'Centre', end: 'End' },
+        options: {
+          start: i18n.t('config.frame.align.start'),
+          center: i18n.t('config.frame.align.center'),
+          end: i18n.t('config.frame.align.end'),
+        },
       }),
     // Percent, with a floor: at 0 a widget was invisible and nearly impossible to
     // find again. Config v3; v2 stored a 0–1 fraction.
@@ -61,7 +69,7 @@ export const frameSchema = z
       .min(20)
       .max(100)
       .default(100)
-      .meta({ label: 'Opacity', step: 5, unit: '%' }),
+      .meta({ label: i18n.t('config.frame.opacity.label'), step: 5, unit: '%' }),
   })
   .prefault({});
 
@@ -88,25 +96,43 @@ export const layoutSchema = z
     // the column count rescales every widget, and rounding to whole cells is lossy,
     // so a slider drag would compound a hundred roundings into a mangled layout.
     // See `setLayout` in canvas/operations.ts.
-    columns: z.number().int().min(4).max(48).default(24).meta({
-      control: 'number',
-      label: 'Columns',
-      help: 'How finely a widget can be placed across the page. More columns means finer placement, not smaller widgets.',
-    }),
+    columns: z
+      .number()
+      .int()
+      .min(4)
+      .max(48)
+      .default(24)
+      .meta({
+        control: 'number',
+        label: i18n.t('config.layout.columns.label'),
+        help: i18n.t('config.layout.columns.help'),
+      }),
     rows: z
       .number()
       .int()
       .min(4)
       .max(32)
       .default(12)
-      .meta({ control: 'number', label: 'Rows' }),
-    gap: z.number().int().min(0).max(64).default(12).meta({ label: 'Gap', unit: 'px' }),
+      .meta({ control: 'number', label: i18n.t('config.layout.rows.label') }),
+    gap: z
+      .number()
+      .int()
+      .min(0)
+      .max(64)
+      .default(12)
+      .meta({ label: i18n.t('config.layout.gap.label'), unit: 'px' }),
     /** Caps canvas width so an ultrawide composes instead of smearing. */
-    maxWidth: z.number().int().min(480).nullable().default(1600).meta({
-      label: 'Maximum width',
-      unit: 'px',
-      help: 'Keeps the canvas from smearing across an ultrawide screen. Clear it to use the whole window.',
-    }),
+    maxWidth: z
+      .number()
+      .int()
+      .min(480)
+      .nullable()
+      .default(1600)
+      .meta({
+        label: i18n.t('config.layout.maxWidth.label'),
+        unit: 'px',
+        help: i18n.t('config.layout.maxWidth.help'),
+      }),
   })
   .prefault({});
 
@@ -141,16 +167,29 @@ export const imageBackgroundSchema = z.object({
     .enum(['cover', 'contain'])
     .default('cover')
     .meta({
-      label: 'Fit',
+      label: i18n.t('config.image.fit.label'),
       control: 'segmented',
-      options: { cover: 'Fill', contain: 'Whole image' },
+      options: {
+        cover: i18n.t('config.image.fit.cover'),
+        contain: i18n.t('config.image.fit.contain'),
+      },
     }),
-  blur: z.number().min(0).max(40).default(0).meta({ label: 'Blur', unit: 'px' }),
-  dim: z.number().min(0).max(1).default(0).meta({
-    label: 'Dim',
-    step: 0.05,
-    help: 'Darkens the photo so text over it stays readable.',
-  }),
+  blur: z
+    .number()
+    .min(0)
+    .max(40)
+    .default(0)
+    .meta({ label: i18n.t('config.photo.blur'), unit: 'px' }),
+  dim: z
+    .number()
+    .min(0)
+    .max(1)
+    .default(0)
+    .meta({
+      label: i18n.t('config.photo.dim'),
+      step: 0.05,
+      help: i18n.t('config.photo.dimHelp'),
+    }),
 });
 
 /**
@@ -167,25 +206,42 @@ export const imageBackgroundSchema = z.object({
 export const unsplashBackgroundSchema = z.object({
   kind: z.literal('unsplash').meta({ hidden: true }),
   source: z.enum(['picsum', 'unsplash']).default('picsum').meta({ hidden: true }),
-  query: z.string().default('landscape').meta({
-    label: 'Search',
-    help: 'Photos are picked at random from Unsplash results for this. Try “mountains”, “ocean” or “architecture”.',
-  }),
+  query: z
+    .string()
+    .default('landscape')
+    .meta({
+      label: i18n.t('config.web.query.label'),
+      help: i18n.t('config.web.query.help'),
+    }),
   refresh: z
     .enum(['tab', 'hourly', 'daily'])
     .default('daily')
     .meta({
-      label: 'New photo',
+      label: i18n.t('config.web.refresh.label'),
       control: 'segmented',
-      options: { tab: 'Every tab', hourly: 'Hourly', daily: 'Daily' },
-      help: 'A new photo appears on the next tab you open, never under the one you are looking at.',
+      options: {
+        tab: i18n.t('config.web.refresh.tab'),
+        hourly: i18n.t('config.web.refresh.hourly'),
+        daily: i18n.t('config.web.refresh.daily'),
+      },
+      help: i18n.t('config.web.refresh.help'),
     }),
-  blur: z.number().min(0).max(40).default(0).meta({ label: 'Blur', unit: 'px' }),
-  dim: z.number().min(0).max(1).default(0).meta({
-    label: 'Dim',
-    step: 0.05,
-    help: 'Darkens the photo so text over it stays readable.',
-  }),
+  blur: z
+    .number()
+    .min(0)
+    .max(40)
+    .default(0)
+    .meta({ label: i18n.t('config.photo.blur'), unit: 'px' }),
+  dim: z
+    .number()
+    .min(0)
+    .max(1)
+    .default(0)
+    .meta({
+      label: i18n.t('config.photo.dim'),
+      step: 0.05,
+      help: i18n.t('config.photo.dimHelp'),
+    }),
 });
 
 export const backgroundSchema = z.discriminatedUnion('kind', [
@@ -229,20 +285,27 @@ export const appSettingsSchema = z
       .default('en')
       // Nothing reads this yet — the clock formats with the browser's own locale.
       // Offered to the user when something does. See M5.
-      .meta({ label: 'Language', hidden: true }),
+      .meta({ label: i18n.t('config.app.locale.label'), hidden: true }),
     /** User-supplied. Without it, Unsplash backgrounds use Lorem Picsum. */
-    unsplashAccessKey: z.string().nullable().default(null).meta({
-      label: 'Unsplash access key',
-      help: 'Only needed for Unsplash backgrounds. Free from unsplash.com/developers: create an app and copy its Access Key.',
-    }),
+    unsplashAccessKey: z
+      .string()
+      .nullable()
+      .default(null)
+      .meta({
+        label: i18n.t('config.app.unsplashKey.label'),
+        help: i18n.t('config.app.unsplashKey.help'),
+      }),
     hasCompletedFirstRun: z
       .boolean()
       .default(false)
-      .meta({ label: 'Has completed first run', hidden: true }),
-    editModeEnabled: z.boolean().default(true).meta({
-      label: 'Allow editing the layout',
-      help: 'Turn this off to lock the canvas. The “Edit layout” button and the E shortcut stop responding.',
-    }),
+      .meta({ label: i18n.t('config.app.firstRun.label'), hidden: true }),
+    editModeEnabled: z
+      .boolean()
+      .default(true)
+      .meta({
+        label: i18n.t('config.app.editMode.label'),
+        help: i18n.t('config.app.editMode.help'),
+      }),
   })
   .prefault({});
 

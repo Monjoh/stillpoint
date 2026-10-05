@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { formatAge, unit } from '@/lib/age';
 import type { WidgetProps } from '@/core/registry/types';
 import { useNow } from '@/lib/use-now';
 import type { WeatherData } from './api';
@@ -16,7 +18,7 @@ export default function WeatherView({
   const now = useNow(60_000).getTime();
 
   if (!settings.location || !data) {
-    return <p className={styles.notice}>Choose a place in this widget’s settings.</p>;
+    return <p className={styles.notice}>{i18n.t('widget.weather.view.choosePlace')}</p>;
   }
 
   const weather = data.status === 'empty' ? undefined : data.data;
@@ -24,7 +26,8 @@ export default function WeatherView({
     // An error with nothing cached. `ready` always has data; `empty` is the frame's.
     return (
       <p className={styles.notice}>
-        Weather unavailable. {data.status === 'error' ? data.error : ''}
+        {i18n.t('widget.weather.view.unavailable')}{' '}
+        {data.status === 'error' ? data.error : ''}
       </p>
     );
   }
@@ -32,8 +35,11 @@ export default function WeatherView({
   const { current } = weather;
   const condition = describeWeather(current.code);
   const temperature = `${Math.round(current.temperature)}°`;
-  const wind = weather.units === 'imperial' ? 'mph' : 'km/h';
-  const place = settings.location.name.split(',')[0];
+  const wind = unit(
+    Math.round(current.windSpeed),
+    weather.units === 'imperial' ? 'mile-per-hour' : 'kilometer-per-hour',
+  );
+  const place = settings.location.name.split(',')[0] ?? settings.location.name;
   const days = settings.forecast ? weather.days.slice(0, 3) : [];
 
   const layout = layoutWeather({
@@ -59,7 +65,10 @@ export default function WeatherView({
           {temperature}
           <span className={styles.hidden}>
             {' '}
-            {condition.label} in {place}
+            {i18n.t('widget.weather.view.conditionIn', {
+              condition: condition.label,
+              place,
+            })}
           </span>
         </span>
       </div>
@@ -67,16 +76,18 @@ export default function WeatherView({
       {layout.showSummary && (
         <p className={styles.line}>
           {failedAt !== undefined
-            ? `Not updated for ${age(now - failedAt)}`
+            ? i18n.t('widget.weather.view.stale', { age: formatAge(now - failedAt) })
             : `${condition.label} · ${place}`}
         </p>
       )}
 
       {layout.showDetails && (
         <p className={styles.line}>
-          Feels {Math.round(current.feelsLike)}° · Wind {Math.round(current.windSpeed)}{' '}
-          {wind}
-          {' · '}Humidity {Math.round(current.humidity)}%
+          {i18n.t('widget.weather.view.details', {
+            feels: `${Math.round(current.feelsLike)}°`,
+            wind,
+            humidity: percent(current.humidity),
+          })}
         </p>
       )}
 
@@ -112,9 +123,9 @@ function weekday(date: string): string {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
-function age(ms: number): string {
-  const minutes = Math.max(1, Math.round(ms / 60_000));
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours} h` : `${Math.round(hours / 24)} days`;
+/** "64 %" or "64%", as the browser's language writes it. */
+function percent(value: number): string {
+  return new Intl.NumberFormat(undefined, { style: 'percent' }).format(
+    Math.round(value) / 100,
+  );
 }

@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 /**
  * City search, for the Location control. Open-Meteo's geocoder: no key, CORS-open.
  * Runs only while the user types in the widget's settings, so only on their action.
@@ -37,9 +38,9 @@ export async function searchPlaces(
     response = await fetcher(url.href, { signal, credentials: 'omit' });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new Error('The place search could not be reached.', { cause: error });
+    throw new Error(i18n.t('widget.weather.error.searchUnreachable'), { cause: error });
   }
-  if (!response.ok) throw new Error('The place search is not answering right now.');
+  if (!response.ok) throw new Error(i18n.t('widget.weather.error.searchDown'));
 
   const body: unknown = await response.json().catch(() => null);
   const results = (body as { results?: unknown } | null)?.results;

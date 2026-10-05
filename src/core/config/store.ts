@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { StorageKeys, type StorageAdapter } from '@/core/storage/adapter';
@@ -89,7 +90,7 @@ export function createConfigStore(
       const parsed = configSchema.safeParse(config);
       if (!parsed.success) {
         set({
-          error: 'Refused to save an invalid config. Your last change was not kept.',
+          error: i18n.t('store.refused'),
         });
         return;
       }
@@ -197,9 +198,7 @@ export function createConfigStore(
         set({
           config,
           status: 'ready',
-          error:
-            failure ??
-            'Your saved settings could not be read, so Stillpoint started fresh. The old file was kept as a backup.',
+          error: failure ?? i18n.t('store.startedFresh'),
         });
         startWatching();
         return;

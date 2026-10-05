@@ -32,10 +32,17 @@ export interface DataSourceSpec<S, D> {
    * Throw an `Error` whose message the user can read. It is shown as is, under any
    * data still cached. Keep the network code behind a dynamic `import()` in here: the
    * definition is on the new tab's critical path, and the fetch must not be.
+   *
+   * Throw `RateLimitError` (core/data/errors.ts) when the service says "too many
+   * requests": the data layer then waits a quarter of an hour, not a minute.
    */
   fetch: (settings: S, signal: AbortSignal) => Promise<D>;
-  /** Serve cached data for this long before revalidating. */
-  ttlMs: number;
+  /**
+   * Serve cached data for this long before revalidating. A function when the user
+   * picks the interval (Stocks). Not part of the cache key: a new interval applies
+   * from the next refresh.
+   */
+  ttlMs: number | ((settings: S) => number);
   /** Beyond this, cached data is too old to show at all. */
   maxAgeMs?: number;
 }
@@ -183,6 +190,12 @@ export type FieldMeta = {
   /** Group fields under a collapsible heading. */
   group?: string;
   order?: number;
+  /**
+   * A list field's name for one row, as the buttons say it: "Add {itemLabel}". Its
+   * own string rather than derived from `label`, since only English makes a singular
+   * by dropping an s.
+   */
+  itemLabel?: string;
   /**
    * Skip this field in generated forms. For state the schema has to carry but the
    * user has no business editing — a first-run flag, a cache stamp — and for fields

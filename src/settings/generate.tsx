@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import type { ComponentType } from 'react';
 import type { ControlProps } from '@/core/registry/types';
 import { groupFields, isVisible, type FieldDescriptor } from './describe';
@@ -139,7 +140,9 @@ function GeneratedField({ field, value, onChange, idPrefix }: GeneratedFieldProp
     // Shown rather than skipped. A field that quietly fails to appear is a bug nobody
     // reports; a field that says it has no control is one someone can.
     return (
-      <p className={styles.unsupported}>{field.label} cannot be edited here yet.</p>
+      <p className={styles.unsupported}>
+        {i18n.t('controls.unsupported', { label: field.label })}
+      </p>
     );
   }
 
@@ -201,7 +204,7 @@ function ListField({ field, value, onChange, idPrefix }: GeneratedFieldProps) {
 
       <ListControl
         id={id}
-        label={rowLabel(field.label)}
+        label={field.itemLabel ?? field.label}
         rows={rows}
         onAdd={() => write([...rows, blankRow(rowFields)])}
         onRemove={(index) => write(rows.filter((_, i) => i !== index))}
@@ -246,12 +249,6 @@ function blankRow(fields: FieldDescriptor[]): Record<string, unknown> {
     else row[field.key] = field.options?.[0]?.value ?? '';
   }
   return row;
-}
-
-/** "Links" → "link", so the buttons read "Add link", not "Add links". */
-function rowLabel(label: string): string {
-  const lower = label.toLowerCase();
-  return lower.endsWith('s') && !lower.endsWith('ss') ? lower.slice(0, -1) : lower;
 }
 
 function swap<T>(items: T[], a: number, b: number): T[] {

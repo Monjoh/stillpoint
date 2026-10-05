@@ -1,7 +1,9 @@
+import { i18n } from '#i18n';
 import type { ReactNode } from 'react';
 import type { ControlField } from '@/core/registry/types';
 import type { ThemeConfig } from '@/core/config/schema';
 import { presetTokens } from '@/core/theme/presets';
+import { tokenHelp, tokenLabel } from './names';
 import { THEME_TOKENS, type TokenSpec } from '@/core/theme/tokens';
 import { ColorControl } from './controls/Color';
 import { FontControl } from './controls/Font';
@@ -34,18 +36,18 @@ export interface TokenOverridesProps {
  * Shadows are offered as a short list, not a text box. Nobody opening a theme panel
  * wants to write `box-shadow` syntax, and these four cover what the presets use.
  */
-const SHADOWS: { value: string; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: '0 1px 8px rgb(0 0 0 / 0.15)', label: 'Subtle' },
-  { value: '0 2px 20px rgb(0 0 0 / 0.25)', label: 'Soft' },
-  { value: '0 8px 32px rgb(0 0 0 / 0.4)', label: 'Strong' },
-];
+const SHADOWS = [
+  { value: 'none', id: 'none' },
+  { value: '0 1px 8px rgb(0 0 0 / 0.15)', id: 'subtle' },
+  { value: '0 2px 20px rgb(0 0 0 / 0.25)', id: 'soft' },
+  { value: '0 8px 32px rgb(0 0 0 / 0.4)', id: 'strong' },
+] as const;
 
-const GROUPS: { title: string; kinds: TokenSpec['kind'][] }[] = [
-  { title: 'Colour', kinds: ['color'] },
-  { title: 'Type', kinds: ['font'] },
-  { title: 'Surface', kinds: ['length', 'shadow'] },
-];
+const GROUPS = [
+  { id: 'colour', kinds: ['color'] },
+  { id: 'type', kinds: ['font'] },
+  { id: 'surface', kinds: ['length', 'shadow'] },
+] as const satisfies readonly { id: string; kinds: readonly TokenSpec['kind'][] }[];
 
 export function TokenOverrides({ theme, onChangeTheme }: TokenOverridesProps) {
   const base = presetTokens(theme.preset);
@@ -61,22 +63,22 @@ export function TokenOverrides({ theme, onChangeTheme }: TokenOverridesProps) {
   return (
     <div className={styles.editor}>
       {GROUPS.map((group) => (
-        <fieldset key={group.title} className={fields.group}>
-          <legend className={fields.legend}>{group.title}</legend>
-          {THEME_TOKENS.filter((spec) => group.kinds.includes(spec.kind)).map(
-            (spec) => (
-              <TokenRow
-                key={spec.token}
-                spec={spec}
-                changed={spec.token in overrides}
-                onReset={() => set(spec.token, null)}
-              >
-                {control(spec, overrides[spec.token], base[spec.token] ?? '', (value) =>
-                  set(spec.token, value),
-                )}
-              </TokenRow>
-            ),
-          )}
+        <fieldset key={group.id} className={fields.group}>
+          <legend className={fields.legend}>{i18n.t(`theme.group.${group.id}`)}</legend>
+          {THEME_TOKENS.filter((spec) =>
+            (group.kinds as readonly TokenSpec['kind'][]).includes(spec.kind),
+          ).map((spec) => (
+            <TokenRow
+              key={spec.token}
+              spec={spec}
+              changed={spec.token in overrides}
+              onReset={() => set(spec.token, null)}
+            >
+              {control(spec, overrides[spec.token], base[spec.token] ?? '', (value) =>
+                set(spec.token, value),
+              )}
+            </TokenRow>
+          ))}
         </fieldset>
       ))}
     </div>
@@ -95,25 +97,27 @@ function TokenRow({
   children: ReactNode;
 }) {
   const id = tokenId(spec.token);
+  const label = tokenLabel(spec.token);
+  const help = tokenHelp(spec.token);
   return (
     <div className={fields.field}>
       <div className={styles.labelRow}>
         <label className={fields.label} id={`${id}-label`} htmlFor={id}>
-          {spec.label}
+          {label}
         </label>
         {changed && (
           <button
             type="button"
             className={styles.reset}
-            aria-label={`Reset ${spec.label} to the theme’s`}
+            aria-label={i18n.t('theme.resetToken', { name: label })}
             onClick={onReset}
           >
-            Reset
+            {i18n.t('theme.reset')}
           </button>
         )}
       </div>
       {children}
-      {spec.help && <p className={fields.help}>{spec.help}</p>}
+      {help && <p className={fields.help}>{help}</p>}
     </div>
   );
 }
@@ -125,7 +129,7 @@ function control(
   onChange: (value: string | null) => void,
 ): ReactNode {
   const id = tokenId(spec.token);
-  const field: ControlField = { label: spec.label, nullable: false };
+  const field: ControlField = { label: tokenLabel(spec.token), nullable: false };
 
   switch (spec.kind) {
     case 'color':
@@ -174,10 +178,10 @@ function control(
           value={override ?? ''}
           onChange={(event) => onChange(event.target.value || null)}
         >
-          <option value="">Theme default</option>
+          <option value="">{i18n.t('theme.default')}</option>
           {SHADOWS.map((shadow) => (
-            <option key={shadow.label} value={shadow.value}>
-              {shadow.label}
+            <option key={shadow.id} value={shadow.value}>
+              {i18n.t(`theme.shadow.${shadow.id}`)}
             </option>
           ))}
         </select>

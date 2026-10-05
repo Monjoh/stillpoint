@@ -2,7 +2,11 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { DataSourceSpec } from '@/core/registry/types';
 import type { StorageAdapter } from '@/core/storage/adapter';
+import { RateLimitError } from './errors';
 import {
+  attemptStorageKey,
+  backoffMs,
+  planFetch,
   resourceStorageKey,
   stateFromCache,
   useResource,
@@ -229,5 +233,152 @@ describe('useResource', () => {
     await waitFor(() => expect(result.current).toMatchObject({ data: 'mine' }));
     await act(() => adapter.set(keyFor('Paris'), cached('theirs', 0)));
     expect(result.current).toMatchObject({ data: 'theirs' });
+  });
+});
+
+describe('backoffMs', () => {
+  it('doubles from a minute, up to the refresh interval', () => {
+    expect(backoffMs(1, false, 30 * MIN)).toBe(1 * MIN);
+    expect(backoffMs(2, false, 30 * MIN)).toBe(2 * MIN);
+    expect(backoffMs(4, false, 30 * MIN)).toBe(8 * MIN);
+    expect(backoffMs(9, false, 30 * MIN)).toBe(30 * MIN);
+  });
+
+  it('waits far longer on a rate limit, up to an hour', () => {
+    expect(backoffMs(1, true, 5 * MIN)).toBe(15 * MIN);
+    expect(backoffMs(2, true, 5 * MIN)).toBe(30 * MIN);
+    expect(backoffMs(5, true, 5 * MIN)).toBe(60 * MIN);
+  });
+});
+
+describe('planFetch', () => {
+  const now = 100 * MIN;
+  const entry = (age: number): CachedResource<string> => ({
+    v: 1,
+    data: 'x',
+    fetchedAt: now - age,
+  });
+
+  it('takes a cache another tab has just refreshed', () => {
+    expect(planFetch(entry(1 * MIN), null, 30 * MIN, now)).toEqual({ kind: 'fresh' });
+  });
+
+  it('fetches when due and nobody else is', () => {
+    expect(planFetch(entry(40 * MIN), null, 30 * MIN, now)).toEqual({ kind: 'fetch' });
+    expect(planFetch(null, { v: 1, failures: 0 }, 30 * MIN, now)).toEqual({
+      kind: 'fetch',
+    });
+  });
+
+  it('waits out a failure', () => {
+    const attempt = { v: 1 as const, failures: 1, retryAt: now + 5 * MIN };
+    expect(planFetch(entry(40 * MIN), attempt, 30 * MIN, now)).toEqual({
+      kind: 'wait',
+      until: now + 5 * MIN,
+    });
+  });
+
+  it('leaves the fetch to a tab that has claimed it', () => {
+    const attempt = { v: 1 as const, failures: 0, claimedAt: now - 2000 };
+    expect(planFetch(null, attempt, 30 * MIN, now).kind).toBe('wait');
+  });
+
+  it('ignores a claim from a tab that was closed mid-fetch', () => {
+    const attempt = { v: 1 as const, failures: 0, claimedAt: now - 5 * MIN };
+    expect(planFetch(null, attempt, 30 * MIN, now)).toEqual({ kind: 'fetch' });
+  });
+});
+
+describe('useResource across tabs', () => {
+  const attemptKey = (city: string) => attemptStorageKey(keyFor(city));
+
+  it('writes a failure down, so the next tab does not ask again', async () => {
+    const { adapter, data } = memoryAdapter();
+    data.set(keyFor('Paris'), cached('old', 45 * MIN));
+    const fetch = vi.fn(async (): Promise<string> => {
+      throw new Error('Down.');
+    });
+    const first = renderHook(() =>
+      useResource('test.widget', spec(fetch), { city: 'Paris' }, adapter),
+    );
+    await waitFor(() =>
+      expect(first.result.current).toMatchObject({ status: 'error' }),
+    );
+    first.unmount();
+
+    // A new tab, a moment later.
+    const second = renderHook(() =>
+      useResource('test.widget', spec(fetch), { city: 'Paris' }, adapter),
+    );
+    await waitFor(() =>
+      expect(second.result.current).toMatchObject({
+        status: 'error',
+        error: 'Down.',
+        data: 'old',
+      }),
+    );
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(data.get(attemptKey('Paris'))).toMatchObject({ failures: 1 });
+  });
+
+  it('backs off for a quarter of an hour on a rate limit', async () => {
+    const { adapter, data } = memoryAdapter();
+    const fetch = vi.fn(async (): Promise<string> => {
+      throw new RateLimitError('Too many.');
+    });
+    const before = Date.now();
+    renderHook(() =>
+      useResource('test.widget', spec(fetch), { city: 'Paris' }, adapter),
+    );
+    await waitFor(() => expect(data.get(attemptKey('Paris'))).toBeTruthy());
+    await waitFor(() =>
+      expect(
+        (data.get(attemptKey('Paris')) as { retryAt: number }).retryAt - before,
+      ).toBeGreaterThanOrEqual(15 * MIN),
+    );
+  });
+
+  it('waits for the tab that is already fetching, and takes its answer', async () => {
+    const { adapter, data } = memoryAdapter();
+    data.set(attemptKey('Paris'), { v: 1, failures: 0, claimedAt: Date.now() });
+    const fetch = vi.fn(async () => 'mine');
+    const { result } = renderHook(() =>
+      useResource('test.widget', spec(fetch), { city: 'Paris' }, adapter),
+    );
+    await waitFor(() => expect(result.current).toEqual({ status: 'empty' }));
+    await act(() => adapter.set(keyFor('Paris'), cached('theirs', 0)));
+    expect(result.current).toMatchObject({ data: 'theirs' });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('clears the failure count after a success', async () => {
+    const { adapter, data } = memoryAdapter();
+    data.set(attemptKey('Paris'), { v: 1, failures: 3, retryAt: Date.now() - 1 });
+    const { result } = renderHook(() =>
+      useResource(
+        'test.widget',
+        spec(async () => 'x'),
+        { city: 'Paris' },
+        adapter,
+      ),
+    );
+    await waitFor(() => expect(result.current).toMatchObject({ data: 'x' }));
+    expect(data.get(attemptKey('Paris'))).toEqual({ v: 1, failures: 0 });
+  });
+
+  it('takes its refresh interval from the settings when given a function', async () => {
+    const { adapter, data } = memoryAdapter();
+    data.set(keyFor('Paris'), cached('old', 10 * MIN));
+    const fetch = vi.fn(async () => 'new');
+    const everyFive: DataSourceSpec<S, string> = {
+      ...spec(fetch),
+      ttlMs: () => 5 * MIN,
+    };
+    const { result } = renderHook(() =>
+      useResource('test.widget', everyFive, { city: 'Paris' }, adapter),
+    );
+    // Ten minutes old is fresh at 30, stale at 5.
+    await waitFor(() => expect(result.current).toMatchObject({ data: 'new' }));
+    expect(fetch).toHaveBeenCalledTimes(1);
   });
 });

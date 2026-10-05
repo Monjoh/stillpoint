@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import type { ImageAsset } from '@/core/assets/image';
 import { averageColor } from '@/lib/average-color';
 
@@ -43,19 +44,17 @@ export function fitWithin(
 
 export async function prepareImage(file: File): Promise<ImageAsset> {
   if (file.type && !file.type.startsWith('image/')) {
-    throw new ImageUploadError('That file is not an image.');
+    throw new ImageUploadError(i18n.t('photo.error.notImage'));
   }
   if (file.size > MAX_FILE_BYTES) {
-    throw new ImageUploadError('That image is over 50 MB. Try a smaller copy of it.');
+    throw new ImageUploadError(i18n.t('photo.error.tooLarge'));
   }
 
   let bitmap: ImageBitmap;
   try {
     bitmap = await createImageBitmap(file);
   } catch {
-    throw new ImageUploadError(
-      'That image could not be opened. JPEG, PNG, WebP and AVIF all work.',
-    );
+    throw new ImageUploadError(i18n.t('photo.error.unreadable'));
   }
 
   try {
@@ -90,7 +89,7 @@ function draw(bitmap: ImageBitmap, width: number, height: number): HTMLCanvasEle
   canvas.width = width;
   canvas.height = height;
   const context = canvas.getContext('2d');
-  if (!context) throw new ImageUploadError('This browser could not process the image.');
+  if (!context) throw new ImageUploadError(i18n.t('photo.error.process'));
   context.imageSmoothingQuality = 'high';
   context.drawImage(bitmap, 0, 0, width, height);
   return canvas;
@@ -106,7 +105,7 @@ async function encode(canvas: HTMLCanvasElement): Promise<Blob> {
   if (webp?.type === 'image/webp') return webp;
   const jpeg = await toBlob(canvas, 'image/jpeg', 0.85);
   if (jpeg) return jpeg;
-  throw new ImageUploadError('This browser could not process the image.');
+  throw new ImageUploadError(i18n.t('photo.error.process'));
 }
 
 function toBlob(
@@ -121,7 +120,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new ImageUploadError('The image could not be read.'));
+    reader.onerror = () => reject(new ImageUploadError(i18n.t('photo.error.read')));
     reader.readAsDataURL(blob);
   });
 }

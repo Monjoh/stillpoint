@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { saveImageAsset } from '@/core/assets/image';
 import {
@@ -70,7 +71,7 @@ export function PhotoFields({ background, onChangeBackground }: PhotoFieldsProps
       setError(
         caught instanceof ImageUploadError
           ? caught.message
-          : 'The photo could not be saved. There may not be enough storage space left.',
+          : i18n.t('photo.error.save'),
       );
     } finally {
       setBusy(false);
@@ -93,7 +94,11 @@ export function PhotoFields({ background, onChangeBackground }: PhotoFieldsProps
         {/* A label, not a button: it is the one way to open a file picker that needs
             no script, and it takes keyboard focus through the input inside it. */}
         <label className={styles.upload} data-busy={busy || undefined}>
-          {busy ? 'Preparing photo…' : image ? 'Replace photo' : 'Use your own photo'}
+          {busy
+            ? i18n.t('photo.preparing')
+            : image
+              ? i18n.t('photo.replace')
+              : i18n.t('photo.upload')}
           <input
             type="file"
             accept="image/*"
@@ -119,8 +124,7 @@ export function PhotoFields({ background, onChangeBackground }: PhotoFieldsProps
           before photos were exported, or storage cleared underneath us. */}
       {image && !preview && !busy && (
         <p className={styles.warning} role="status">
-          This photo is no longer stored here. Upload it again, or choose another type
-          above.
+          {i18n.t('photo.missing')}
         </p>
       )}
 
@@ -136,11 +140,7 @@ export function PhotoFields({ background, onChangeBackground }: PhotoFieldsProps
         />
       )}
 
-      {!image && (
-        <p className={fields.help}>
-          Kept on this device only, and included when you export your settings.
-        </p>
-      )}
+      {!image && <p className={fields.help}>{i18n.t('photo.privacy')}</p>}
     </div>
   );
 }

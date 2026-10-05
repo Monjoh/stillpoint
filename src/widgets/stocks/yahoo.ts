@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { RateLimitError } from '@/core/data/errors';
 import {
   changeSince,
   isNumber,
@@ -37,7 +39,8 @@ export async function fetchYahoo(
     if (outcome.kind === 'quote')
       data.quotes[normalizeSymbol(symbols[i]!)] = outcome.quote;
     else if (outcome.kind === 'missing') data.missing.push(symbols[i]!);
-    else failure ??= outcome.error;
+    // A rate limit outranks any other failure: it decides how long to wait.
+    else if (!(failure instanceof RateLimitError)) failure = outcome.error;
   });
   // A partial answer would be cached as if complete, so a symbol that merely failed
   // would read as unknown for the next ten minutes. Fail the lot; the last complete
@@ -58,13 +61,16 @@ async function one(symbol: string, signal: AbortSignal | undefined, fetcher: Fet
     response = await fetcher(url.href, { signal, credentials: 'omit' });
   } catch (error) {
     if (signal?.aborted) throw error;
-    return failed('Yahoo Finance could not be reached.', error);
+    return failed(i18n.t('widget.stocks.error.yahooUnreachable'), error);
   }
   if (response.status === 404) return { kind: 'missing' } as Outcome;
   if (response.status === 429) {
-    return failed('Yahoo Finance is refusing requests for now. Try again later.');
+    return {
+      kind: 'failed',
+      error: new RateLimitError(i18n.t('widget.stocks.error.yahooRefusing')),
+    } as Outcome;
   }
-  if (!response.ok) return failed('Yahoo Finance is not answering right now.');
+  if (!response.ok) return failed(i18n.t('widget.stocks.error.yahooDown'));
 
   const body = (await response.json().catch(() => null)) as {
     chart?: { result?: { meta?: Record<string, unknown> }[] | null };
@@ -74,7 +80,7 @@ async function one(symbol: string, signal: AbortSignal | undefined, fetcher: Fet
   if (Array.isArray(result) && result.length === 0)
     return { kind: 'missing' } as Outcome;
   const quote = parse(result?.[0]?.meta);
-  if (!quote) return failed('Yahoo Finance sent something unreadable.');
+  if (!quote) return failed(i18n.t('widget.stocks.error.yahooUnreadable'));
   return { kind: 'quote', quote } as Outcome;
 }
 

@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import type { ControlProps } from '@/core/registry/types';
 import styles from './Controls.module.css';
 
@@ -18,7 +19,7 @@ export function SelectControl({
         )
       }
     >
-      {field.nullable && <option value="">Not set</option>}
+      {field.nullable && <option value="">{i18n.t('controls.notSet')}</option>}
       {field.options?.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}

@@ -1,5 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { cleanup } from '@testing-library/react';
+import { generateChromeMessages, parseMessagesText } from '@wxt-dev/i18n/build';
 import { afterEach } from 'vitest';
+import { browser } from 'wxt/browser';
 
 afterEach(cleanup);
 
@@ -59,3 +62,28 @@ Element.prototype.hasPointerCapture ??= function hasPointerCapture() {
  */
 globalThis.fetch = () =>
   Promise.reject(new Error('A test tried to reach the network. Inject a fetch.'));
+
+/**
+ * Strings come from `browser.i18n.getMessage`, which WXT's fake browser does not
+ * implement. Serve it from the real `src/locales/en.yml`, compiled the way the build
+ * compiles it, so tests assert the English a user sees and a missing key fails here.
+ *
+ * Assigned rather than spied on: `restoreMocks` would undo a spy after every test.
+ */
+const messages = generateChromeMessages(
+  parseMessagesText(readFileSync('src/locales/en.yml', 'utf8'), 'YAML'),
+);
+browser.i18n.getMessage = (name: string, substitutions?: string | string[]) => {
+  const entry = messages[name];
+  if (!entry) return '';
+  const subs = substitutions === undefined ? [] : [substitutions].flat();
+  return entry.message
+    .replace(/\$(\w+)\$/g, (_, placeholder: string) =>
+      (entry.placeholders?.[placeholder.toLowerCase()]?.content ?? '').replace(
+        /\$(\d)/g,
+        (__, n: string) => subs[Number(n) - 1] ?? '',
+      ),
+    )
+    .replace(/\$(\d)/g, (_, n: string) => subs[Number(n) - 1] ?? '')
+    .replace(/\$\$/g, '$');
+};

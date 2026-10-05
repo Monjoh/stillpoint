@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useMemo } from 'react';
 import {
   appSettingsSchema,
@@ -19,14 +20,14 @@ import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
 import { NameField } from './NameField';
 import { Section } from './Section';
-import { backgroundMode, BackgroundFields, ThemeFields } from './ThemeSettings';
+import { gradientName, presetName } from './names';
+import {
+  backgroundMode,
+  backgroundModeName,
+  BackgroundFields,
+  ThemeFields,
+} from './ThemeSettings';
 
-/** A colour background summarises as its gradient's name instead. */
-const BACKGROUND_SUMMARY: Partial<Record<ReturnType<typeof backgroundMode>, string>> = {
-  photo: 'Photo',
-  picsum: 'Lorem Picsum',
-  unsplash: 'Unsplash',
-};
 import { getPreset } from '@/core/theme/presets';
 import { matchGradient } from '@/core/theme/gradients';
 // The section frame and the input chrome come from the two stylesheets the generator
@@ -109,9 +110,12 @@ export function PageSettings({
         <Section
           {...section(
             'profile',
-            'Profile',
+            i18n.t('page.profile.title'),
             config.profiles.length > 1
-              ? `${profile.name} of ${config.profiles.length}`
+              ? i18n.t('page.profile.summary', {
+                  name: profile.name,
+                  count: config.profiles.length,
+                })
               : profile.name,
           )}
         >
@@ -120,7 +124,7 @@ export function PageSettings({
           {config.profiles.length > 1 && (
             <div className={fields.field}>
               <label className={fields.label} htmlFor="sp-profile-switch">
-                Editing
+                {i18n.t('page.profile.editing')}
               </label>
               <select
                 id="sp-profile-switch"
@@ -149,12 +153,12 @@ export function PageSettings({
 
           <div className={fields.field}>
             <label className={fields.label} htmlFor="sp-profile-name">
-              Name
+              {i18n.t('page.profile.name')}
             </label>
             <NameField
               id="sp-profile-name"
               className={controls.input}
-              label="Profile name"
+              label={i18n.t('page.profile.nameLabel')}
               value={profile.name}
               onCommit={(name) =>
                 onChangeConfig((c) => renameProfile(c, profile.id, name))
@@ -168,14 +172,14 @@ export function PageSettings({
               className={styles.button}
               onClick={() => onChangeConfig((c) => createProfile(c))}
             >
-              New profile
+              {i18n.t('page.profile.new')}
             </button>
             <button
               type="button"
               className={styles.button}
               onClick={() => onChangeConfig((c) => duplicateProfile(c, profile.id))}
             >
-              Duplicate
+              {i18n.t('page.profile.duplicate')}
             </button>
           </div>
         </Section>
@@ -183,10 +187,10 @@ export function PageSettings({
         <Section
           {...section(
             'theme',
-            'Theme',
+            i18n.t('page.theme.title'),
             Object.keys(profile.theme.overrides).length > 0
-              ? `${preset.name}, customised`
-              : preset.name,
+              ? i18n.t('page.theme.customised', { name: presetName(preset.id) })
+              : presetName(preset.id),
           )}
         >
           <ThemeFields profile={profile} onChangeTheme={onChangeTheme} />
@@ -195,10 +199,8 @@ export function PageSettings({
         <Section
           {...section(
             'background',
-            'Background',
-            BACKGROUND_SUMMARY[backgroundMode(profile.background)] ??
-              gradient?.name ??
-              'Custom',
+            i18n.t('page.background.title'),
+            backgroundSummary(profile.background, gradient?.id),
           )}
         >
           <BackgroundFields
@@ -216,7 +218,7 @@ export function PageSettings({
         <Section
           {...section(
             'layout',
-            'Layout',
+            i18n.t('page.layout.title'),
             `${profile.layout.columns} \u00d7 ${profile.layout.rows}`,
           )}
         >
@@ -236,8 +238,10 @@ export function PageSettings({
         <Section
           {...section(
             'general',
-            'General',
-            config.app.editModeEnabled ? 'Editing allowed' : 'Canvas locked',
+            i18n.t('page.general.title'),
+            config.app.editModeEnabled
+              ? i18n.t('page.general.unlocked')
+              : i18n.t('page.general.locked'),
           )}
         >
           <GeneratedFields
@@ -257,10 +261,20 @@ export function PageSettings({
       {onOpenOptions && (
         <footer className={styles.footer}>
           <button type="button" className={styles.quiet} onClick={onOpenOptions}>
-            All settings and backups…
+            {i18n.t('page.allSettings')}
           </button>
         </footer>
       )}
     </>
   );
+}
+
+/** The Background row's value: the type, or for a colour its gradient's name. */
+function backgroundSummary(
+  background: BackgroundConfig,
+  gradientId: string | undefined,
+): string {
+  const mode = backgroundMode(background);
+  if (mode !== 'colour') return backgroundModeName(mode);
+  return gradientId ? gradientName(gradientId) : i18n.t('page.background.custom');
 }

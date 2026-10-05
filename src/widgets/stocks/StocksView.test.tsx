@@ -93,7 +93,7 @@ describe('StocksView', () => {
       />,
     );
     expect(rows()).toHaveLength(2);
-    expect(screen.getByText('Not updated for 2 h')).toBeTruthy();
+    expect(screen.getByText('Not updated for 2 hr')).toBeTruthy();
   });
 
   it('says what is wrong when there is nothing to show', () => {

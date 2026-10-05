@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RateLimitError } from '@/core/data/errors';
 import {
   jsonResponse,
   twelveBadKey,
@@ -77,6 +78,9 @@ describe('fetchTwelveData', () => {
     await expect(
       fetchTwelveData(['AAPL'], 'k', undefined, answer(twelveOutOfCredits)),
     ).rejects.toThrow('8 symbols a minute');
+    await expect(
+      fetchTwelveData(['AAPL'], 'k', undefined, answer(twelveOutOfCredits)),
+    ).rejects.toBeInstanceOf(RateLimitError);
   });
 
   it('says so when Twelve Data cannot be reached', async () => {

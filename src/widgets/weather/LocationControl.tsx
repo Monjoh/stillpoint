@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useEffect, useState } from 'react';
 import { usePermissions } from '@/core/permissions';
 import type { ControlProps } from '@/core/registry/types';
@@ -43,7 +44,11 @@ export default function LocationControl({
         })
         .catch((error: unknown) => {
           if (controller.signal.aborted) return;
-          setProblem(error instanceof Error ? error.message : 'The search failed.');
+          setProblem(
+            error instanceof Error
+              ? error.message
+              : i18n.t('widget.weather.picker.searchFailed'),
+          );
         });
     }, SETTLE_MS);
     return () => {
@@ -66,7 +71,7 @@ export default function LocationControl({
 
   const locate = () => {
     if (!('geolocation' in navigator)) {
-      setProblem('This browser cannot share a location. Search for a city instead.');
+      setProblem(i18n.t('widget.weather.picker.noGeolocation'));
       return;
     }
     setLocating(true);
@@ -75,7 +80,8 @@ export default function LocationControl({
       (position) => {
         setLocating(false);
         choose({
-          name: 'My location',
+          // Saved with the setting, so it stays in the language it was set in.
+          name: i18n.t('widget.weather.picker.myLocation'),
           latitude: roundCoordinate(position.coords.latitude),
           longitude: roundCoordinate(position.coords.longitude),
         });
@@ -84,8 +90,8 @@ export default function LocationControl({
         setLocating(false);
         setProblem(
           error.code === error.PERMISSION_DENIED
-            ? 'Location access was declined. Search for a city instead.'
-            : 'Your location could not be found. Search for a city instead.',
+            ? i18n.t('widget.weather.picker.declined')
+            : i18n.t('widget.weather.picker.notFound'),
         );
       },
       { timeout: 10_000, maximumAge: 10 * 60 * 1000 },
@@ -102,7 +108,7 @@ export default function LocationControl({
           className={styles.button}
           onClick={() => setChanging(true)}
         >
-          Change
+          {i18n.t('widget.weather.picker.change')}
         </button>
       </div>
     );
@@ -112,11 +118,7 @@ export default function LocationControl({
   if (consent.state === 'missing') {
     return (
       <div className={styles.picker}>
-        <p className={styles.status}>
-          Weather sends the place you pick to Open-Meteo to get its forecast. Firefox
-          asks you to allow that once. Your device’s location is not used unless you
-          press “Use my location” later.
-        </p>
+        <p className={styles.status}>{i18n.t('widget.weather.picker.consent')}</p>
         <div className={styles.actions}>
           <button
             id={id}
@@ -124,7 +126,7 @@ export default function LocationControl({
             className={styles.button}
             onClick={consent.request}
           >
-            Allow
+            {i18n.t('frame.permission.allow')}
           </button>
           {value && (
             <button
@@ -132,7 +134,7 @@ export default function LocationControl({
               className={styles.link}
               onClick={() => setChanging(false)}
             >
-              Keep {value.name}
+              {i18n.t('widget.weather.picker.keep', { name: value.name })}
             </button>
           )}
         </div>
@@ -144,11 +146,11 @@ export default function LocationControl({
   const status = problem
     ? problem
     : locating
-      ? 'Finding your location…'
+      ? i18n.t('widget.weather.picker.locating')
       : searchable && !places
-        ? 'Searching…'
+        ? i18n.t('widget.weather.picker.searching')
         : places?.length === 0
-          ? 'No place by that name.'
+          ? i18n.t('widget.weather.picker.noMatch')
           : null;
 
   return (
@@ -159,13 +161,16 @@ export default function LocationControl({
         type="search"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder="Search for a city"
+        placeholder={i18n.t('widget.weather.picker.placeholder')}
         autoComplete="off"
         spellCheck={false}
       />
 
       {places && places.length > 0 && (
-        <ul className={styles.results} aria-label="Places found">
+        <ul
+          className={styles.results}
+          aria-label={i18n.t('widget.weather.picker.results')}
+        >
           {places.map((place) => (
             <li key={`${place.latitude},${place.longitude}`}>
               <button
@@ -192,7 +197,7 @@ export default function LocationControl({
           onClick={locate}
           disabled={locating}
         >
-          Use my location
+          {i18n.t('widget.weather.picker.useMyLocation')}
         </button>
         {value && (
           <button
@@ -200,7 +205,7 @@ export default function LocationControl({
             className={styles.link}
             onClick={() => setChanging(false)}
           >
-            Keep {value.name}
+            {i18n.t('widget.weather.picker.keep', { name: value.name })}
           </button>
         )}
       </div>

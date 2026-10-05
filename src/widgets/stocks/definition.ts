@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
 import { YAHOO_ORIGIN } from './origins';
@@ -9,10 +10,13 @@ export const stocksSettingsSchema = z.object({
     .default('yahoo')
     .meta(
       field({
-        label: 'Prices from',
+        label: i18n.t('widget.stocks.source.label'),
         control: 'select',
-        options: { yahoo: 'Yahoo Finance', twelvedata: 'Twelve Data' },
-        help: 'Yahoo needs no key and covers every market, but is unofficial and may stop working. Twelve Data needs a free key and covers US markets.',
+        options: {
+          yahoo: i18n.t('widget.stocks.source.option.yahoo'),
+          twelvedata: i18n.t('widget.stocks.source.option.twelvedata'),
+        },
+        help: i18n.t('widget.stocks.source.help'),
       }),
     ),
 
@@ -22,9 +26,26 @@ export const stocksSettingsSchema = z.object({
     .default('')
     .meta(
       field({
-        label: 'Twelve Data key',
-        help: 'Free at twelvedata.com, for up to 8 symbols. It is saved with your settings, so exports include it.',
+        label: i18n.t('widget.stocks.apiKey.label'),
+        help: i18n.t('widget.stocks.apiKey.help'),
         showIf: { field: 'source', equals: 'twelvedata' },
+      }),
+    ),
+
+  // Minutes, as strings: an enum gives the panel a select with named choices.
+  refresh: z
+    .enum(['5', '15', '30', '60'])
+    .default('15')
+    .meta(
+      field({
+        label: i18n.t('widget.stocks.refresh.label'),
+        options: {
+          '5': i18n.t('widget.stocks.refresh.option.m5'),
+          '15': i18n.t('widget.stocks.refresh.option.m15'),
+          '30': i18n.t('widget.stocks.refresh.option.m30'),
+          '60': i18n.t('widget.stocks.refresh.option.m60'),
+        },
+        help: i18n.t('widget.stocks.refresh.help'),
       }),
     ),
 
@@ -37,15 +58,20 @@ export const stocksSettingsSchema = z.object({
           .default('')
           .meta(
             field({
-              label: 'Symbol',
-              help: 'As Yahoo writes it: AAPL, 7203.T for Tokyo, MC.PA for Paris.',
+              label: i18n.t('widget.stocks.symbols.row.symbol.label'),
+              help: i18n.t('widget.stocks.symbols.row.symbol.help'),
             }),
           ),
         label: z
           .string()
           .max(40)
           .default('')
-          .meta(field({ label: 'Name', help: 'Leave empty to show the symbol.' })),
+          .meta(
+            field({
+              label: i18n.t('widget.stocks.symbols.row.label.label'),
+              help: i18n.t('widget.stocks.symbols.row.label.help'),
+            }),
+          ),
       }),
     )
     .max(20)
@@ -53,16 +79,21 @@ export const stocksSettingsSchema = z.object({
       { symbol: 'AAPL', label: '' },
       { symbol: 'MSFT', label: '' },
     ])
-    .meta(field({ label: 'Watchlist' })),
+    .meta(
+      field({
+        label: i18n.t('widget.stocks.symbols.label'),
+        itemLabel: i18n.t('widget.stocks.symbols.itemLabel'),
+      }),
+    ),
 
   change: z
     .enum(['percent', 'amount'])
     .default('percent')
     .meta(
       field({
-        label: 'Change',
+        label: i18n.t('widget.stocks.change.label'),
         control: 'segmented',
-        options: { percent: '%', amount: 'Amount' },
+        options: { percent: '%', amount: i18n.t('widget.stocks.change.option.amount') },
       }),
     ),
 
@@ -73,11 +104,11 @@ export const stocksSettingsSchema = z.object({
     .default(20)
     .meta(
       field({
-        label: 'Size',
+        label: i18n.t('widget.stocks.fontSize.label'),
         control: 'slider',
         step: 1,
         unit: 'px',
-        help: 'An upper limit. Rows shrink to fit, and the change is dropped first.',
+        help: i18n.t('widget.stocks.fontSize.help'),
       }),
     ),
 });
@@ -89,8 +120,8 @@ const MINUTE = 60 * 1000;
 export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
   // Permanent: written into every user's stored config.
   id: 'stillpoint.stocks',
-  name: 'Stocks',
-  description: 'A watchlist with the latest prices.',
+  name: i18n.t('widget.stocks.name'),
+  description: i18n.t('widget.stocks.description'),
   category: 'info',
   icon: 'M4 19h16 M5 15l4-4 3 3 6-7 M15 7h3v3',
   settingsSchema: stocksSettingsSchema,
@@ -121,9 +152,9 @@ export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
       const { fetchYahoo } = await import('./yahoo');
       return fetchYahoo(symbols, signal);
     },
-    // Ten symbols every ten minutes, over a ten-hour day of open tabs, is 600 of
-    // Twelve Data's 800 free credits.
-    ttlMs: 10 * MINUTE,
+    // The user's choice. Prices only move while markets are open, and Twelve Data
+    // charges a credit per symbol per refresh: see the setting's help.
+    ttlMs: (s) => Number(s.refresh) * MINUTE,
     // Friday's close is still the price on Sunday.
     maxAgeMs: 4 * 24 * 60 * MINUTE,
   },

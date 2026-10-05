@@ -16,9 +16,9 @@ import type { BackgroundConfig } from '@/core/config/schema';
  * under the clock, which sits above the middle of the canvas.
  */
 
+/** Names are in `settings/names.ts`, out of the critical path. */
 export interface GradientPreset {
   id: string;
-  name: string;
   from: string;
   to: string;
   angle: number;
@@ -29,17 +29,17 @@ const ANGLE = 160;
 export const GRADIENT_PRESETS: readonly GradientPreset[] = [
   // The default, first. It is what a fresh install already has, so it is also the
   // "put it back" button.
-  { id: 'midnight', name: 'Midnight', from: '#11131c', to: '#1d2033', angle: ANGLE },
-  { id: 'ink', name: 'Ink', from: '#0d0d0f', to: '#1a1a20', angle: ANGLE },
-  { id: 'dusk', name: 'Dusk', from: '#2b5876', to: '#4e4376', angle: ANGLE },
-  { id: 'ember', name: 'Ember', from: '#2b1a17', to: '#5c2f26', angle: ANGLE },
-  { id: 'moss', name: 'Moss', from: '#12201a', to: '#24402f', angle: ANGLE },
-  { id: 'plum', name: 'Plum', from: '#241b2f', to: '#4a3159', angle: ANGLE },
-  { id: 'slate', name: 'Slate', from: '#1c2226', to: '#39454d', angle: ANGLE },
-  { id: 'tide', name: 'Tide', from: '#0f2027', to: '#2c5364', angle: ANGLE },
+  { id: 'midnight', from: '#11131c', to: '#1d2033', angle: ANGLE },
+  { id: 'ink', from: '#0d0d0f', to: '#1a1a20', angle: ANGLE },
+  { id: 'dusk', from: '#2b5876', to: '#4e4376', angle: ANGLE },
+  { id: 'ember', from: '#2b1a17', to: '#5c2f26', angle: ANGLE },
+  { id: 'moss', from: '#12201a', to: '#24402f', angle: ANGLE },
+  { id: 'plum', from: '#241b2f', to: '#4a3159', angle: ANGLE },
+  { id: 'slate', from: '#1c2226', to: '#39454d', angle: ANGLE },
+  { id: 'tide', from: '#0f2027', to: '#2c5364', angle: ANGLE },
   // The two light ones, for Paper and for anyone who does not want a dark page.
-  { id: 'paper', name: 'Paper', from: '#f7f2e8', to: '#e8e0d1', angle: ANGLE },
-  { id: 'linen', name: 'Linen', from: '#fbfbf9', to: '#e6e8e6', angle: ANGLE },
+  { id: 'paper', from: '#f7f2e8', to: '#e8e0d1', angle: ANGLE },
+  { id: 'linen', from: '#fbfbf9', to: '#e6e8e6', angle: ANGLE },
 ];
 
 /** A picker entry as the config stores it. */

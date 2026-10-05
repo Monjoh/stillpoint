@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
 import type { WeatherData } from './api';
@@ -18,7 +19,7 @@ export const weatherSettingsSchema = z.object({
     .default(null)
     .meta(
       field({
-        label: 'Place',
+        label: i18n.t('widget.weather.location.label'),
         control: 'custom',
         component: LocationField,
       }),
@@ -29,22 +30,31 @@ export const weatherSettingsSchema = z.object({
     .default('auto')
     .meta(
       field({
-        label: 'Units',
+        label: i18n.t('widget.weather.units.label'),
         control: 'segmented',
-        options: { auto: 'Auto', metric: '°C', imperial: '°F' },
-        help: 'Auto follows your browser’s language.',
+        options: {
+          auto: i18n.t('widget.weather.units.option.auto'),
+          metric: '°C',
+          imperial: '°F',
+        },
+        help: i18n.t('widget.weather.units.help'),
       }),
     ),
 
   details: z
     .boolean()
     .default(true)
-    .meta(field({ label: 'Show details', help: 'Feels like, wind and humidity.' })),
+    .meta(
+      field({
+        label: i18n.t('widget.weather.details.label'),
+        help: i18n.t('widget.weather.details.help'),
+      }),
+    ),
 
   forecast: z
     .boolean()
     .default(true)
-    .meta(field({ label: 'Show the next days' })),
+    .meta(field({ label: i18n.t('widget.weather.forecast.label') })),
 
   fontSize: z
     .number()
@@ -53,11 +63,11 @@ export const weatherSettingsSchema = z.object({
     .default(64)
     .meta(
       field({
-        label: 'Size',
+        label: i18n.t('widget.weather.fontSize.label'),
         control: 'slider',
         step: 2,
         unit: 'px',
-        help: 'An upper limit. The other lines are dropped before the temperature shrinks.',
+        help: i18n.t('widget.weather.fontSize.help'),
       }),
     ),
 });
@@ -69,8 +79,8 @@ const MINUTE = 60 * 1000;
 export const weatherDefinition: WidgetDefinition<WeatherSettings, WeatherData> = {
   // Permanent: written into every user's stored config.
   id: 'stillpoint.weather',
-  name: 'Weather',
-  description: 'Current conditions and the next days, for a place you choose.',
+  name: i18n.t('widget.weather.name'),
+  description: i18n.t('widget.weather.description'),
   category: 'info',
   icon: 'M7 18h10.5a3.5 3.5 0 0 0 .4-6.98A5.5 5.5 0 0 0 7.3 10 4 4 0 0 0 7 18Z',
   settingsSchema: weatherSettingsSchema,

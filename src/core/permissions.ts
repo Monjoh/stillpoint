@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
 import type { DataCollection } from './data-collection';
@@ -130,7 +131,6 @@ export function originHost(pattern: string): string {
 }
 
 /** What a category means to the person asked, for a sentence like "It sends …". */
-export const DATA_COLLECTION_PHRASE: Record<DataCollection, string> = {
-  locationInfo: 'the place you picked to its forecast service',
-  searchTerms: 'your search words',
-};
+export function dataCollectionPhrase(category: DataCollection): string {
+  return i18n.t(`permission.${category}`);
+}

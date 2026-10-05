@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RateLimitError } from '@/core/data/errors';
 import { forecastBody, jsonResponse } from './__fixtures__/open-meteo';
 import { fetchWeather } from './api';
 
@@ -60,6 +61,15 @@ describe('fetchWeather', () => {
         jsonResponse({ error: true, reason: 'x' }, 400),
       ),
     ).rejects.toThrow('not answering');
+  });
+
+  // So the data layer waits a quarter of an hour, not a minute.
+  it('reports a rate limit as one', async () => {
+    await expect(
+      fetchWeather(paris, 'metric', undefined, async () =>
+        jsonResponse({ error: true, reason: 'Too many requests' }, 429),
+      ),
+    ).rejects.toBeInstanceOf(RateLimitError);
   });
 
   it('refuses an answer it cannot read', async () => {

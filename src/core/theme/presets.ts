@@ -24,11 +24,12 @@ import type { TokenSet } from './tokens';
  * Deliberately zod-free: `apply.ts` reads this and runs inside `boot.ts`.
  */
 
+/**
+ * Names and descriptions are not here: `boot.ts` reaches this file, and the i18n
+ * runtime must stay out of it. See `settings/names.ts`.
+ */
 export interface ThemePreset {
   id: string;
-  name: string;
-  /** One line, shown under the name in the picker. Character, not a spec. */
-  description: string;
   tokens: TokenSet;
 }
 
@@ -40,8 +41,6 @@ const MONO = "ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospa
 export const THEME_PRESETS: readonly ThemePreset[] = [
   {
     id: 'midnight',
-    name: 'Midnight',
-    description: 'Near-black and cool blue. High contrast, out of the way.',
     tokens: {
       '--sp-text': '#f2f2f2',
       '--sp-text-muted': 'rgb(242 242 242 / 0.62)',
@@ -58,8 +57,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   },
   {
     id: 'paper',
-    name: 'Paper',
-    description: 'Warm white and ink, set in a serif. For light backgrounds.',
     tokens: {
       '--sp-text': '#23201c',
       '--sp-text-muted': 'rgb(35 32 28 / 0.58)',
@@ -76,8 +73,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   },
   {
     id: 'terminal',
-    name: 'Terminal',
-    description: 'Monospace throughout, phosphor green, no shadows, square corners.',
     tokens: {
       '--sp-text': '#cfe8cf',
       '--sp-text-muted': 'rgb(207 232 207 / 0.55)',
@@ -96,8 +91,6 @@ export const THEME_PRESETS: readonly ThemePreset[] = [
   },
   {
     id: 'glass',
-    name: 'Glass',
-    description: 'Frosted translucent surfaces. Built for photo backgrounds.',
     tokens: {
       // Pure white and a heavier shadow: this theme expects to sit on a photograph,
       // where anything less than full contrast disappears into a bright patch.

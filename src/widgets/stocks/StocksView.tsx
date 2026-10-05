@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { formatAge } from '@/lib/age';
 import type { WidgetProps } from '@/core/registry/types';
 import { useNow } from '@/lib/use-now';
 import type { StocksSettings } from './definition';
@@ -21,8 +23,8 @@ export default function StocksView({
     return (
       <p className={styles.notice}>
         {settings.source === 'twelvedata' && !settings.apiKey.trim()
-          ? 'Add your Twelve Data key in this widget’s settings.'
-          : 'Add symbols in this widget’s settings.'}
+          ? i18n.t('widget.stocks.view.addKey')
+          : i18n.t('widget.stocks.view.addSymbols')}
       </p>
     );
   }
@@ -31,7 +33,8 @@ export default function StocksView({
   if (!stocks) {
     return (
       <p className={styles.notice}>
-        Prices unavailable. {data.status === 'error' ? data.error : ''}
+        {i18n.t('widget.stocks.view.unavailable')}{' '}
+        {data.status === 'error' ? data.error : ''}
       </p>
     );
   }
@@ -76,18 +79,28 @@ export default function StocksView({
   return (
     <div className={styles.stocks} style={{ fontSize: `${layout.fontPx}px` }}>
       <table className={styles.table}>
-        <caption className={styles.hidden}>Watchlist</caption>
+        <caption className={styles.hidden}>
+          {i18n.t('widget.stocks.symbols.label')}
+        </caption>
         <tbody>
           {shown.map((row) => {
             const way = row.quote ? direction(row.quote.changePercent) : 'flat';
             return (
-              <tr key={row.symbol} title={row.quote?.name ?? 'Not available'}>
+              <tr
+                key={row.symbol}
+                title={row.quote?.name ?? i18n.t('widget.stocks.view.notAvailable')}
+              >
                 <th scope="row" className={styles.label}>
                   {row.label}
                 </th>
                 <td className={styles.price}>
                   {row.price}
-                  {!row.quote && <span className={styles.hidden}> Not available</span>}
+                  {!row.quote && (
+                    <span className={styles.hidden}>
+                      {' '}
+                      {i18n.t('widget.stocks.view.notAvailable')}
+                    </span>
+                  )}
                 </td>
                 {layout.showChange && (
                   <td className={styles.change} data-direction={way}>
@@ -105,15 +118,10 @@ export default function StocksView({
         </tbody>
       </table>
       {showStale && (
-        <p className={styles.stale}>Not updated for {age(now - failedAt!)}</p>
+        <p className={styles.stale}>
+          {i18n.t('widget.stocks.view.stale', { age: formatAge(now - failedAt!) })}
+        </p>
       )}
     </div>
   );
-}
-
-function age(ms: number): string {
-  const minutes = Math.max(1, Math.round(ms / 60_000));
-  if (minutes < 60) return `${minutes} min`;
-  const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours} h` : `${Math.round(hours / 24)} days`;
 }

@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import {
   Component,
   Suspense,
@@ -9,7 +10,7 @@ import {
 import type { WidgetInstance } from '@/core/config/schema';
 import { useResource } from '@/core/data/resource';
 import {
-  DATA_COLLECTION_PHRASE,
+  dataCollectionPhrase,
   originHost,
   usePermissions,
   type PermissionNeeds,
@@ -73,15 +74,15 @@ export function WidgetFrame({
   if (!definition || !Widget) {
     content = (
       <FrameNotice
-        title="Widget not available"
-        detail={`This profile uses "${instance.type}", which this version of Stillpoint does not have. Its position and settings are kept.`}
+        title={i18n.t('frame.unavailable.title')}
+        detail={i18n.t('frame.unavailable.detail', { type: instance.type })}
       />
     );
   } else if (resolved.settings === null) {
     content = (
       <FrameNotice
-        title="Settings could not be read"
-        detail={`${definition.name} has settings this version cannot interpret.`}
+        title={i18n.t('frame.unreadable.title')}
+        detail={i18n.t('frame.unreadable.detail', { name: definition.name })}
         onRemove={isEditing ? onRemove : undefined}
       />
     );
@@ -193,32 +194,41 @@ function WithData({
     const what = describeNeeds(needs);
     return (
       <FrameNotice
-        title={`${name} needs your permission`}
+        title={i18n.t('frame.permission.title', { name })}
         detail={
           props.isEditing
-            ? `${what}. Leave edit mode to allow it.`
-            : `${what}, which Firefox asks you to allow once.`
+            ? i18n.t('frame.permission.inEditMode', { what })
+            : i18n.t('frame.permission.askOnce', { what })
         }
-        action={props.isEditing ? undefined : { label: 'Allow', onClick: request }}
+        action={
+          props.isEditing
+            ? undefined
+            : { label: i18n.t('frame.permission.allow'), onClick: request }
+        }
       />
     );
   }
   return <Fetching {...props} />;
 }
 
-/** "It gets its data from a.com" / "It sends the place you chose" / both. */
+/**
+ * "It gets its data from a.com" / "It sends the place you picked" / both. Whole
+ * sentences per case, not fragments joined with "and": word order differs between
+ * languages, and only a whole sentence can be translated.
+ */
 function describeNeeds({ origins = [], dataCollection = [] }: PermissionNeeds): string {
-  const parts: string[] = [];
-  if (origins.length > 0) {
-    parts.push(`gets its data from ${origins.map(originHost).join(', ')}`);
+  const hosts = listFormat().format(origins.map(originHost));
+  const what = listFormat().format(dataCollection.map(dataCollectionPhrase));
+  if (origins.length > 0 && dataCollection.length > 0) {
+    return i18n.t('frame.permission.hostsAndData', { hosts, what });
   }
-  if (dataCollection.length > 0) {
-    parts.push(
-      `sends ${dataCollection.map((c) => DATA_COLLECTION_PHRASE[c]).join(' and ')}`,
-    );
-  }
-  return `It ${parts.join(' and ')}`;
+  return origins.length > 0
+    ? i18n.t('frame.permission.hosts', { hosts })
+    : i18n.t('frame.permission.data', { what });
 }
+
+/** "a, b and c", in the browser's language. */
+const listFormat = () => new Intl.ListFormat(undefined, { type: 'conjunction' });
 
 function Fetching({ widgetType, spec, Widget, settings, size, isEditing }: DataProps) {
   const data = useResource(widgetType, spec, settings);
@@ -250,7 +260,7 @@ function FrameNotice({
   title,
   detail,
   onRemove,
-  action = onRemove && { label: 'Remove', onClick: onRemove },
+  action = onRemove && { label: i18n.t('frame.remove'), onClick: onRemove },
 }: {
   title: string;
   detail: string;
@@ -324,7 +334,9 @@ class WidgetErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 
     return (
       <div className={styles.notice} role="alert">
-        <strong className={styles.noticeTitle}>{this.props.name} failed</strong>
+        <strong className={styles.noticeTitle}>
+          {i18n.t('frame.failed', { name: this.props.name })}
+        </strong>
         <span className={styles.noticeDetail}>{this.state.error.message}</span>
         <span className={styles.noticeActions}>
           <button
@@ -334,7 +346,7 @@ class WidgetErrorBoundary extends Component<BoundaryProps, BoundaryState> {
               this.setState((s) => ({ error: null, attempt: s.attempt + 1 }))
             }
           >
-            Retry
+            {i18n.t('frame.retry')}
           </button>
           {this.props.onRemove && (
             <button
@@ -342,7 +354,7 @@ class WidgetErrorBoundary extends Component<BoundaryProps, BoundaryState> {
               className={styles.noticeAction}
               onClick={this.props.onRemove}
             >
-              Remove
+              {i18n.t('frame.remove')}
             </button>
           )}
         </span>

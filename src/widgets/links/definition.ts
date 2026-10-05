@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
 
@@ -9,33 +10,52 @@ export const linksSettingsSchema = z.object({
           .string()
           .max(2000)
           .default('')
-          .meta(field({ label: 'Address', help: 'For example github.com' })),
+          .meta(
+            field({
+              label: i18n.t('widget.links.links.row.url.label'),
+              help: i18n.t('widget.links.links.row.url.help'),
+            }),
+          ),
         label: z
           .string()
           .max(60)
           .default('')
-          .meta(field({ label: 'Name', help: 'Leave empty to show the address.' })),
+          .meta(
+            field({
+              label: i18n.t('widget.links.links.row.label.label'),
+              help: i18n.t('widget.links.links.row.label.help'),
+            }),
+          ),
       }),
     )
     .max(48)
     .default([])
-    .meta(field({ label: 'Links' })),
+    .meta(
+      field({
+        label: i18n.t('widget.links.links.label'),
+        itemLabel: i18n.t('widget.links.links.itemLabel'),
+      }),
+    ),
 
   layout: z
     .enum(['tiles', 'icons', 'list'])
     .default('tiles')
     .meta(
       field({
-        label: 'Layout',
+        label: i18n.t('widget.links.layout.label'),
         control: 'segmented',
-        options: { tiles: 'Tiles', icons: 'Icons', list: 'List' },
+        options: {
+          tiles: i18n.t('widget.links.layout.option.tiles'),
+          icons: i18n.t('widget.links.layout.option.icons'),
+          list: i18n.t('widget.links.layout.option.list'),
+        },
       }),
     ),
 
   newTab: z
     .boolean()
     .default(false)
-    .meta(field({ label: 'Open in a new tab' })),
+    .meta(field({ label: i18n.t('widget.links.newTab.label') })),
 
   iconSize: z
     .number()
@@ -44,11 +64,11 @@ export const linksSettingsSchema = z.object({
     .default(48)
     .meta(
       field({
-        label: 'Size',
+        label: i18n.t('widget.links.iconSize.label'),
         control: 'slider',
         step: 2,
         unit: 'px',
-        help: 'An upper limit. Icons shrink to fit their cell, and names are dropped first.',
+        help: i18n.t('widget.links.iconSize.help'),
       }),
     ),
 });
@@ -58,8 +78,8 @@ export type LinksSettings = z.infer<typeof linksSettingsSchema>;
 export const linksDefinition: WidgetDefinition<LinksSettings> = {
   // Permanent: written into every user's stored config.
   id: 'stillpoint.links',
-  name: 'Links',
-  description: 'Your sites, one click away, with their icons.',
+  name: i18n.t('widget.links.name'),
+  description: i18n.t('widget.links.description'),
   category: 'navigation',
   icon: 'M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1',
   settingsSchema: linksSettingsSchema,

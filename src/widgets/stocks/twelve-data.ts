@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { RateLimitError } from '@/core/data/errors';
 import { isNumber, normalizeSymbol, type Quote, type StocksData } from './quotes';
 
 /**
@@ -24,13 +26,13 @@ export async function fetchTwelveData(
     response = await fetcher(url.href, { signal, credentials: 'omit' });
   } catch (error) {
     if (signal?.aborted) throw error;
-    throw new Error('Twelve Data could not be reached.', { cause: error });
+    throw new Error(i18n.t('widget.stocks.error.twelveUnreachable'), { cause: error });
   }
   const body = (await response.json().catch(() => null)) as Record<
     string,
     unknown
   > | null;
-  if (!body) throw new Error('Twelve Data is not answering right now.');
+  if (!body) throw new Error(i18n.t('widget.stocks.error.twelveDown'));
 
   // Errors arrive with HTTP 200 as often as not; the body's `code` is what counts.
   // Asked for one symbol, the body is that symbol's answer, so a "not found" there
@@ -38,7 +40,7 @@ export async function fetchTwelveData(
   const single = symbols.length === 1;
   if (isError(body) && !(single && isMissing(body))) throw requestError(body);
   if (!response.ok && !single)
-    throw new Error('Twelve Data is not answering right now.');
+    throw new Error(i18n.t('widget.stocks.error.twelveDown'));
 
   const answers: Record<string, unknown> = single ? { [symbols[0]!]: body } : body;
   const data: StocksData = { quotes: {}, missing: [] };
@@ -101,13 +103,11 @@ function isMissing(error: ApiError): boolean {
 }
 
 function requestError(error: ApiError): Error {
-  if (error.code === 401) return new Error('Twelve Data did not accept this key.');
+  if (error.code === 401) return new Error(i18n.t('widget.stocks.error.twelveKey'));
   if (error.code === 429) {
-    return new Error(
-      'This Twelve Data key has used its allowance. The free plan allows 8 symbols a minute and 800 a day.',
-    );
+    return new RateLimitError(i18n.t('widget.stocks.error.twelveRate'));
   }
-  return new Error('Twelve Data is not answering right now.');
+  return new Error(i18n.t('widget.stocks.error.twelveDown'));
 }
 
 function findIgnoringCase(answers: Record<string, unknown>, symbol: string): unknown {

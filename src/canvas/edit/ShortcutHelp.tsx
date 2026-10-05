@@ -1,14 +1,16 @@
+import { i18n } from '#i18n';
 import { useEffect, useRef } from 'react';
 import styles from './EditToolbar.module.css';
 
-const SHORTCUTS: [keys: string[], action: string][] = [
-  [['E'], 'Edit the layout'],
-  [['Esc'], 'Close the panel, then leave edit mode'],
-  [['←', '→', '↑', '↓'], 'Move the selected widget'],
-  [['Shift', '+', 'arrows'], 'Resize it'],
-  [['Delete'], 'Remove it (or Backspace)'],
-  [['Ctrl', '+', 'D'], 'Duplicate it (⌘ on a Mac)'],
-  [['/'], 'Jump to the search box'],
+/** Key caps, then what they do. `+` joins a chord. Key names are translated too. */
+const shortcuts = (): [keys: string[], action: string][] => [
+  [['E'], i18n.t('shortcuts.edit')],
+  [[i18n.t('keys.esc')], i18n.t('shortcuts.escape')],
+  [['←', '→', '↑', '↓'], i18n.t('shortcuts.move')],
+  [[i18n.t('keys.shift'), '+', i18n.t('keys.arrows')], i18n.t('shortcuts.resize')],
+  [[i18n.t('keys.delete')], i18n.t('shortcuts.remove')],
+  [[i18n.t('keys.ctrl'), '+', 'D'], i18n.t('shortcuts.duplicate')],
+  [['/'], i18n.t('shortcuts.search')],
 ];
 
 /** Keyboard shortcuts, on demand. Closes on Escape without leaving edit mode. */
@@ -33,15 +35,13 @@ export function ShortcutHelp({ onClose }: { onClose: () => void }) {
       ref={panel}
       className={styles.shortcuts}
       role="dialog"
-      aria-label="Keyboard shortcuts"
+      aria-label={i18n.t('edit.shortcuts')}
       tabIndex={-1}
       onPointerDown={(event) => event.stopPropagation()}
     >
-      <p className={styles.shortcutsLead}>
-        Drag a widget to move it, or its edges to resize it.
-      </p>
+      <p className={styles.shortcutsLead}>{i18n.t('shortcuts.lead')}</p>
       <dl className={styles.shortcutList}>
-        {SHORTCUTS.map(([keys, action]) => (
+        {shortcuts().map(([keys, action]) => (
           <div key={action} className={styles.shortcut}>
             <dt>
               {keys.map((key, i) =>

@@ -10,24 +10,25 @@
  * change a font is worse than eight good choices.
  */
 export interface FontStack {
-  name: string;
+  /** Its name is `fontName(id)`, in settings/names.ts. */
+  id: string;
   stack: string;
 }
 
 export const FONT_STACKS: FontStack[] = [
   {
-    name: 'System',
+    id: 'system',
     stack:
       'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
   },
-  { name: 'Grotesk', stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
-  { name: 'Humanist', stack: 'Avenir, "Avenir Next", Corbel, "Gill Sans", sans-serif' },
-  { name: 'Geometric', stack: 'Futura, "Century Gothic", "URW Gothic", sans-serif' },
-  { name: 'Serif', stack: 'Georgia, "Iowan Old Style", "Times New Roman", serif' },
+  { id: 'grotesk', stack: '"Helvetica Neue", Helvetica, Arial, sans-serif' },
+  { id: 'humanist', stack: 'Avenir, "Avenir Next", Corbel, "Gill Sans", sans-serif' },
+  { id: 'geometric', stack: 'Futura, "Century Gothic", "URW Gothic", sans-serif' },
+  { id: 'serif', stack: 'Georgia, "Iowan Old Style", "Times New Roman", serif' },
   {
-    name: 'Old style',
+    id: 'oldStyle',
     stack: '"Hoefler Text", "Baskerville Old Face", Garamond, serif',
   },
-  { name: 'Slab', stack: 'Rockwell, "Roboto Slab", "Courier New", serif' },
-  { name: 'Monospace', stack: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace' },
+  { id: 'slab', stack: 'Rockwell, "Roboto Slab", "Courier New", serif' },
+  { id: 'monospace', stack: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace' },
 ];

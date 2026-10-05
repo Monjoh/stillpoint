@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { CONFIG_VERSION } from './schema';
 
 /**
@@ -100,9 +101,7 @@ export class ConfigVersionError extends Error {
     readonly found: number,
     readonly supported: number,
   ) {
-    super(
-      `This config was written by a newer version of Stillpoint (config version ${found}, this build understands up to ${supported}). Update the extension, then import it again.`,
-    );
+    super(i18n.t('importError.newer', { found, supported }));
     this.name = 'ConfigVersionError';
   }
 }
@@ -115,11 +114,11 @@ export interface MigrationResult {
 
 function readVersion(raw: unknown): number {
   if (typeof raw !== 'object' || raw === null) {
-    throw new Error('Config is not an object.');
+    throw new Error(i18n.t('importError.notObject'));
   }
   const version = (raw as Record<string, unknown>).version;
   if (typeof version !== 'number' || !Number.isInteger(version) || version < 1) {
-    throw new Error('Config has no usable `version` field.');
+    throw new Error(i18n.t('importError.noVersion'));
   }
   return version;
 }

@@ -20,10 +20,9 @@
 export interface TokenSpec {
   /** The custom property name, including the leading `--`. */
   token: string;
-  label: string;
-  /** How the override editor should offer it. */
+  /** How the override editor should offer it. Its label and help text are in
+   *  `settings/names.ts`, keyed by `token`: this file runs in `boot.ts`. */
   kind: 'color' | 'font' | 'length' | 'shadow';
-  help?: string;
   /** `length` tokens only: the editor's slider bounds, in px. */
   range?: { min: number; max: number };
 }
@@ -33,35 +32,28 @@ export interface TokenSpec {
  * editor came to change, type and rhythm after.
  */
 export const THEME_TOKENS: readonly TokenSpec[] = [
-  { token: '--sp-text', label: 'Text', kind: 'color' },
+  { token: '--sp-text', kind: 'color' },
   {
     token: '--sp-text-muted',
-    label: 'Muted text',
     kind: 'color',
-    help: 'Secondary lines — a date under a clock, a label under a value.',
   },
-  { token: '--sp-accent', label: 'Accent', kind: 'color' },
+  { token: '--sp-accent', kind: 'color' },
   {
     token: '--sp-surface',
-    label: 'Widget surface',
     kind: 'color',
-    help: 'Shows on widgets with Card switched on in their Frame settings, as do border, shadow, blur and corner radius.',
   },
-  { token: '--sp-surface-border', label: 'Widget border', kind: 'color' },
-  { token: '--sp-shadow', label: 'Widget shadow', kind: 'shadow' },
+  { token: '--sp-surface-border', kind: 'color' },
+  { token: '--sp-shadow', kind: 'shadow' },
   {
     token: '--sp-surface-blur',
-    label: 'Surface blur',
     kind: 'length',
-    help: 'Frosts whatever is behind a widget’s surface. Costs nothing at 0.',
     range: { min: 0, max: 24 },
   },
-  { token: '--sp-font-display', label: 'Display font', kind: 'font' },
-  { token: '--sp-font-body', label: 'Body font', kind: 'font' },
-  { token: '--sp-font-mono', label: 'Monospace font', kind: 'font' },
+  { token: '--sp-font-display', kind: 'font' },
+  { token: '--sp-font-body', kind: 'font' },
+  { token: '--sp-font-mono', kind: 'font' },
   {
     token: '--sp-radius',
-    label: 'Corner radius',
     kind: 'length',
     range: { min: 0, max: 24 },
   },

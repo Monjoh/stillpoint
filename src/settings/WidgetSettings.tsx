@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { richText } from '@/lib/rich-text';
 import { useMemo } from 'react';
 import { frameSchema, type WidgetInstance } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
@@ -46,8 +48,9 @@ export function WidgetSettings({
       <div className={styles.body}>
         {!definition && (
           <p className={styles.note}>
-            This widget’s type (<code>{instance.type}</code>) is not installed, so its
-            settings cannot be shown. They are kept untouched.
+            {richText(i18n.t('widgetSettings.notInstalled'), {
+              type: <code>{instance.type}</code>,
+            })}
           </p>
         )}
 
@@ -66,7 +69,7 @@ export function WidgetSettings({
             the widget, so it still does something there. */}
         <section className={fieldStyles.section} aria-labelledby="sp-frame-heading">
           <h3 className={fieldStyles.sectionHeading} id="sp-frame-heading">
-            Frame
+            {i18n.t('widgetSettings.frame')}
           </h3>
           <GeneratedFields
             fields={frameFields}
@@ -92,7 +95,7 @@ export function WidgetSettings({
               onCommit();
             }}
           >
-            Reset to defaults
+            {i18n.t('widgetSettings.reset')}
           </button>
         </footer>
       )}

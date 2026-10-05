@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { newId } from '@/lib/id';
 import {
   configSchema,
@@ -22,7 +23,7 @@ const MAX_NAME = 60;
 
 export function createProfile(
   config: StillpointConfig,
-  name = 'New profile',
+  name = i18n.t('profile.newName'),
   options: { activate?: boolean } = {},
 ): StillpointConfig {
   // Parsed rather than built literally, so layout, theme and background come from the

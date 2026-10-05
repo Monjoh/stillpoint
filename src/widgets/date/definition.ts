@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
 
@@ -7,17 +8,21 @@ export const dateSettingsSchema = z.object({
     .default('full')
     .meta(
       field({
-        label: 'Format',
+        label: i18n.t('widget.date.style.label'),
         control: 'segmented',
         // Names, not samples: the order of day and month is the browser's locale.
-        options: { full: 'Full', short: 'Short', numeric: 'Numbers' },
+        options: {
+          full: i18n.t('widget.date.style.option.full'),
+          short: i18n.t('widget.date.style.option.short'),
+          numeric: i18n.t('widget.date.style.option.numeric'),
+        },
       }),
     ),
 
   showYear: z
     .boolean()
     .default(false)
-    .meta(field({ label: 'Show year' })),
+    .meta(field({ label: i18n.t('widget.date.showYear.label') })),
 
   fontSize: z
     .number()
@@ -26,18 +31,28 @@ export const dateSettingsSchema = z.object({
     .default(28)
     .meta(
       field({
-        label: 'Size',
+        label: i18n.t('widget.date.fontSize.label'),
         control: 'slider',
         step: 2,
         unit: 'px',
-        help: 'An upper limit. The date shrinks to fit when its cell is too small.',
+        help: i18n.t('widget.date.fontSize.help'),
       }),
     ),
 
   weight: z
     .enum(['light', 'regular', 'medium'])
     .default('regular')
-    .meta(field({ label: 'Weight', control: 'segmented' })),
+    .meta(
+      field({
+        label: i18n.t('widget.date.weight.label'),
+        control: 'segmented',
+        options: {
+          light: i18n.t('fontWeight.light'),
+          regular: i18n.t('fontWeight.regular'),
+          medium: i18n.t('fontWeight.medium'),
+        },
+      }),
+    ),
 
   timezone: z
     .string()
@@ -45,9 +60,9 @@ export const dateSettingsSchema = z.object({
     .default(null)
     .meta(
       field({
-        label: 'Time zone',
+        label: i18n.t('widget.date.timezone.label'),
         control: 'timezone',
-        help: 'Leave empty to use this device’s time zone.',
+        help: i18n.t('widget.date.timezone.help'),
       }),
     ),
 });
@@ -57,8 +72,8 @@ export type DateSettings = z.infer<typeof dateSettingsSchema>;
 export const dateDefinition: WidgetDefinition<DateSettings> = {
   // Permanent: written into every user's stored config.
   id: 'stillpoint.date',
-  name: 'Date',
-  description: 'Today’s date, in any time zone.',
+  name: i18n.t('widget.date.name'),
+  description: i18n.t('widget.date.description'),
   category: 'time',
   icon: 'M4 6.5A1.5 1.5 0 0 1 5.5 5h13A1.5 1.5 0 0 1 20 6.5v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5Z M4 10h16 M8 3v4 M16 3v4',
   settingsSchema: dateSettingsSchema,

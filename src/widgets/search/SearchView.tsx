@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useEffect, useId, useRef, useState } from 'react';
 import type { WidgetProps } from '@/core/registry/types';
 import type { SearchSettings } from './definition';
@@ -42,11 +43,7 @@ export default function SearchView({
   }, [isEditing]);
 
   if (custom && !isSearchTemplate(template)) {
-    return (
-      <p className={styles.notice}>
-        Set a search address with %s where the words go, in this widget’s settings.
-      </p>
-    );
+    return <p className={styles.notice}>{i18n.t('widget.search.view.setAddress')}</p>;
   }
 
   return (
@@ -64,7 +61,9 @@ export default function SearchView({
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M10.5 17a6.5 6.5 0 1 1 0-13 6.5 6.5 0 0 1 0 13Z M15.5 15.5 20 20" />
         </svg>
-        <span className={styles.hidden}>Search {name}</span>
+        <span className={styles.hidden}>
+          {i18n.t('widget.search.view.label', { name })}
+        </span>
       </label>
       <input
         ref={input}
@@ -74,7 +73,7 @@ export default function SearchView({
         name="q"
         value={query}
         onChange={(event) => setQuery(event.target.value)}
-        placeholder={`Search ${name}`}
+        placeholder={i18n.t('widget.search.view.label', { name })}
         enterKeyHint="search"
         autoComplete="off"
         spellCheck={false}

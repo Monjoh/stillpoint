@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useEffect, useMemo, useState } from 'react';
 import {
   appSettingsSchema,
@@ -34,13 +35,7 @@ export interface UnsplashFieldsProps {
   onChangeAccessKey: (key: string | null) => void;
 }
 
-const PROBLEMS: Record<UnsplashErrorKind, string> = {
-  key: 'Unsplash did not accept this key. Check that it is the Access Key, not the Secret key.',
-  rate: 'This key has used its hourly allowance on Unsplash. The current photo stays up, and new ones resume within the hour.',
-  network:
-    'The photo service could not be reached. The last photo stays up until it can.',
-  empty: 'Unsplash found no photos for that search. Try a broader word.',
-};
+const problemText = (kind: UnsplashErrorKind) => i18n.t(`web.problem.${kind}`);
 
 export function UnsplashFields({
   source,
@@ -85,10 +80,7 @@ export function UnsplashFields({
       <div className={styles.photo}>
         {keyFields}
         {isUnsplash && !accessKey && (
-          <p className={fields.help}>
-            Unsplash needs an access key, free from unsplash.com/developers: create an
-            app and copy its Access Key. For photos with no setup, choose Lorem Picsum.
-          </p>
+          <p className={fields.help}>{i18n.t('web.needsKey')}</p>
         )}
       </div>
     );
@@ -100,7 +92,7 @@ export function UnsplashFields({
     state?.error &&
     state.source === source &&
     state.error.key === (isUnsplash ? accessKey || null : null)
-      ? PROBLEMS[state.error.kind]
+      ? problemText(state.error.kind)
       : null;
   // Picsum cannot search. Without consent Unsplash would send nothing either: the
   // Allow below takes the field's place.
@@ -139,25 +131,17 @@ export function UnsplashFields({
           disabled={skipping || blocked}
           onClick={() => void skip()}
         >
-          {skipping ? 'Fetching a photo…' : 'Show another photo'}
+          {skipping ? i18n.t('web.fetching') : i18n.t('web.another')}
         </button>
       </div>
 
-      {!isUnsplash && (
-        <p className={fields.help}>
-          Random photos from a curated set of about a thousand on Unsplash, via Lorem
-          Picsum. To search for your own subject, choose Unsplash.
-        </p>
-      )}
+      {!isUnsplash && <p className={fields.help}>{i18n.t('web.picsumAbout')}</p>}
 
       {isUnsplash && accessKey && consent.state === 'missing' && (
         <div className={styles.consent}>
-          <p className={fields.help}>
-            Searching sends your search words to Unsplash. Firefox asks you to allow
-            that once.
-          </p>
+          <p className={fields.help}>{i18n.t('web.consent')}</p>
           <button type="button" className={styles.customise} onClick={consent.request}>
-            Allow search
+            {i18n.t('web.allowSearch')}
           </button>
         </div>
       )}

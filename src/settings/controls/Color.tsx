@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useState } from 'react';
 import { colorAlpha, colorToHex, withAlpha } from '@/core/theme/color';
 import type { ControlProps } from '@/core/registry/types';
@@ -31,7 +32,7 @@ export function ColorControl({ id, value, onChange, field }: ControlProps<string
         type="color"
         className={styles.swatch}
         value={colorToHex(current) ?? '#000000'}
-        aria-label={`${field.label}, colour picker`}
+        aria-label={i18n.t('controls.colour.picker', { label: field.label })}
         onChange={(event) =>
           onChange(withAlpha(event.target.value, colorAlpha(current)))
         }
@@ -41,7 +42,7 @@ export function ColorControl({ id, value, onChange, field }: ControlProps<string
         className={`${styles.input} ${styles.hex}`}
         value={text}
         spellCheck={false}
-        aria-label={`${field.label}, colour value`}
+        aria-label={i18n.t('controls.colour.value', { label: field.label })}
         onChange={(event) => {
           const raw = event.target.value;
           const usable = colorToHex(raw) !== null;

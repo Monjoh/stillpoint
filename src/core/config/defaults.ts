@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { newId } from '@/lib/id';
 import { CONFIG_VERSION, configSchema, type StillpointConfig } from './schema';
 
@@ -18,7 +19,8 @@ export function createDefaultConfig(): StillpointConfig {
     profiles: [
       {
         id: profileId,
-        name: 'Default',
+        // Stored, so it stays in the language it was created in.
+        name: i18n.t('profile.defaultName'),
         // A gradient, not a flat colour: a fresh install should already look
         // deliberate, and this needs no network and no user choice.
         background: { kind: 'gradient', from: '#11131c', to: '#1d2033', angle: 160 },

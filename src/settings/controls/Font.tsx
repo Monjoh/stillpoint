@@ -1,4 +1,6 @@
+import { i18n } from '#i18n';
 import { FONT_STACKS } from '../fonts';
+import { fontName } from '../names';
 import type { ControlProps } from '@/core/registry/types';
 import styles from './Controls.module.css';
 
@@ -28,10 +30,10 @@ export function FontControl({
         )
       }
     >
-      {field.nullable && <option value="">Theme default</option>}
+      {field.nullable && <option value="">{i18n.t('theme.default')}</option>}
       {FONT_STACKS.map((font) => (
-        <option key={font.name} value={font.stack} style={{ fontFamily: font.stack }}>
-          {font.name}
+        <option key={font.id} value={font.stack} style={{ fontFamily: font.stack }}>
+          {fontName(font.id)}
         </option>
       ))}
     </select>

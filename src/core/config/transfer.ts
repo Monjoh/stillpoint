@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { isImageAsset, type ImageAsset } from '@/core/assets/image';
 import { CONFIG_VERSION, configSchema, type StillpointConfig } from './schema';
 import { ConfigVersionError, runMigrations } from './migrations';
@@ -71,20 +72,19 @@ export function importConfig(raw: string): ImportResult {
   } catch {
     return {
       ok: false,
-      error: 'That file is not valid JSON, so there is nothing to import.',
+      error: i18n.t('importError.notJsonNothing'),
     };
   }
 
   if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    return { ok: false, error: 'That file does not contain a Stillpoint backup.' };
+    return { ok: false, error: i18n.t('importError.notBackup') };
   }
 
   const found = (parsed as Record<string, unknown>).version;
   if (typeof found !== 'number') {
     return {
       ok: false,
-      error:
-        'That file has no Stillpoint version number, so it is probably not an export from this extension.',
+      error: i18n.t('importError.noVersionNumber'),
     };
   }
 

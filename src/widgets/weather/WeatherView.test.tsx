@@ -100,7 +100,7 @@ describe('WeatherView', () => {
       />,
     );
     expect(container.textContent).toContain('24°');
-    expect(screen.getByText('Not updated for 3 h')).toBeTruthy();
+    expect(screen.getByText('Not updated for 3 hr')).toBeTruthy();
   });
 
   it('says what is wrong when there is nothing to show', () => {

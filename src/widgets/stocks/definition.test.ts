@@ -42,3 +42,23 @@ describe('stocks definition', () => {
     );
   });
 });
+
+describe('the refresh interval', () => {
+  const ttl = (refresh?: string) => {
+    const settings = stocksSettingsSchema.parse(refresh ? { refresh } : {});
+    const { ttlMs } = stocksDefinition.dataSource!;
+    return typeof ttlMs === 'function' ? ttlMs(settings) : ttlMs;
+  };
+
+  it('is the user’s choice, every 15 minutes unless changed', () => {
+    expect(ttl()).toBe(15 * 60 * 1000);
+    expect(ttl('5')).toBe(5 * 60 * 1000);
+    expect(ttl('60')).toBe(60 * 60 * 1000);
+  });
+
+  it('is not part of the cache key: a new interval keeps the prices', () => {
+    const { key } = stocksDefinition.dataSource!;
+    const base = stocksSettingsSchema.parse({});
+    expect(key({ ...base, refresh: '5' })).toBe(key({ ...base, refresh: '60' }));
+  });
+});

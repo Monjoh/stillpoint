@@ -1,0 +1,633 @@
+# Every user-facing string in Stillpoint. Built into _locales/en/messages.json by
+# @wxt-dev/i18n; read at runtime with `i18n.t('area.key')` from '#i18n'.
+#
+# - Nested keys become `area_key` in messages.json. Keep keys stable: a translation is
+#   keyed to them.
+# - `$1`…`$9` are substitutions: i18n.t('key', [value]).
+# - `{name}`: a named string substitution, i18n.t('key', { name: value }).
+# - `[[name]]`: where an element goes (a link, a key cap). See src/lib/rich-text.tsx.
+# - Plurals: `1: …` and `n: …`, then i18n.t('key', count).
+# - The language follows the browser's. To add one, copy this file to <lang>.yml.
+
+manifest:
+  name: Stillpoint
+  description: A quiet, personalizable new tab page.
+
+# View mode: the new tab itself.
+newtab:
+  emptyHint: 'Press [[key]] to add a widget.'
+  editLayout: 'Edit layout'
+  firstRunHint: 'or press [[key]] to customise this page'
+  gotIt: 'Got it'
+  pageTitle: 'New Tab'
+
+# Unsplash's required credit. [[name]] is the photographer, [[unsplash]] the word Unsplash as a link.
+credit:
+  photoBy: 'Photo by [[name]] on [[unsplash]]'
+
+# Notices a widget's frame shows in its place.
+frame:
+  unavailable:
+    title: 'Widget not available'
+    detail: 'This profile uses "{type}", which this version of Stillpoint does not have. Its position and settings are kept.'
+  unreadable:
+    title: 'Settings could not be read'
+    detail: '{name} has settings this version cannot interpret.'
+  permission:
+    title: '{name} needs your permission'
+    hosts: 'It gets its data from {hosts}'
+    data: 'It sends {what}'
+    hostsAndData: 'It gets its data from {hosts} and sends {what}'
+    inEditMode: '{what}. Leave edit mode to allow it.'
+    askOnce: '{what}, which Firefox asks you to allow once.'
+    allow: 'Allow'
+  failed: '{name} failed'
+  retry: 'Retry'
+  remove: 'Remove'
+
+# Completes "It sends …" for each kind of data Firefox asks consent for.
+permission:
+  locationInfo: 'the place you picked to its forecast service'
+  searchTerms: 'your search words'
+
+# Edit mode: the toolbar and the widget boxes.
+edit:
+  toolbar: 'Edit layout'
+  addWidget: 'Add widget'
+  profile: 'Profile'
+  shortcuts: 'Keyboard shortcuts'
+  settings: 'Settings'
+  done: 'Done'
+  widgetBox: '{name}, column {column}, row {row}, {width} by {height} cells'
+
+# The keyboard shortcut list behind the toolbar's ? button.
+shortcuts:
+  lead: 'Drag a widget to move it, or its edges to resize it.'
+  edit: 'Edit the layout'
+  escape: 'Close the panel, then leave edit mode'
+  move: 'Move the selected widget'
+  resize: 'Resize it'
+  remove: 'Remove it (or Backspace)'
+  duplicate: 'Duplicate it (⌘ on a Mac)'
+  search: 'Jump to the search box'
+
+# Names printed on keys, as a keyboard in this language labels them.
+keys:
+  esc: 'Esc'
+  shift: 'Shift'
+  ctrl: 'Ctrl'
+  delete: 'Delete'
+  arrows: 'arrows'
+
+picker:
+  label: 'Add a widget'
+  category:
+    time: 'Time'
+    info: 'Information'
+    navigation: 'Navigation'
+    productivity: 'Productivity'
+    decoration: 'Decoration'
+
+# Theme presets and the token editor. Keys are preset ids and token names.
+theme:
+  customise: 'Customise'
+  changes:
+    1: '$1 change'
+    n: '$1 changes'
+  resetAll: 'Reset all'
+  reset: 'Reset'
+  resetToken: 'Reset {name} to the theme’s'
+  default: 'Theme default'
+  preset:
+    midnight:
+      name: 'Midnight'
+      description: 'Near-black and cool blue. High contrast, out of the way.'
+    paper:
+      name: 'Paper'
+      description: 'Warm white and ink, set in a serif. For light backgrounds.'
+    terminal:
+      name: 'Terminal'
+      description: 'Monospace throughout, phosphor green, no shadows, square corners.'
+    glass:
+      name: 'Glass'
+      description: 'Frosted translucent surfaces. Built for photo backgrounds.'
+  token:
+    text:
+      label: 'Text'
+    textMuted:
+      label: 'Muted text'
+      help: 'Secondary lines — a date under a clock, a label under a value.'
+    accent:
+      label: 'Accent'
+    surface:
+      label: 'Widget surface'
+      help: 'Shows on widgets with Card switched on in their Frame settings, as do border, shadow, blur and corner radius.'
+    surfaceBorder:
+      label: 'Widget border'
+    shadow:
+      label: 'Widget shadow'
+    surfaceBlur:
+      label: 'Surface blur'
+      help: 'Frosts whatever is behind a widget’s surface. Costs nothing at 0.'
+    fontDisplay:
+      label: 'Display font'
+    fontBody:
+      label: 'Body font'
+    fontMono:
+      label: 'Monospace font'
+    radius:
+      label: 'Corner radius'
+  shadow:
+    none: 'None'
+    subtle: 'Subtle'
+    soft: 'Soft'
+    strong: 'Strong'
+  group:
+    colour: 'Colour'
+    type: 'Type'
+    surface: 'Surface'
+
+# Background gradient swatches, by id.
+gradient:
+  midnight: 'Midnight'
+  ink: 'Ink'
+  dusk: 'Dusk'
+  ember: 'Ember'
+  moss: 'Moss'
+  plum: 'Plum'
+  slate: 'Slate'
+  tide: 'Tide'
+  paper: 'Paper'
+  linen: 'Linen'
+
+# Font stack choices, by style.
+font:
+  system: 'System'
+  grotesk: 'Grotesk'
+  humanist: 'Humanist'
+  geometric: 'Geometric'
+  serif: 'Serif'
+  oldStyle: 'Old style'
+  slab: 'Slab'
+  monospace: 'Monospace'
+
+# The settings panel's frame.
+panel:
+  pageSettings: 'Page settings'
+  widgetSettings: '{name} settings'
+  back: 'Back to page settings'
+  hide: 'Hide settings'
+
+# Page settings: the accordion sections and their one-line summaries.
+page:
+  profile:
+    title: 'Profile'
+    summary: '{name} of {count}'
+    editing: 'Editing'
+    name: 'Name'
+    nameLabel: 'Profile name'
+    new: 'New profile'
+    duplicate: 'Duplicate'
+  theme:
+    title: 'Theme'
+    customised: '{name}, customised'
+  background:
+    title: 'Background'
+    custom: 'Custom'
+  layout:
+    title: 'Layout'
+  general:
+    title: 'General'
+    unlocked: 'Editing allowed'
+    locked: 'Canvas locked'
+  allSettings: 'All settings and backups…'
+
+background:
+  typeLabel: 'Type'
+  type:
+    colour: 'Colour'
+    photo: 'My photo'
+    picsum: 'Lorem Picsum'
+    unsplash: 'Unsplash'
+  contrast:
+    yourText: 'Your text colour is hard to read on this background (contrast {ratio}:1). Pick a lighter or darker background, or a theme that suits this one.'
+    themeText: '{theme} text is hard to read on this background (contrast {ratio}:1). Pick a lighter or darker background, or a theme that suits this one.'
+  notAPreset: 'This profile uses a background that is not one of these. Picking one replaces it.'
+
+# Background: My photo.
+photo:
+  upload: 'Use your own photo'
+  replace: 'Replace photo'
+  preparing: 'Preparing photo…'
+  missing: 'This photo is no longer stored here. Upload it again, or choose another type above.'
+  privacy: 'Kept on this device only, and included when you export your settings.'
+  error:
+    notImage: 'That file is not an image.'
+    tooLarge: 'That image is over 50 MB. Try a smaller copy of it.'
+    unreadable: 'That image could not be opened. JPEG, PNG, WebP and AVIF all work.'
+    process: 'This browser could not process the image.'
+    read: 'The image could not be read.'
+    save: 'The photo could not be saved. There may not be enough storage space left.'
+
+# Background: Lorem Picsum and Unsplash.
+web:
+  needsKey: 'Unsplash needs an access key, free from unsplash.com/developers: create an app and copy its Access Key. For photos with no setup, choose Lorem Picsum.'
+  another: 'Show another photo'
+  fetching: 'Fetching a photo…'
+  picsumAbout: 'Random photos from a curated set of about a thousand on Unsplash, via Lorem Picsum. To search for your own subject, choose Unsplash.'
+  consent: 'Searching sends your search words to Unsplash. Firefox asks you to allow that once.'
+  allowSearch: 'Allow search'
+  problem:
+    key: 'Unsplash did not accept this key. Check that it is the Access Key, not the Secret key.'
+    rate: 'This key has used its hourly allowance on Unsplash. The current photo stays up, and new ones resume within the hour.'
+    network: 'The photo service could not be reached. The last photo stays up until it can.'
+    empty: 'Unsplash found no photos for that search. Try a broader word.'
+
+widgetSettings:
+  notInstalled: 'This widget’s type ([[type]]) is not installed, so its settings cannot be shown. They are kept untouched.'
+  frame: 'Frame'
+  reset: 'Reset to defaults'
+
+# Generated settings controls.
+controls:
+  unsupported: '{label} cannot be edited here yet.'
+  notSet: 'Not set'
+  colour:
+    picker: '{label}, colour picker'
+    value: '{label}, colour value'
+  timezone:
+    device: 'Device time zone'
+    useDevice: 'Use this device’s time zone for {label}'
+  list:
+    empty: 'Nothing here yet.'
+    add: '+ Add {item}'
+    moveUp: 'Move {item} {n} up'
+    moveDown: 'Move {item} {n} down'
+    remove: 'Remove {item} {n}'
+
+# Labels and help for settings generated from the config schema.
+config:
+  frame:
+    card:
+      label: 'Card'
+      help: 'A surface behind the widget. Its colour, border, corners, shadow and blur come from the theme.'
+    align:
+      label: 'Alignment'
+      start: 'Start'
+      center: 'Centre'
+      end: 'End'
+    opacity:
+      label: 'Opacity'
+  layout:
+    columns:
+      label: 'Columns'
+      help: 'How finely a widget can be placed across the page. More columns means finer placement, not smaller widgets.'
+    rows:
+      label: 'Rows'
+    gap:
+      label: 'Gap'
+    maxWidth:
+      label: 'Maximum width'
+      help: 'Keeps the canvas from smearing across an ultrawide screen. Clear it to use the whole window.'
+  image:
+    fit:
+      label: 'Fit'
+      cover: 'Fill'
+      contain: 'Whole image'
+  web:
+    query:
+      label: 'Search'
+      help: 'Photos are picked at random from Unsplash results for this. Try “mountains”, “ocean” or “architecture”.'
+    refresh:
+      label: 'New photo'
+      help: 'A new photo appears on the next tab you open, never under the one you are looking at.'
+      tab: 'Every tab'
+      hourly: 'Hourly'
+      daily: 'Daily'
+  app:
+    locale:
+      label: 'Language'
+    unsplashKey:
+      label: 'Unsplash access key'
+      help: 'Only needed for Unsplash backgrounds. Free from unsplash.com/developers: create an app and copy its Access Key.'
+    firstRun:
+      label: 'Has completed first run'
+    editMode:
+      label: 'Allow editing the layout'
+      help: 'Turn this off to lock the canvas. The “Edit layout” button and the E shortcut stop responding.'
+  photo:
+    blur: 'Blur'
+    dim: 'Dim'
+    dimHelp: 'Darkens the photo so text over it stays readable.'
+
+# Why an imported settings file was refused.
+importError:
+  notJson: 'That file is not valid JSON.'
+  notJsonNothing: 'That file is not valid JSON, so there is nothing to import.'
+  unreadable: 'Could not read that config.'
+  invalid: 'That file is not a valid Stillpoint config.'
+  notBackup: 'That file does not contain a Stillpoint backup.'
+  noVersionNumber: 'That file has no Stillpoint version number, so it is probably not an export from this extension.'
+  notObject: 'Config is not an object.'
+  noVersion: 'Config has no usable version number.'
+  newer: 'This config was written by a newer version of Stillpoint (config version {found}, this build understands up to {supported}). Update the extension, then import it again.'
+
+store:
+  refused: 'Refused to save an invalid config. Your last change was not kept.'
+  startedFresh: 'Your saved settings could not be read, so Stillpoint started fresh. The old file was kept as a backup.'
+
+data:
+  timeout: 'The request took too long.'
+  failed: 'Could not load.'
+
+# Names given to new profiles. Saved with the profile.
+profile:
+  defaultName: 'Default'
+  newName: 'New profile'
+
+# The options page (about:addons → Stillpoint → Options).
+options:
+  pageTitle: 'Stillpoint — Settings'
+  loading: 'Loading your settings…'
+  loadFailed: 'Settings could not be loaded.'
+  intro: 'Your settings are stored on this device only. There is no account, and nothing is sent to the developer.'
+  configVersion: 'Config format version {version}.'
+  profiles:
+    title: 'Profiles'
+    note: 'Each profile is a whole new tab page: its own layout, widgets, background and theme. One is active at a time.'
+    use: 'Use {name}'
+    nameOf: 'Name of profile {name}'
+    widgets:
+      1: '$1 widget'
+      n: '$1 widgets'
+    moveUp: 'Move {name} up'
+    moveDown: 'Move {name} down'
+    duplicate: 'Duplicate {name}'
+    delete: 'Delete {name}'
+  general:
+    note: 'Applies to every profile.'
+  data:
+    title: 'Your data'
+    note: 'An export is a plain JSON file holding every profile, setting and photo. Importing one replaces everything — export first if you want a way back.'
+    export: 'Export to a file'
+    import: 'Import a file'
+    reset: 'Reset everything'
+    confirmReset: 'Delete everything, really'
+    cancel: 'Cancel'
+    saved: 'Saved {file}.'
+    imported: 'Imported.'
+    importedUpgraded: 'Imported, and upgraded from config version {version}.'
+    photosFailed: 'The photos in that file could not be stored, so nothing was imported. There may not be enough storage space left.'
+    wasReset: 'Reset to a fresh install.'
+
+# Each widget's name, description and settings. Keys follow the settings schema.
+widget:
+  clock:
+    format:
+      label: 'Time format'
+      option:
+        12h: '11:04 PM'
+    showSeconds:
+      label: 'Show seconds'
+    showMeridiem:
+      label: 'Show AM/PM'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The clock shrinks to fit when its cell is too small.'
+    weight:
+      label: 'Weight'
+    timezone:
+      label: 'Time zone'
+      help: 'Leave empty to use this device’s time zone.'
+    name: 'Clock'
+    description: 'The current time, in any time zone.'
+  date:
+    style:
+      label: 'Format'
+      option:
+        full: 'Full'
+        short: 'Short'
+        numeric: 'Numbers'
+    showYear:
+      label: 'Show year'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The date shrinks to fit when its cell is too small.'
+    weight:
+      label: 'Weight'
+    timezone:
+      label: 'Time zone'
+      help: 'Leave empty to use this device’s time zone.'
+    name: 'Date'
+    description: 'Today’s date, in any time zone.'
+  links:
+    view:
+      noneOpen: 'None of these addresses can be opened. Check them in this widget’s settings.'
+      empty: 'Add your sites in this widget’s settings.'
+    links:
+      row:
+        url:
+          label: 'Address'
+          help: 'For example github.com'
+        label:
+          label: 'Name'
+          help: 'Leave empty to show the address.'
+      label: 'Links'
+      itemLabel: 'link'
+    layout:
+      label: 'Layout'
+      option:
+        tiles: 'Tiles'
+        icons: 'Icons'
+        list: 'List'
+    newTab:
+      label: 'Open in a new tab'
+    iconSize:
+      label: 'Size'
+      help: 'An upper limit. Icons shrink to fit their cell, and names are dropped first.'
+    name: 'Links'
+    description: 'Your sites, one click away, with their icons.'
+  quote:
+    view:
+      empty: 'No quotes to show. Add your own, or turn the built-in ones back on, in this widget’s settings.'
+    refresh:
+      label: 'New quote'
+      option:
+        tab: 'Every tab'
+        hourly: 'Hourly'
+        daily: 'Daily'
+      help: 'A quote never changes while you are reading it. The next tab shows the new one.'
+    builtIn:
+      label: 'Include built-in quotes'
+      help: 'About sixty, all public domain. Turn off to show only your own.'
+    mine:
+      row:
+        text:
+          label: 'Quote'
+        author:
+          label: 'Author'
+      label: 'Your quotes'
+      itemLabel: 'quote'
+    showAuthor:
+      label: 'Show author'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. A long quote, or a small cell, gets smaller text.'
+    style:
+      label: 'Style'
+      option:
+        normal: 'Upright'
+        italic: 'Italic'
+    name: 'Quote'
+    description: 'A quote to start on, from a built-in set or your own.'
+  search:
+    view:
+      setAddress: 'Set a search address with %s where the words go, in this widget’s settings.'
+      label: 'Search {name}'
+    engine:
+      label: 'Engine'
+      option:
+        custom: 'Other…'
+    customUrl:
+      label: 'Search address'
+      help: 'The address of a results page, with %s where the words go. For example https://example.com/search?q=%s'
+    newTab:
+      label: 'Open results in a new tab'
+    autofocus:
+      label: 'Focus on open'
+      help: 'Browsers usually keep the cursor in the address bar on a new tab. Press / to jump to the search box at any time.'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The box shrinks to fit when its cell is too small.'
+    name: 'Search'
+    description: 'A search box for the engine of your choice.'
+  stocks:
+    refresh:
+      label: 'Refresh every'
+      option:
+        m5: '5 minutes'
+        m15: '15 minutes'
+        m30: '30 minutes'
+        m60: 'Hour'
+      help: 'While a new tab is open. With Twelve Data each refresh costs one credit per symbol, and the free plan has 800 a day: 8 symbols every 15 minutes, all day, use 768.'
+    view:
+      addKey: 'Add your Twelve Data key in this widget’s settings.'
+      addSymbols: 'Add symbols in this widget’s settings.'
+      unavailable: 'Prices unavailable.'
+      notAvailable: 'Not available'
+      stale: 'Not updated for {age}'
+    error:
+      twelveUnreachable: 'Twelve Data could not be reached.'
+      twelveDown: 'Twelve Data is not answering right now.'
+      twelveKey: 'Twelve Data did not accept this key.'
+      twelveRate: 'This Twelve Data key has used its allowance. The free plan allows 8 symbols a minute and 800 a day.'
+      yahooUnreachable: 'Yahoo Finance could not be reached.'
+      yahooRefusing: 'Yahoo Finance is refusing requests for now. Try again later.'
+      yahooDown: 'Yahoo Finance is not answering right now.'
+      yahooUnreadable: 'Yahoo Finance sent something unreadable.'
+    source:
+      label: 'Prices from'
+      option:
+        yahoo: 'Yahoo Finance'
+        twelvedata: 'Twelve Data'
+      help: 'Yahoo needs no key and covers every market, but is unofficial and may stop working. Twelve Data needs a free key and covers US markets.'
+    apiKey:
+      label: 'Twelve Data key'
+      help: 'Free at twelvedata.com, for up to 8 symbols. It is saved with your settings, so exports include it.'
+    symbols:
+      row:
+        symbol:
+          label: 'Symbol'
+          help: 'As Yahoo writes it: AAPL, 7203.T for Tokyo, MC.PA for Paris.'
+        label:
+          label: 'Name'
+          help: 'Leave empty to show the symbol.'
+      label: 'Watchlist'
+      itemLabel: 'symbol'
+    change:
+      label: 'Change'
+      option:
+        amount: 'Amount'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. Rows shrink to fit, and the change is dropped first.'
+    name: 'Stocks'
+    description: 'A watchlist with the latest prices.'
+  weather:
+    condition:
+      clear: 'Clear'
+      mainlyClear: 'Mainly clear'
+      partlyCloudy: 'Partly cloudy'
+      overcast: 'Overcast'
+      fog: 'Fog'
+      freezingFog: 'Freezing fog'
+      lightDrizzle: 'Light drizzle'
+      drizzle: 'Drizzle'
+      heavyDrizzle: 'Heavy drizzle'
+      freezingDrizzle: 'Freezing drizzle'
+      lightRain: 'Light rain'
+      rain: 'Rain'
+      heavyRain: 'Heavy rain'
+      freezingRain: 'Freezing rain'
+      lightSnow: 'Light snow'
+      snow: 'Snow'
+      heavySnow: 'Heavy snow'
+      snowGrains: 'Snow grains'
+      lightShowers: 'Light showers'
+      showers: 'Showers'
+      heavyShowers: 'Heavy showers'
+      snowShowers: 'Snow showers'
+      heavySnowShowers: 'Heavy snow showers'
+      thunderstorm: 'Thunderstorm'
+      thunderstormWithHail: 'Thunderstorm with hail'
+      unknown: 'Weather'
+    view:
+      choosePlace: 'Choose a place in this widget’s settings.'
+      unavailable: 'Weather unavailable.'
+      conditionIn: '{condition} in {place}'
+      stale: 'Not updated for {age}'
+      details: 'Feels {feels} · Wind {wind} · Humidity {humidity}'
+    picker:
+      consent: 'Weather sends the place you pick to Open-Meteo to get its forecast. Firefox asks you to allow that once. Your device’s location is not used unless you press “Use my location” later.'
+      change: 'Change'
+      keep: 'Keep {name}'
+      placeholder: 'Search for a city'
+      results: 'Places found'
+      useMyLocation: 'Use my location'
+      myLocation: 'My location'
+      locating: 'Finding your location…'
+      searching: 'Searching…'
+      noMatch: 'No place by that name.'
+      searchFailed: 'The search failed.'
+      noGeolocation: 'This browser cannot share a location. Search for a city instead.'
+      declined: 'Location access was declined. Search for a city instead.'
+      notFound: 'Your location could not be found. Search for a city instead.'
+    error:
+      searchUnreachable: 'The place search could not be reached.'
+      searchDown: 'The place search is not answering right now.'
+      unreachable: 'The weather service could not be reached.'
+      down: 'The weather service is not answering right now.'
+      unreadable: 'The weather service sent something unreadable.'
+    units:
+      label: 'Units'
+      option:
+        auto: 'Auto'
+      help: 'Auto follows your browser’s language.'
+    details:
+      label: 'Show details'
+      help: 'Feels like, wind and humidity.'
+    forecast:
+      label: 'Show the next days'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The other lines are dropped before the temperature shrinks.'
+    name: 'Weather'
+    description: 'Current conditions and the next days, for a place you choose.'
+    location:
+      label: 'Place'
+
+# Font weight choices, shared by widgets.
+fontWeight:
+  light: 'Light'
+  regular: 'Regular'
+  medium: 'Medium'

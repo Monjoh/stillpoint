@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useMemo, useState } from 'react';
 import type { WidgetProps } from '@/core/registry/types';
 import type { LinksSettings } from './definition';
@@ -23,8 +24,8 @@ export default function LinksView({
     return (
       <p className={styles.notice}>
         {settings.links.some((link) => link.url.trim())
-          ? 'None of these addresses can be opened. Check them in this widget’s settings.'
-          : 'Add your sites in this widget’s settings.'}
+          ? i18n.t('widget.links.view.noneOpen')
+          : i18n.t('widget.links.view.empty')}
       </p>
     );
   }

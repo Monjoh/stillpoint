@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useState } from 'react';
 import type { PhotoSource } from '@/core/unsplash/api';
 import {
@@ -17,6 +18,7 @@ import { getPreset, THEME_PRESETS } from '@/core/theme/presets';
 import { imageAssetId } from '@/core/assets/image';
 import { readImagePreview } from '@/core/storage/paint-cache';
 import { UNSPLASH_PREVIEW_ID } from '@/core/unsplash/state';
+import { gradientName, presetDescription, presetName } from './names';
 import { PhotoFields } from './PhotoFields';
 import { UnsplashFields } from './UnsplashFields';
 import { TokenOverrides } from './TokenOverrides';
@@ -59,12 +61,11 @@ export interface BackgroundFieldsProps {
 
 export type BackgroundMode = 'colour' | 'photo' | PhotoSource;
 
-const MODES: Record<BackgroundMode, string> = {
-  colour: 'Colour',
-  photo: 'My photo',
-  picsum: 'Lorem Picsum',
-  unsplash: 'Unsplash',
-};
+const MODES: readonly BackgroundMode[] = ['colour', 'photo', 'picsum', 'unsplash'];
+
+/** "Colour", "My photo", "Lorem Picsum", "Unsplash", in the browser's language. */
+export const backgroundModeName = (mode: BackgroundMode): string =>
+  i18n.t(`background.type.${mode}`);
 
 export function backgroundMode(background: BackgroundConfig): BackgroundMode {
   if (background.kind === 'image') return 'photo';
@@ -94,7 +95,11 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
 
   return (
     <>
-      <div className={styles.grid} role="radiogroup" aria-label="Theme">
+      <div
+        className={styles.grid}
+        role="radiogroup"
+        aria-label={i18n.t('page.theme.title')}
+      >
         {THEME_PRESETS.map((preset) => (
           <button
             key={preset.id}
@@ -102,7 +107,7 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
             role="radio"
             aria-checked={preset.id === active.id}
             className={styles.swatch}
-            title={preset.description}
+            title={presetDescription(preset.id)}
             onClick={() => onChangeTheme({ ...profile.theme, preset: preset.id })}
           >
             {/* Painted over the background that is actually on the page: this is a
@@ -130,12 +135,12 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
                 style={{ background: preset.tokens['--sp-accent'] }}
               />
             </span>
-            <span className={styles.swatchName}>{preset.name}</span>
+            <span className={styles.swatchName}>{presetName(preset.id)}</span>
           </button>
         ))}
       </div>
 
-      <p className={fields.help}>{active.description}</p>
+      <p className={fields.help}>{presetDescription(active.id)}</p>
 
       <div className={styles.customiseRow}>
         <button
@@ -148,11 +153,9 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
           <svg viewBox="0 0 24 24" className={styles.chevron} aria-hidden="true">
             <path d="M9 6l6 6-6 6" />
           </svg>
-          Customise
+          {i18n.t('theme.customise')}
           {changes > 0 && (
-            <span className={styles.count}>
-              {changes} {changes === 1 ? 'change' : 'changes'}
-            </span>
+            <span className={styles.count}>{i18n.t('theme.changes', changes)}</span>
           )}
         </button>
         {/* Out here rather than inside the editor, so a customised theme can be put
@@ -163,7 +166,7 @@ export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
             className={styles.resetAll}
             onClick={() => onChangeTheme({ ...profile.theme, overrides: {} })}
           >
-            Reset all
+            {i18n.t('theme.resetAll')}
           </button>
         )}
       </div>
@@ -241,7 +244,7 @@ export function BackgroundFields({
     <>
       <div className={fields.field}>
         <label className={fields.label} htmlFor="sp-background-mode">
-          Type
+          {i18n.t('background.typeLabel')}
         </label>
         <select
           id="sp-background-mode"
@@ -249,9 +252,9 @@ export function BackgroundFields({
           value={mode}
           onChange={(event) => choose(event.target.value as BackgroundMode)}
         >
-          {Object.entries(MODES).map(([id, name]) => (
+          {MODES.map((id) => (
             <option key={id} value={id}>
-              {name}
+              {backgroundModeName(id)}
             </option>
           ))}
         </select>
@@ -275,16 +278,20 @@ export function BackgroundFields({
       )}
 
       {mode === 'colour' && (
-        <div className={styles.grid} role="radiogroup" aria-label="Background">
+        <div
+          className={styles.grid}
+          role="radiogroup"
+          aria-label={i18n.t('page.background.title')}
+        >
           {GRADIENT_PRESETS.map((gradient) => (
             <button
               key={gradient.id}
               type="button"
               role="radio"
               aria-checked={gradient.id === activeGradient?.id}
-              aria-label={gradient.name}
+              aria-label={gradientName(gradient.id)}
               className={styles.swatch}
-              title={gradient.name}
+              title={gradientName(gradient.id)}
               onClick={() => onChangeBackground(gradientToBackground(gradient))}
             >
               <span
@@ -295,7 +302,7 @@ export function BackgroundFields({
                 }}
                 aria-hidden="true"
               />
-              <span className={styles.swatchName}>{gradient.name}</span>
+              <span className={styles.swatchName}>{gradientName(gradient.id)}</span>
             </button>
           ))}
         </div>
@@ -307,10 +314,12 @@ export function BackgroundFields({
             might be either of them. */}
       {unreadable && (
         <p className={styles.warning} role="status">
-          {ownText ? 'Your text colour' : `${active.name} text`} is hard to read on this
-          background
-          {contrast !== null && ` (contrast ${contrast.toFixed(1)}:1)`}. Pick a lighter
-          or darker background, or a theme that suits this one.
+          {ownText
+            ? i18n.t('background.contrast.yourText', { ratio: formatRatio(contrast) })
+            : i18n.t('background.contrast.themeText', {
+                theme: presetName(active.id),
+                ratio: formatRatio(contrast),
+              })}
         </p>
       )}
 
@@ -318,11 +327,15 @@ export function BackgroundFields({
             hand-edited export, later a photograph. Saying so beats showing ten
             swatches with none selected and leaving the user to wonder. */}
       {mode === 'colour' && current === 'colour' && activeGradient === undefined && (
-        <p className={fields.help}>
-          This profile uses a background that is not one of these. Picking one replaces
-          it.
-        </p>
+        <p className={fields.help}>{i18n.t('background.notAPreset')}</p>
       )}
     </>
   );
 }
+
+/** A contrast ratio as "3.2", with the browser's decimal separator. */
+const formatRatio = (ratio: number | null) =>
+  (ratio ?? 0).toLocaleString(undefined, {
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 1,
+  });

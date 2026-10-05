@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useMemo, useState } from 'react';
 import type { WidgetProps } from '@/core/registry/types';
 import type { QuoteSettings } from './definition';
@@ -20,12 +21,7 @@ export default function QuoteView({ settings, size }: WidgetProps<QuoteSettings>
   const quote = pickQuote(pool, settings.refresh, opened.at, opened.seed);
 
   if (!quote) {
-    return (
-      <p className={styles.empty}>
-        No quotes to show. Add your own, or turn the built-in ones back on, in this
-        widget’s settings.
-      </p>
-    );
+    return <p className={styles.empty}>{i18n.t('widget.quote.view.empty')}</p>;
   }
 
   const layout = layoutQuote({

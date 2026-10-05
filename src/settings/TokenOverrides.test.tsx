@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import type { ThemeConfig } from '@/core/config/schema';
 import { THEME_TOKENS } from '@/core/theme/tokens';
+import { tokenLabel } from './names';
 import { TokenOverrides } from './TokenOverrides';
 
 /** Controlled, as the store is: a write comes back as the next `theme` prop. */
@@ -36,7 +37,7 @@ describe('TokenOverrides', () => {
     setup();
     for (const spec of THEME_TOKENS) {
       expect(
-        screen.getAllByLabelText(new RegExp(`^${spec.label}`)).length,
+        screen.getAllByLabelText(new RegExp(`^${tokenLabel(spec.token)}`)).length,
       ).toBeGreaterThan(0);
     }
   });

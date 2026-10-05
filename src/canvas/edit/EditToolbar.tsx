@@ -1,3 +1,4 @@
+import { i18n } from '#i18n';
 import { useRef, useState } from 'react';
 import type { Profile } from '@/core/config/schema';
 import { ShortcutHelp } from './ShortcutHelp';
@@ -37,7 +38,7 @@ export function EditToolbar({
       className={styles.toolbar}
       data-panel={panelOpen || undefined}
       role="toolbar"
-      aria-label="Edit layout"
+      aria-label={i18n.t('edit.toolbar')}
     >
       <button
         ref={addButton}
@@ -50,10 +51,10 @@ export function EditToolbar({
         <svg viewBox="0 0 24 24" className={styles.icon} aria-hidden="true">
           <path d="M12 5v14M5 12h14" />
         </svg>
-        Add widget
+        {i18n.t('edit.addWidget')}
       </button>
 
-      <span className={styles.profile} title="Profile">
+      <span className={styles.profile} title={i18n.t('edit.profile')}>
         {profile.name}
       </span>
 
@@ -63,7 +64,7 @@ export function EditToolbar({
         ref={helpButton}
         type="button"
         className={styles.help}
-        aria-label="Keyboard shortcuts"
+        aria-label={i18n.t('edit.shortcuts')}
         aria-expanded={helpOpen}
         onClick={() => setHelpOpen((open) => !open)}
       >
@@ -82,11 +83,11 @@ export function EditToolbar({
         <svg viewBox="0 0 24 24" className={styles.icon} aria-hidden="true">
           <path d="M4 5h16v14H4zM15 5v14" />
         </svg>
-        Settings
+        {i18n.t('edit.settings')}
       </button>
 
       <button type="button" className={styles.done} onClick={onExit}>
-        Done
+        {i18n.t('edit.done')}
       </button>
 
       {helpOpen && (

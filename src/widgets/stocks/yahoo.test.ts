@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { RateLimitError } from '@/core/data/errors';
 import {
   jsonResponse,
   yahooApple,
@@ -74,6 +75,9 @@ describe('fetchYahoo', () => {
     });
     await expect(fetchYahoo(['AAPL'], undefined, fetcher)).rejects.toThrow(
       'refusing requests',
+    );
+    await expect(fetchYahoo(['AAPL'], undefined, fetcher)).rejects.toBeInstanceOf(
+      RateLimitError,
     );
   });
 
