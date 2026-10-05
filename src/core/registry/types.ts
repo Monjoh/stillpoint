@@ -78,8 +78,13 @@ export interface WidgetDefinition<S = unknown, D = unknown> {
    */
   dataSource?: DataSourceSpec<S, D>;
 
-  /** Optional host permissions, requested when the user adds the widget. */
-  permissions?: string[];
+  /**
+   * Host origins the data source needs, given these settings, for a service that
+   * sends no CORS headers. Each must also be under `optional_host_permissions` in
+   * `wxt.config.ts`. Until they are granted, the frame fetches nothing and shows an
+   * Allow button in their place (see `core/permissions.ts`).
+   */
+  origins?: (settings: S) => readonly string[];
 }
 
 /**

@@ -8,6 +8,7 @@ import {
 } from 'react';
 import type { WidgetInstance } from '@/core/config/schema';
 import { useResource } from '@/core/data/resource';
+import { originHost, useOrigins } from '@/core/permissions';
 import { widgetRegistry } from '@/core/registry';
 import type { DataSourceSpec, WidgetProps } from '@/core/registry/types';
 import { resolveSettings } from '@/core/registry/settings';
@@ -89,6 +90,8 @@ export function WidgetFrame({
         {definition.dataSource ? (
           <WithData
             widgetType={definition.id}
+            name={definition.name}
+            origins={definition.origins?.(resolved.settings) ?? NO_ORIGINS}
             spec={definition.dataSource}
             Widget={Widget}
             settings={resolved.settings}
@@ -152,26 +155,51 @@ export function WidgetFrame({
   );
 }
 
-/**
- * A widget with a `dataSource`. The frame resolves the data, so the widget never
- * touches the network or the cache, and draws `empty` as the same skeleton as a
- * loading chunk: a widget needs no loading state of its own.
- */
-function WithData({
-  widgetType,
-  spec,
-  Widget,
-  settings,
-  size,
-  isEditing,
-}: {
+const NO_ORIGINS: readonly string[] = [];
+
+interface DataProps {
   widgetType: string;
   spec: DataSourceSpec<unknown, unknown>;
   Widget: ComponentType<WidgetProps<unknown>>;
   settings: unknown;
   size: WidgetProps<unknown>['size'];
   isEditing: boolean;
-}) {
+}
+
+/**
+ * A widget with a `dataSource`. The frame resolves the data, so the widget never
+ * touches the network or the cache, and draws `empty` as the same skeleton as a
+ * loading chunk: a widget needs no loading state of its own.
+ *
+ * A source that needs a host permission fetches nothing until it is granted. The
+ * request has to come from a click, so the frame offers one. Edit mode covers the
+ * canvas with its own layer, so there the notice says where the button is instead.
+ */
+function WithData({
+  name,
+  origins,
+  ...props
+}: DataProps & { name: string; origins: readonly string[] }) {
+  const { state, request } = useOrigins(origins);
+  if (state === 'checking') return null;
+  if (state === 'missing') {
+    const hosts = origins.map(originHost).join(', ');
+    return (
+      <FrameNotice
+        title={`${name} needs your permission`}
+        detail={
+          props.isEditing
+            ? `It gets its data from ${hosts}. Leave edit mode to allow it.`
+            : `It gets its data from ${hosts}, which Firefox asks you to allow once.`
+        }
+        action={props.isEditing ? undefined : { label: 'Allow', onClick: request }}
+      />
+    );
+  }
+  return <Fetching {...props} />;
+}
+
+function Fetching({ widgetType, spec, Widget, settings, size, isEditing }: DataProps) {
   const data = useResource(widgetType, spec, settings);
   // Reading the cache: a few milliseconds, drawn as nothing rather than a skeleton
   // that flashes on every tab.
@@ -201,18 +229,20 @@ function FrameNotice({
   title,
   detail,
   onRemove,
+  action = onRemove && { label: 'Remove', onClick: onRemove },
 }: {
   title: string;
   detail: string;
   onRemove?: () => void;
+  action?: { label: string; onClick: () => void };
 }) {
   return (
     <div className={styles.notice} role="status">
       <strong className={styles.noticeTitle}>{title}</strong>
       <span className={styles.noticeDetail}>{detail}</span>
-      {onRemove && (
-        <button type="button" className={styles.noticeAction} onClick={onRemove}>
-          Remove
+      {action && (
+        <button type="button" className={styles.noticeAction} onClick={action.onClick}>
+          {action.label}
         </button>
       )}
     </div>

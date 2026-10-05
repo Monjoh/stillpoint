@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import { YAHOO_ORIGIN } from './src/widgets/stocks/origins';
 
 /**
  * Permanent. Firefox keys stored extension data to this id, so changing it after the
@@ -16,6 +17,9 @@ export default defineConfig({
     short_name: 'Stillpoint',
     description: 'A quiet, personalizable new tab page.',
     permissions: ['storage'],
+    // Asked for only when a widget needs one, from a click; never at install. Each
+    // widget declares the origins it uses in its definition's `origins`.
+    optional_host_permissions: [YAHOO_ORIGIN],
     // Firefox-only keys. Chrome rejects unknown top-level manifest keys, so they are
     // added per-target rather than unconditionally.
     ...(browser === 'firefox'

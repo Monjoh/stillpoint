@@ -1,0 +1,82 @@
+.stocks {
+  display: flex;
+  flex-direction: column;
+  width: 100cqw;
+  max-height: 100cqh;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.6;
+  color: var(--sp-text, #f2f2f2);
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 0;
+  white-space: nowrap;
+}
+
+/* The label column takes what the figures leave, and an ellipsis when that is too
+   little. Both halves are needed: max-width alone collapses the column to nothing. */
+.label {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+
+.table .price,
+.table .change {
+  padding-left: 1em;
+  text-align: right;
+}
+
+.change {
+  /* Tinted toward the theme's text, so it sits on any background. The arrow and the
+     sign carry the meaning; the colour only repeats it. */
+  color: var(--sp-text-muted, #a0a3ad);
+}
+
+.change[data-direction='up'] {
+  color: color-mix(in oklab, #2fb46a 75%, var(--sp-text, #f2f2f2));
+}
+
+.change[data-direction='down'] {
+  color: color-mix(in oklab, #e5534b 75%, var(--sp-text, #f2f2f2));
+}
+
+.arrow {
+  margin-right: 0.3em;
+  font-size: 0.7em;
+  vertical-align: 0.1em;
+}
+
+.stale {
+  margin: 0;
+  overflow: hidden;
+  color: var(--sp-text-muted, #a0a3ad);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.notice {
+  margin: 0;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  font-size: min(14px, 30cqh, 6cqw);
+  color: var(--sp-text-muted, #a0a3ad);
+}
