@@ -7,9 +7,18 @@ is tagged in git as `v<version>`.
 Numbering: a fix raises the last number (1.0.1), a new feature the middle one (1.1.0),
 and a change that breaks how something used to work the first (2.0.0).
 
-## 1.0.1 — unreleased
+## 1.1.0 — unreleased
 
-Accessibility, for keyboard and screen-reader users.
+Two new widgets:
+
+- **World clocks:** the time in several cities at once, with how many hours ahead or
+  behind each one is, and whether it is already tomorrow there. London, New York and
+  Tokyo to start with; add up to twelve.
+- **Countdown:** the days left until a date, such as a holiday or a deadline. It can
+  also show the days, hours and minutes, down to a time of day you set. Once the
+  date has passed, it counts the time since.
+
+Accessibility, for keyboard and screen-reader users:
 
 - The page has landmarks, so a screen reader can jump straight to the widgets or to
   the controls.

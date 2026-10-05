@@ -24,15 +24,19 @@ developer.
 
 ### Widgets
 
-| Widget      | What it shows                                                                                                                                       |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Clock**   | The time, in any time zone, 12- or 24-hour                                                                                                          |
-| **Date**    | Today's date, written out, short or in numbers, in any time zone                                                                                    |
-| **Search**  | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                                                        |
-| **Links**   | Your favourite sites as tiles, with each site's own icon                                                                                            |
-| **Weather** | Current conditions and the next days, from [Open-Meteo](https://open-meteo.com)                                                                     |
-| **Quote**   | A quote from a built-in collection, or your own                                                                                                     |
-| **Stocks**  | A watchlist with each price and the day's change, from [Twelve Data](https://twelvedata.com) with your free key (US markets, currencies and crypto) |
+| Widget           | What it shows                                                                                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clock**        | The time, in any time zone, 12- or 24-hour                                                                                                          |
+| **World clocks** | The time in several cities at once, with how far ahead or behind each one is                                                                        |
+| **Date**         | Today's date, written out, short or in numbers, in any time zone                                                                                    |
+| **Countdown**    | The days left until a date, or the days, hours and minutes to a moment, and the time since once it has passed                                       |
+| **Search**       | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                                                        |
+| **Links**        | Your favourite sites as tiles, with each site's own icon                                                                                            |
+| **Weather**      | Current conditions and the next days, from [Open-Meteo](https://open-meteo.com)                                                                     |
+| **Quote**        | A quote from a built-in collection, or your own                                                                                                     |
+| **Stocks**       | A watchlist with each price and the day's change, from [Twelve Data](https://twelvedata.com) with your free key (US markets, currencies and crypto) |
+| **Notes**        | A note you type straight onto the page                                                                                                              |
+| **To-do**        | A checklist you edit in place                                                                                                                       |
 
 Every widget's settings, and whether it sits on a card, are in the edit panel. Press
 <kbd>E</kbd> on a new tab, or use the **Edit layout** button at the top of the page.

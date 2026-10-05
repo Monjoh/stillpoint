@@ -1,4 +1,11 @@
-import type { ClockSettings } from './definition';
+/** What a time display is asked to show. Clock and World clocks both use this. */
+export interface ClockFormat {
+  format: '24h' | '12h';
+  showSeconds: boolean;
+  showMeridiem: boolean;
+  /** An IANA zone; null or unknown means the device's own. */
+  timezone: string | null;
+}
 
 /**
  * Pure formatting, so the awkward parts are testable without a DOM or a fake clock.
@@ -12,7 +19,7 @@ import type { ClockSettings } from './definition';
  */
 export function formatClock(
   date: Date,
-  settings: Pick<ClockSettings, 'format' | 'showSeconds' | 'showMeridiem' | 'timezone'>,
+  settings: ClockFormat,
   locale?: string,
 ): string {
   const options: Intl.DateTimeFormatOptions = {
@@ -50,6 +57,6 @@ export function formatClock(
 }
 
 /** How often the display has to change, given the settings. */
-export function tickIntervalMs(settings: Pick<ClockSettings, 'showSeconds'>): number {
+export function tickIntervalMs(settings: Pick<ClockFormat, 'showSeconds'>): number {
   return settings.showSeconds ? 1_000 : 60_000;
 }

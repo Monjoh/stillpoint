@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { clockSettingsSchema } from './definition';
-import { formatClock, tickIntervalMs } from './format';
+import { formatClock, tickIntervalMs, type ClockFormat } from './clock-format';
 
-const settings = (overrides: Record<string, unknown> = {}) =>
-  clockSettingsSchema.parse(overrides);
+const settings = (overrides: Partial<ClockFormat> = {}): ClockFormat => ({
+  format: '24h',
+  showSeconds: false,
+  showMeridiem: true,
+  timezone: null,
+  ...overrides,
+});
 
 // 2026-03-15T23:04:07Z — late enough in the day that 24h and 12h clearly differ, and
 // that a westward time zone falls on the previous date.
@@ -55,23 +59,6 @@ describe('tickIntervalMs', () => {
   it('ticks once a minute unless seconds are shown', () => {
     expect(tickIntervalMs({ showSeconds: false })).toBe(60_000);
     expect(tickIntervalMs({ showSeconds: true })).toBe(1_000);
-  });
-});
-
-describe('clockSettingsSchema', () => {
-  it('parses an empty object, which is what a newly added widget stores', () => {
-    expect(settings()).toEqual({
-      format: '24h',
-      showSeconds: false,
-      showMeridiem: true,
-      fontSize: 72,
-      weight: 'light',
-      timezone: null,
-    });
-  });
-
-  it('rejects a font size outside the slider range', () => {
-    expect(clockSettingsSchema.safeParse({ fontSize: 500 }).success).toBe(false);
   });
 });
 

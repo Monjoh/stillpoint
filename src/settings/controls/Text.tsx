@@ -45,3 +45,32 @@ export function TextareaControl({
     />
   );
 }
+
+/**
+ * The browser's own date and time pickers. They hand back `YYYY-MM-DD` and `HH:mm`
+ * whatever the language shows, which is what the schema stores; an incomplete entry
+ * reads as `''`, "not set".
+ */
+export function DateControl({ id, value, onChange }: ControlProps<string | null>) {
+  return (
+    <input
+      id={id}
+      type="date"
+      className={styles.input}
+      value={value ?? ''}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+}
+
+export function TimeControl({ id, value, onChange }: ControlProps<string | null>) {
+  return (
+    <input
+      id={id}
+      type="time"
+      className={styles.input}
+      value={value ?? ''}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+}

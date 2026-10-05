@@ -29,6 +29,8 @@ export type ControlKind =
   | 'color'
   | 'font'
   | 'timezone'
+  | 'date'
+  | 'time'
   | 'list'
   | 'group'
   | 'custom'
@@ -147,6 +149,8 @@ export function describeField(
         meta?.control === 'color' ||
         meta?.control === 'font' ||
         meta?.control === 'timezone' ||
+        meta?.control === 'date' ||
+        meta?.control === 'time' ||
         meta?.control === 'textarea' ||
         meta?.control === 'select'
           ? meta.control

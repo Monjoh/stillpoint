@@ -7,7 +7,12 @@ import { FontControl } from './controls/Font';
 import { ListControl } from './controls/List';
 import { NumberControl, SliderControl } from './controls/Number';
 import { SegmentedControl, SelectControl } from './controls/Choice';
-import { TextControl, TextareaControl } from './controls/Text';
+import {
+  DateControl,
+  TextControl,
+  TextareaControl,
+  TimeControl,
+} from './controls/Text';
 import { TimezoneControl } from './controls/Timezone';
 import { ToggleControl } from './controls/Toggle';
 import styles from './Fields.module.css';
@@ -52,6 +57,8 @@ const LEAF_CONTROLS: Record<string, { Control: Leaf; labelling: 'label' | 'group
   color: { Control: ColorControl as Leaf, labelling: 'group' },
   font: { Control: FontControl as Leaf, labelling: 'label' },
   timezone: { Control: TimezoneControl as Leaf, labelling: 'label' },
+  date: { Control: DateControl as Leaf, labelling: 'label' },
+  time: { Control: TimeControl as Leaf, labelling: 'label' },
 };
 
 export interface GeneratedFieldsProps {

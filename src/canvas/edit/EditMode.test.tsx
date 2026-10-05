@@ -594,6 +594,11 @@ describe('for a screen reader (S29)', () => {
     expect(document.activeElement).toBe(items[0]);
     await user.keyboard('{End}');
     expect(document.activeElement).toBe(items[items.length - 1]);
+    // A letter wraps to the next widget starting with it, and again on the next press.
+    await user.keyboard('w');
+    expect(document.activeElement).toBe(
+      screen.getByRole('menuitem', { name: 'World clocks' }),
+    );
     await user.keyboard('w');
     expect(document.activeElement).toBe(
       screen.getByRole('menuitem', { name: 'Weather' }),

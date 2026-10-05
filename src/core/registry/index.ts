@@ -1,4 +1,5 @@
 import { clockDefinition } from '@/widgets/clock/definition';
+import { countdownDefinition } from '@/widgets/countdown/definition';
 import { dateDefinition } from '@/widgets/date/definition';
 import { linksDefinition } from '@/widgets/links/definition';
 import { notesDefinition } from '@/widgets/notes/definition';
@@ -7,6 +8,7 @@ import { searchDefinition } from '@/widgets/search/definition';
 import { stocksDefinition } from '@/widgets/stocks/definition';
 import { todoDefinition } from '@/widgets/todo/definition';
 import { weatherDefinition } from '@/widgets/weather/definition';
+import { worldClocksDefinition } from '@/widgets/worldclocks/definition';
 import { createRegistry } from './registry';
 import type { AnyWidgetDefinition } from './types';
 
@@ -17,7 +19,9 @@ import type { AnyWidgetDefinition } from './types';
  */
 export const widgetDefinitions = [
   clockDefinition,
+  worldClocksDefinition,
   dateDefinition,
+  countdownDefinition,
   quoteDefinition,
   searchDefinition,
   linksDefinition,

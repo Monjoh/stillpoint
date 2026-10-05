@@ -1,0 +1,94 @@
+/* --time is set by layout.ts in container units; label and difference follow it
+   (LABEL = 0.42, DIFF = 0.32 there). */
+.clocks {
+  box-sizing: border-box;
+  display: flex;
+  width: 100cqw;
+  height: 100cqh;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--sp-text, #f2f2f2);
+}
+
+.clocks[data-direction='rows'] {
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.clocks[data-direction='columns'] {
+  flex-direction: row;
+  justify-content: space-evenly;
+  align-items: center;
+}
+
+.clock {
+  display: flex;
+  min-width: 0;
+}
+
+.clocks[data-direction='rows'] .clock {
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(var(--time) * 0.5);
+}
+
+/* Columns stack label, time, difference: .place steps aside so its two lines can be
+   ordered around the time. */
+.clocks[data-direction='columns'] .clock {
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(var(--time) * 0.08);
+}
+
+.clocks[data-direction='columns'] .place {
+  display: contents;
+}
+
+.clocks[data-direction='columns'] .difference {
+  order: 1;
+}
+
+.place {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.label,
+.difference {
+  overflow: hidden;
+  max-width: 100%;
+  font-family: var(--sp-font-body, system-ui, sans-serif);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.label {
+  font-size: calc(var(--time) * 0.42);
+}
+
+.difference {
+  font-size: calc(var(--time) * 0.32);
+  color: var(--sp-text-muted, #a0a0a8);
+}
+
+.time {
+  flex: none;
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  font-size: var(--time);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.empty {
+  margin: 0;
+  font-family: var(--sp-font-body, system-ui, sans-serif);
+  font-size: min(14px, 30cqh, 6cqw);
+  color: var(--sp-text-muted, #a0a0a8);
+}

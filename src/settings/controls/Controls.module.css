@@ -43,6 +43,12 @@
   background-repeat: no-repeat;
 }
 
+/* The tool chrome is dark; without this the pickers' own icons are drawn black. */
+.input[type='date'],
+.input[type='time'] {
+  color-scheme: dark;
+}
+
 .input::placeholder,
 .textarea::placeholder {
   color: var(--sp-ui-text-muted);

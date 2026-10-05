@@ -1,0 +1,46 @@
+/* --count is fitTextCss's size for the big line; the caption follows it. */
+.countdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--count) * 0.12);
+  /* As wide as its text, so the frame's Alignment can place it. */
+  max-width: 100cqw;
+  height: 100cqh;
+  min-width: 0;
+  color: var(--sp-text, #f2f2f2);
+  text-align: center;
+}
+
+.count,
+.caption {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.count {
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  font-size: var(--count);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  font-family: var(--sp-font-body, system-ui, sans-serif);
+  font-size: calc(var(--count) * 0.32);
+  line-height: 1.2;
+  color: var(--sp-text-muted, #a0a0a8);
+}
+
+.empty {
+  margin: 0;
+  font-family: var(--sp-font-body, system-ui, sans-serif);
+  font-size: min(14px, 30cqh, 6cqw);
+  color: var(--sp-text-muted, #a0a0a8);
+}

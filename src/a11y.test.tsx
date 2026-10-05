@@ -36,6 +36,7 @@ const SETTINGS: Record<string, unknown> = {
     location: { name: 'Paris', latitude: 48.85, longitude: 2.35 },
   },
   'stillpoint.search': { autofocus: false },
+  'stillpoint.countdown': { title: 'Holidays', date: '2030-12-25', display: 'full' },
 };
 
 async function seedEveryWidget() {

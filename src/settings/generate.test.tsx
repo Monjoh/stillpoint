@@ -114,6 +114,31 @@ describe('label wiring', () => {
 });
 
 describe('controls emit values of the right type', () => {
+  it('a date and a time field use the browser pickers, labelled', async () => {
+    const onValues = vi.fn();
+    render(
+      <Form
+        schema={z.object({
+          day: z
+            .string()
+            .default('')
+            .meta(field({ label: 'Day', control: 'date' })),
+          at: z
+            .string()
+            .default('')
+            .meta(field({ label: 'At', control: 'time' })),
+        })}
+        initial={{ day: '', at: '' }}
+        onValues={onValues}
+      />,
+    );
+    expect(screen.getByLabelText('Day')).toHaveProperty('type', 'date');
+    expect(screen.getByLabelText('At')).toHaveProperty('type', 'time');
+    // Typed as the browser stores it: ISO, whatever the language shows.
+    await userEvent.type(screen.getByLabelText('Day'), '2026-12-25');
+    expect(onValues).toHaveBeenLastCalledWith({ day: '2026-12-25', at: '' });
+  });
+
   it('a toggle emits a boolean', async () => {
     const onValues = vi.fn();
     render(

@@ -414,6 +414,32 @@ widget:
       help: 'Leave empty to use this device’s time zone.'
     name: 'Clock'
     description: 'The current time, in any time zone.'
+  countdown:
+    name: 'Countdown'
+    description: 'Days left until a date, or since one.'
+    empty: 'Pick a date in this widget’s settings.'
+    today: 'Today'
+    now: 'Now'
+    until: 'until {target}'
+    since: 'since {target}'
+    title:
+      label: 'Name'
+      help: 'What you are counting to, such as Holidays. Leave empty to show the date.'
+    date:
+      label: 'Date'
+    time:
+      label: 'Time'
+      help: 'Optional. Without one, the count runs to the start of the day.'
+    display:
+      label: 'Show'
+      option:
+        days: 'Days'
+        full: 'Days and hours'
+    showSeconds:
+      label: 'Show seconds'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The count shrinks to fit when its cell is too small.'
   date:
     style:
       label: 'Format'
@@ -652,6 +678,27 @@ widget:
     description: 'Current conditions and the next days, for a place you choose.'
     location:
       label: 'Place'
+  worldclocks:
+    name: 'World clocks'
+    description: 'The time in several cities at once.'
+    empty: 'No cities yet. Add one in this widget’s settings.'
+    local: 'Here'
+    clocks:
+      label: 'Cities'
+      itemLabel: 'city'
+      row:
+        timezone:
+          label: 'Time zone'
+          help: 'Type a city, such as Tokyo. Leave empty for this device’s time zone.'
+        label:
+          label: 'Name'
+          help: 'Leave empty to use the city in the time zone.'
+    showDifference:
+      label: 'Show difference'
+      help: 'How many hours ahead or behind each city is, and whether it is already tomorrow there.'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The times shrink to fit when the cell is too small.'
 
 # Font weight choices, shared by widgets.
 fontWeight:

@@ -186,6 +186,10 @@ export type FieldMeta = {
     | 'color'
     | 'font'
     | 'timezone'
+    /** A day, stored as `YYYY-MM-DD`, or `''` when not set. */
+    | 'date'
+    /** A time of day, stored as `HH:mm`, or `''` when not set. */
+    | 'time'
     | 'textarea'
     | 'custom';
   /** Human labels for enum values, keyed by value. */

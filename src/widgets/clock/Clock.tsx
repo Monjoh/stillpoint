@@ -1,7 +1,7 @@
 import { fitTextCss } from '@/lib/fit-text';
 import type { WidgetProps } from '@/core/registry/types';
 import type { ClockSettings } from './definition';
-import { formatClock, tickIntervalMs } from './format';
+import { formatClock, tickIntervalMs } from '@/lib/clock-format';
 import { useNow } from '@/lib/use-now';
 import styles from './Clock.module.css';
 
