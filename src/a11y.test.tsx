@@ -100,7 +100,9 @@ describe('accessibility (axe)', () => {
       );
       expect(await violations(), definition.name).toEqual([]);
     }
-  });
+    // Every screen in one test, so it grows with each widget: 3 s alone, past the 5 s
+    // default when the whole suite runs in parallel (S31).
+  }, 30_000);
 
   it('finds nothing on the options page', async () => {
     render(<Options />);

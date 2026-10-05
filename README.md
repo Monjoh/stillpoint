@@ -29,6 +29,7 @@ developer.
 | **Clock**        | The time, in any time zone, 12- or 24-hour                                                                                                          |
 | **World clocks** | The time in several cities at once, with how far ahead or behind each one is                                                                        |
 | **Date**         | Today's date, written out, short or in numbers, in any time zone                                                                                    |
+| **Calendar**     | This month as a grid with today marked, and the months before and after a click away                                                                |
 | **Countdown**    | The days left until a date, or the days, hours and minutes to a moment, and the time since once it has passed                                       |
 | **Search**       | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                                                        |
 | **Links**        | Your favourite sites as tiles, with each site's own icon                                                                                            |

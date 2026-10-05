@@ -414,6 +414,29 @@ widget:
       help: 'Leave empty to use this device’s time zone.'
     name: 'Clock'
     description: 'The current time, in any time zone.'
+  calendar:
+    name: 'Calendar'
+    description: 'This month at a glance, with today marked.'
+    previous: 'Previous month'
+    next: 'Next month'
+    back: 'Back to {month}'
+    week: 'Week'
+    weekNumber: 'Week {n}'
+    weekStart:
+      label: 'Week starts on'
+      help: 'Auto follows your browser’s language and region.'
+      option:
+        locale: 'Auto'
+        monday: 'Monday'
+        sunday: 'Sunday'
+    showWeekNumbers:
+      label: 'Show week numbers'
+      help: 'Numbered as in ISO 8601, where week 1 holds the year’s first Thursday.'
+    showOtherMonths:
+      label: 'Show days from other months'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The calendar shrinks to fit when its cell is too small.'
   countdown:
     name: 'Countdown'
     description: 'Days left until a date, or since one.'

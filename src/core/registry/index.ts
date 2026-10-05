@@ -1,3 +1,4 @@
+import { calendarDefinition } from '@/widgets/calendar/definition';
 import { clockDefinition } from '@/widgets/clock/definition';
 import { countdownDefinition } from '@/widgets/countdown/definition';
 import { dateDefinition } from '@/widgets/date/definition';
@@ -21,6 +22,7 @@ export const widgetDefinitions = [
   clockDefinition,
   worldClocksDefinition,
   dateDefinition,
+  calendarDefinition,
   countdownDefinition,
   quoteDefinition,
   searchDefinition,

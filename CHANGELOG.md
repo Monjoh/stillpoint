@@ -9,7 +9,7 @@ and a change that breaks how something used to work the first (2.0.0).
 
 ## 1.1.0 — unreleased
 
-Two new widgets:
+Three new widgets:
 
 - **World clocks:** the time in several cities at once, with how many hours ahead or
   behind each one is, and whether it is already tomorrow there. London, New York and
@@ -17,6 +17,9 @@ Two new widgets:
 - **Countdown:** the days left until a date, such as a holiday or a deadline. It can
   also show the days, hours and minutes, down to a time of day you set. Once the
   date has passed, it counts the time since.
+- **Calendar:** this month at a glance, with today marked. The arrows show the months
+  before and after. The week starts on the day your language and region expect, or
+  on Monday or Sunday, and week numbers can be shown.
 
 Accessibility, for keyboard and screen-reader users:
 

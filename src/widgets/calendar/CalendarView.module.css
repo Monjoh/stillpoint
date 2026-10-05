@@ -1,0 +1,148 @@
+/* Every row is the same height: one title row, the weekday names if shown, and six
+   weeks. --rows and --columns count them; --day and --title are set by layout.ts in
+   container units. The weekday names are WEEKDAY (0.72) of --day there. */
+.calendar {
+  display: flex;
+  flex-direction: column;
+  width: 100cqw;
+  height: 100cqh;
+  color: var(--sp-text, #f2f2f2);
+  font-family: var(--sp-font-body, system-ui, sans-serif);
+}
+
+.header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  height: calc(100cqh / var(--rows));
+}
+
+.title {
+  display: flex;
+  flex: 1 1 0;
+  justify-content: center;
+  min-width: 0;
+}
+
+.titleText {
+  overflow: hidden;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--sp-font-display, 'Inter', system-ui, sans-serif);
+  font-size: var(--title);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+button.titleText {
+  cursor: pointer;
+}
+
+.arrow {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  /* One column wide, as layout.ts assumes when it fits the title between. */
+  width: calc(100cqw / var(--columns));
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--sp-radius, 10px);
+  background: none;
+  color: var(--sp-text-muted, #a0a0a8);
+  cursor: pointer;
+}
+
+.arrow:hover {
+  color: var(--sp-text, #f2f2f2);
+}
+
+.arrow:focus-visible,
+button.titleText:focus-visible {
+  outline: 2px solid var(--sp-accent, #7aa2f7);
+  outline-offset: -2px;
+}
+
+.chevron {
+  width: calc(var(--day) * 0.9);
+  height: calc(var(--day) * 0.9);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.grid tr {
+  height: calc(100cqh / var(--rows));
+}
+
+.weekday,
+.weekNumber,
+.day {
+  padding: 0;
+  text-align: center;
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.weekday {
+  overflow: hidden;
+  font-size: calc(var(--day) * 0.72);
+  font-weight: 500;
+  color: var(--sp-text-muted, #a0a0a8);
+  white-space: nowrap;
+}
+
+.weekNumber {
+  font-size: calc(var(--day) * 0.72);
+  font-weight: 400;
+  color: var(--sp-text-muted, #a0a0a8);
+}
+
+.day {
+  font-size: var(--day);
+}
+
+.day[data-other] {
+  color: var(--sp-text-muted, #a0a0a8);
+}
+
+.number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Wide enough for "28", so today's ring is round whatever the digit. */
+  min-width: 1.9em;
+  height: 1.9em;
+  border-radius: 50%;
+}
+
+/* Today: a ring and weight, not only a colour. */
+.number[aria-current='date'] {
+  box-shadow: inset 0 0 0 max(1.5px, 0.08em) var(--sp-accent, #7aa2f7);
+  color: var(--sp-accent, #7aa2f7);
+  font-weight: 600;
+}
+
+.hidden {
+  position: absolute;
+  overflow: hidden;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
