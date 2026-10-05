@@ -113,8 +113,9 @@ export default function LocationControl({
     return (
       <div className={styles.picker}>
         <p className={styles.status}>
-          Weather sends the place you choose to Open-Meteo, the forecast service.
-          Firefox asks you to allow that once.
+          Weather sends the place you pick to Open-Meteo to get its forecast. Firefox
+          asks you to allow that once. Your device’s location is not used unless you
+          press “Use my location” later.
         </p>
         <div className={styles.actions}>
           <button

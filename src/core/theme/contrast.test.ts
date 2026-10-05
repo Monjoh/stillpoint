@@ -122,6 +122,7 @@ describe('backgroundContrast', () => {
     expect(
       backgroundContrast(midnight, {
         kind: 'unsplash',
+        source: 'unsplash',
         query: 'x',
         refresh: 'daily',
         blur: 0,

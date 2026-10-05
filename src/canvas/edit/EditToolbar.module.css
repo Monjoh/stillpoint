@@ -1,13 +1,19 @@
+/* Centred between `left` and `right` by `width: fit-content` and auto margins, so the
+   space it may use is just those two edges, and it wraps onto a second row rather
+   than overflowing a half-screen window. */
 .toolbar {
   position: fixed;
   z-index: 10;
   top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 16px;
+  right: 16px;
+  width: fit-content;
+  margin: 0 auto;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
-  gap: 10px;
-  max-width: calc(100vw - 32px);
+  gap: 8px 10px;
   padding: 8px 8px 8px 12px;
   border: 1px solid var(--sp-ui-border);
   border-radius: var(--sp-ui-radius);
@@ -18,11 +24,19 @@
   color: var(--sp-ui-text);
 }
 
-/* The toolbar belongs to the canvas, not to the window. Once the settings sidebar has
-   taken its width out of the stage, centring on the viewport leaves the toolbar
-   visibly off to the right of the thing it acts on. */
+/* The toolbar belongs to the canvas, not to the window. While the settings panel is
+   open it stays out of the panel's width: centred over what is left, and wrapping
+   rather than sliding underneath. Below 760px the panel overlays the page at up to
+   80vw (EditPanel.module.css), and the toolbar keeps to the rest. */
 .toolbar[data-panel] {
-  left: calc(50% - var(--sp-ui-panel-width) / 2);
+  right: calc(var(--sp-ui-panel-width) + 16px);
+}
+
+@media (max-width: 759px) {
+  .toolbar[data-panel] {
+    right: calc(min(var(--sp-ui-panel-width), 80vw) + 8px);
+    left: 8px;
+  }
 }
 
 .action,
@@ -71,27 +85,93 @@
   stroke-linejoin: round;
 }
 
-.separator {
-  width: 1px;
-  height: 18px;
-  background: var(--sp-ui-border);
-}
-
 .profile {
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-weight: 500;
   white-space: nowrap;
 }
 
-.hint {
+.help {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 50%;
+  background: none;
+  font: inherit;
+  font-weight: 600;
   color: var(--sp-ui-text-muted);
-  white-space: nowrap;
+  cursor: pointer;
 }
 
-/* The hint is the first thing to go: the toolbar must stay usable on a narrow window,
-   and the shortcuts it names are a convenience, not the only way to do anything. */
-@media (max-width: 760px) {
-  .hint,
-  .separator:last-of-type {
-    display: none;
-  }
+.help:hover,
+.help[aria-expanded='true'] {
+  border-color: var(--sp-ui-accent);
+  color: var(--sp-ui-text);
+}
+
+.help:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 2px;
+}
+
+.shortcuts {
+  position: absolute;
+  z-index: 11;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(320px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: var(--sp-ui-radius);
+  background: var(--sp-ui-bg);
+  box-shadow: var(--sp-ui-shadow);
+  text-align: left;
+}
+
+.shortcuts:focus {
+  outline: none;
+}
+
+.shortcutsLead {
+  margin: 0 0 10px;
+  color: var(--sp-ui-text-muted);
+}
+
+.shortcutList {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+
+.shortcut {
+  display: grid;
+  grid-template-columns: 9.5em 1fr;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.shortcut dt {
+  white-space: nowrap;
+  color: var(--sp-ui-text-muted);
+}
+
+.shortcut dd {
+  margin: 0;
+}
+
+.kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  margin-right: 2px;
+  padding: 0 4px;
+  border: 1px solid var(--sp-ui-border);
+  border-radius: 4px;
+  background: var(--sp-ui-bg-raised);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  text-align: center;
+  color: var(--sp-ui-text);
 }

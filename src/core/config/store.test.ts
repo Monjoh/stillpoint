@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StorageKeys, type StorageAdapter } from '@/core/storage/adapter';
 import { readPaintCache } from '@/core/storage/paint-cache';
-import fixtureV3 from './__fixtures__/config-v3.json';
+import fixtureV4 from './__fixtures__/config-v4.json';
 import { createConfigStore } from './store';
 import { CONFIG_VERSION, configSchema, type StillpointConfig } from './schema';
 
@@ -63,7 +63,7 @@ describe('config store — load', () => {
 
   it('loads an existing config without rewriting it', async () => {
     const { adapter, data, sets } = createMemoryAdapter();
-    data.set(StorageKeys.config, fixtureV3);
+    data.set(StorageKeys.config, fixtureV4);
     const store = createConfigStore({ adapter, debounceMs: 0 });
 
     await store.getState().load();
@@ -98,7 +98,7 @@ describe('config store — load', () => {
 
   it('refuses a config from a newer version and says so', async () => {
     const { adapter, data } = createMemoryAdapter();
-    data.set(StorageKeys.config, { ...fixtureV3, version: CONFIG_VERSION + 1 });
+    data.set(StorageKeys.config, { ...fixtureV4, version: CONFIG_VERSION + 1 });
     const store = createConfigStore({ adapter, debounceMs: 0 });
 
     await store.getState().load();
@@ -362,7 +362,7 @@ describe('config store — cross-tab sync', () => {
     const before = store.getState().config;
 
     store.getState().dispose();
-    await adapter.set(StorageKeys.config, configSchema.parse(fixtureV3));
+    await adapter.set(StorageKeys.config, configSchema.parse(fixtureV4));
     await tick();
 
     expect(store.getState().config).toBe(before);

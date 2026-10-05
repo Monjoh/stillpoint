@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { imageBackgroundSchema, unsplashBackgroundSchema } from '@/core/config/schema';
 import { field } from '@/core/registry/types';
 import {
   describeSchema,
@@ -207,6 +208,34 @@ describe('describeSchema', () => {
       }),
     );
     expect(fields.map((f) => f.key)).toEqual(['shown']);
+  });
+
+  // A hidden field is never drawn, so it needs no label, and the stored-state fields
+  // of the background schemas carry none.
+  it('drops a hidden field that has no label', () => {
+    const fields = describeSchema(
+      z.object({
+        kind: z.literal('x').meta({ hidden: true }),
+        id: z.string().meta({ hidden: true }),
+        mode: z.enum(['a', 'b']).default('a').meta({ hidden: true }),
+        blur: z.number().meta(field({ label: 'Blur' })),
+      }),
+    );
+    expect(fields.map((f) => f.key)).toEqual(['blur']);
+  });
+
+  it('shows none of the background schemas’ stored state', () => {
+    expect(describeSchema(imageBackgroundSchema).map((f) => f.key)).toEqual([
+      'fit',
+      'blur',
+      'dim',
+    ]);
+    expect(describeSchema(unsplashBackgroundSchema).map((f) => f.key)).toEqual([
+      'query',
+      'refresh',
+      'blur',
+      'dim',
+    ]);
   });
 
   it('returns nothing for a schema that is not an object', () => {

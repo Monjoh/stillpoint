@@ -10,6 +10,7 @@ import { UNSPLASH_PREVIEW_ID } from './state';
 
 const background = (extra: Partial<UnsplashBackground> = {}): UnsplashBackground => ({
   kind: 'unsplash',
+  source: 'unsplash',
   query: 'mountains',
   refresh: 'daily',
   blur: 0,
@@ -171,9 +172,12 @@ describe('refreshUnsplash', () => {
     });
   });
 
-  describe('without a key', () => {
+  describe('Lorem Picsum', () => {
+    const picsum = (extra: Partial<UnsplashBackground> = {}) =>
+      background({ source: 'picsum', ...extra });
+
     it('shows Picsum photos, with nothing to ping', async () => {
-      const result = await run({ key: null });
+      const result = await run({ key: null, background: picsum() });
 
       expect(result.showNow?.photo.source).toBe('picsum');
       expect(result.state.next?.photo.source).toBe('picsum');
@@ -184,22 +188,38 @@ describe('refreshUnsplash', () => {
       expect(result.state.current?.preview.color).toBe('#000000');
     });
 
+    // The source is the user's choice now, not a side effect of a saved key.
+    it('stays on Picsum with a key saved, and never sends it', async () => {
+      const result = await run({ key: 'key', background: picsum() });
+      expect(result.state.source).toBe('picsum');
+      expect(server.batches).not.toHaveBeenCalled();
+      expect(server.pings).not.toHaveBeenCalled();
+    });
+
     // Picsum cannot search, so there is nothing to start over for.
     it('keeps its photos through a change of search', async () => {
-      await run({ key: null });
-      const result = await run({
-        key: null,
-        background: background({ query: 'ocean' }),
-      });
+      await run({ key: null, background: picsum() });
+      const result = await run({ key: null, background: picsum({ query: 'ocean' }) });
       expect(result.showNow).toBeNull();
       expect(server.picsumPages).toHaveBeenCalledTimes(1);
     });
 
-    it('starts over on Unsplash once a key is added', async () => {
-      await run({ key: null });
+    it('starts over when the user switches to Unsplash', async () => {
+      await run({ key: 'key', background: picsum() });
       const result = await run({ key: 'key' });
       expect(result.showNow?.photo.source).toBe('unsplash');
       expect(result.state.source).toBe('unsplash');
+    });
+  });
+
+  describe('Unsplash without a key', () => {
+    it('fetches nothing and keeps the photos it has', async () => {
+      await run({ key: null, background: background({ source: 'picsum' }) });
+      const result = await run({ key: null });
+      expect(result.showNow).toBeNull();
+      expect(result.changed).toBe(false);
+      expect(result.state.source).toBe('picsum');
+      expect(server.batches).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { asset } from '@/core/assets/__fixtures__/asset';
@@ -38,6 +38,10 @@ function setup(background: BackgroundConfig = { kind: 'solid', color: '#000' }) 
 
 const file = () => new File(['x'], 'beach.jpg', { type: 'image/jpeg' });
 
+/** A colour background shows no upload until "My photo" is chosen. */
+const chooseMyPhoto = () =>
+  userEvent.selectOptions(screen.getByLabelText('Type'), 'My photo');
+
 describe('uploading a photo', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -47,6 +51,9 @@ describe('uploading a photo', () => {
   it('stores the photo and its preview before pointing the background at it', async () => {
     vi.mocked(prepareImage).mockResolvedValue(asset);
     const { onChangeBackground } = setup();
+    await chooseMyPhoto();
+    // Choosing alone changes nothing: there is no photo yet to show.
+    expect(onChangeBackground).not.toHaveBeenCalled();
 
     await userEvent.upload(screen.getByLabelText('Use your own photo'), file());
 
@@ -82,7 +89,7 @@ describe('uploading a photo', () => {
       new ImageUploadError('That image could not be opened.'),
     );
     const { onChangeBackground } = setup();
-
+    await chooseMyPhoto();
     await userEvent.upload(screen.getByLabelText('Use your own photo'), file());
 
     expect(await screen.findByRole('alert')).toHaveProperty(
@@ -114,11 +121,12 @@ describe('a photo background', () => {
   });
 
   // It is a background, just not a gradient; the "none of these" note is for imports.
-  it('selects no gradient and does not call itself unknown', () => {
+  it('opens on My photo, with no gradients and no "unknown" note', () => {
     writeImagePreview('a', asset.preview);
     setup(photo('a'));
-    const gradients = screen.getByRole('radiogroup', { name: 'Background' });
-    expect(within(gradients).queryByRole('radio', { checked: true })).toBeNull();
+    expect((screen.getByLabelText('Type') as HTMLSelectElement).value).toBe('photo');
+    expect(screen.getByLabelText('Replace photo')).toBeTruthy();
+    expect(screen.queryByRole('radiogroup', { name: 'Background' })).toBeNull();
     expect(screen.queryByText(/not one of these/)).toBeNull();
   });
 });

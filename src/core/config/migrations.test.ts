@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import fixtureV1 from './__fixtures__/config-v1.json';
 import fixtureV2 from './__fixtures__/config-v2.json';
 import fixtureV3 from './__fixtures__/config-v3.json';
+import fixtureV4 from './__fixtures__/config-v4.json';
 import { ConfigVersionError, migrations, runMigrations } from './migrations';
 import { CONFIG_VERSION, configSchema } from './schema';
 
@@ -93,18 +94,23 @@ describe('fixtures', () => {
 
   it('config-v1 loses the page-wide text size and nothing else', () => {
     expect(migrations[2]!(fixtureV1)).toEqual(fixtureV2);
-    expect(runMigrations(fixtureV1).applied).toEqual([2, 3]);
+    expect(runMigrations(fixtureV1).applied).toEqual([2, 3, 4]);
   });
 
   it('config-v2 loses the frame padding and gets opacity in percent', () => {
-    const { config, applied } = runMigrations(fixtureV2);
-    expect(applied).toEqual([3]);
-    expect(config).toEqual(fixtureV3);
+    expect(migrations[3]!(fixtureV2)).toEqual(fixtureV3);
+    expect(runMigrations(fixtureV2).applied).toEqual([3, 4]);
   });
 
-  it('config-v3 is current and parses as-is', () => {
-    expect(runMigrations(fixtureV3).applied).toEqual([]);
-    expect(configSchema.safeParse(fixtureV3).success).toBe(true);
+  it('config-v3 has no web-photo background, so only its version changes', () => {
+    const { config, applied } = runMigrations(fixtureV3);
+    expect(applied).toEqual([4]);
+    expect(config).toEqual(fixtureV4);
+  });
+
+  it('config-v4 is current and parses as-is', () => {
+    expect(runMigrations(fixtureV4).applied).toEqual([]);
+    expect(configSchema.safeParse(fixtureV4).success).toBe(true);
   });
 });
 
@@ -141,5 +147,36 @@ describe('migration 3', () => {
     expect(() =>
       migrations[3]!({ version: 2, profiles: [null, { widgets: [null, {}] }] }),
     ).not.toThrow();
+  });
+});
+
+describe('migration 4', () => {
+  const tree = (key: unknown) => ({
+    version: 3,
+    profiles: [
+      { background: { kind: 'unsplash', query: 'sea' } },
+      { background: { kind: 'gradient', from: '#000', to: '#111' } },
+    ],
+    app: { unsplashAccessKey: key },
+  });
+
+  it('keeps Unsplash for a background that had a key to search with', () => {
+    const out = migrations[4]!(tree('abc'));
+    expect(out.profiles[0].background).toEqual({
+      kind: 'unsplash',
+      query: 'sea',
+      source: 'unsplash',
+    });
+    expect(out.profiles[1].background).toEqual(tree('abc').profiles[1]!.background);
+  });
+
+  it('names Lorem Picsum where there was no key, as was being shown', () => {
+    expect(migrations[4]!(tree(null)).profiles[0].background.source).toBe('picsum');
+    expect(migrations[4]!(tree('  ')).profiles[0].background.source).toBe('picsum');
+  });
+
+  it('leaves a malformed tree for the schema to reject', () => {
+    expect(() => migrations[4]!({ version: 3, profiles: 'nope' })).not.toThrow();
+    expect(() => migrations[4]!({ version: 3, profiles: [null] })).not.toThrow();
   });
 });

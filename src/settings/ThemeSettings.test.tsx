@@ -212,3 +212,78 @@ describe('the background picker', () => {
     expect(screen.getByRole('status').textContent).toMatch(/Your text colour/);
   });
 });
+
+describe('the background type', () => {
+  const picsum: BackgroundConfig = {
+    kind: 'unsplash',
+    source: 'picsum',
+    query: 'landscape',
+    refresh: 'hourly',
+    blur: 4,
+    dim: 0.2,
+  };
+
+  function setupType(background: BackgroundConfig, key: string | null = null) {
+    const onChangeBackground = vi.fn();
+    const onChangeAccessKey = vi.fn();
+    render(
+      <BackgroundFields
+        profile={profile({ background })}
+        onChangeBackground={onChangeBackground}
+        unsplashAccessKey={key}
+        onChangeAccessKey={onChangeAccessKey}
+      />,
+    );
+    const type = screen.getByLabelText('Type') as HTMLSelectElement;
+    return { onChangeBackground, onChangeAccessKey, type };
+  }
+
+  it('names the four choices, and opens on the one in use', () => {
+    const { type } = setupType(picsum);
+    expect([...type.options].map((o) => o.text)).toEqual([
+      'Colour',
+      'My photo',
+      'Lorem Picsum',
+      'Unsplash',
+    ]);
+    expect(type.value).toBe('picsum');
+    // Only the chosen type's settings: no gradients under a photo source.
+    expect(screen.queryByRole('radiogroup', { name: 'Background' })).toBeNull();
+  });
+
+  it('switches to Lorem Picsum at once: it needs no setup', async () => {
+    const { onChangeBackground, type } = setupType({ kind: 'solid', color: '#000' });
+    await userEvent.selectOptions(type, 'Lorem Picsum');
+    expect(onChangeBackground).toHaveBeenCalledWith({
+      kind: 'unsplash',
+      source: 'picsum',
+      query: 'landscape',
+      refresh: 'daily',
+      blur: 0,
+      dim: 0,
+    });
+  });
+
+  it('carries the timing, blur and dim across from Picsum to Unsplash', async () => {
+    const { onChangeBackground, type } = setupType(picsum, 'key');
+    await userEvent.selectOptions(type, 'Unsplash');
+    expect(onChangeBackground).toHaveBeenCalledWith({ ...picsum, source: 'unsplash' });
+  });
+
+  it('waits for a key before switching to Unsplash, then switches', async () => {
+    const { onChangeBackground, onChangeAccessKey, type } = setupType(picsum);
+    await userEvent.selectOptions(type, 'Unsplash');
+    expect(onChangeBackground).not.toHaveBeenCalled();
+    expect(type.value).toBe('unsplash');
+
+    await userEvent.type(screen.getByLabelText('Unsplash access key'), 'k');
+    expect(onChangeAccessKey).toHaveBeenCalledWith('k');
+    expect(onChangeBackground).toHaveBeenCalledWith({ ...picsum, source: 'unsplash' });
+  });
+
+  it('goes back to a colour with the first gradient', async () => {
+    const { onChangeBackground, type } = setupType(picsum);
+    await userEvent.selectOptions(type, 'Colour');
+    expect(onChangeBackground.mock.lastCall![0].kind).toBe('gradient');
+  });
+});

@@ -131,6 +131,6 @@ export function originHost(pattern: string): string {
 
 /** What a category means to the person asked, for a sentence like "It sends …". */
 export const DATA_COLLECTION_PHRASE: Record<DataCollection, string> = {
-  locationInfo: 'the place you chose',
+  locationInfo: 'the place you picked to its forecast service',
   searchTerms: 'your search words',
 };

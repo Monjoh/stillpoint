@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
+  appSettingsSchema,
   unsplashBackgroundSchema,
   type BackgroundConfig,
   type UnsplashBackground,
@@ -7,7 +8,7 @@ import {
 import { usePermissions } from '@/core/permissions';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
-import type { UnsplashErrorKind } from '@/core/unsplash/api';
+import type { PhotoSource, UnsplashErrorKind } from '@/core/unsplash/api';
 import { loadState, refreshUnsplash, wantedWidth } from '@/core/unsplash/refresh';
 import { isUnsplashState, type UnsplashState } from '@/core/unsplash/state';
 import { describeSchema } from './describe';
@@ -16,21 +17,25 @@ import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
 
 /**
- * The Unsplash half of the Background section.
+ * Settings for a photo from the web: Lorem Picsum or Unsplash, whichever the
+ * Background dropdown chose (`source`).
  *
- * It works with no setup at all: without a key the photos come from Lorem Picsum, a
- * curated set of Unsplash photos, and only Search is missing. A key — under General,
- * since it is global — adds Unsplash search.
+ * Picsum works with no setup: a curated set of about a thousand Unsplash photos, no
+ * search. Unsplash takes the user's own access key, shown here because this is where
+ * it is used, though it is saved once for every profile. Without a key the Unsplash
+ * view is that field and nothing else.
  */
 
 export interface UnsplashFieldsProps {
+  source: PhotoSource;
   background: BackgroundConfig;
   onChangeBackground: (background: BackgroundConfig) => void;
   accessKey: string | null;
+  onChangeAccessKey: (key: string | null) => void;
 }
 
 const PROBLEMS: Record<UnsplashErrorKind, string> = {
-  key: 'Unsplash did not accept this key. Check that it is the Access Key, not the Secret key, and change it under General.',
+  key: 'Unsplash did not accept this key. Check that it is the Access Key, not the Secret key.',
   rate: 'This key has used its hourly allowance on Unsplash. The current photo stays up, and new ones resume within the hour.',
   network:
     'The photo service could not be reached. The last photo stays up until it can.',
@@ -38,53 +43,72 @@ const PROBLEMS: Record<UnsplashErrorKind, string> = {
 };
 
 export function UnsplashFields({
+  source,
   background,
   onChangeBackground,
   accessKey,
+  onChangeAccessKey,
 }: UnsplashFieldsProps) {
-  const unsplash = background.kind === 'unsplash' ? background : null;
+  const isUnsplash = source === 'unsplash';
+  const web =
+    background.kind === 'unsplash' && background.source === source ? background : null;
   const schemaFields = useMemo(() => describeSchema(unsplashBackgroundSchema), []);
-  const state = useUnsplashState(unsplash !== null);
+  const keyField = useMemo(
+    () =>
+      describeSchema(appSettingsSchema).filter(
+        (field) => field.key === 'unsplashAccessKey',
+      ),
+    [],
+  );
+  const state = useUnsplashState(web !== null);
   const [skipping, setSkipping] = useState(false);
   // Asked of the key alone, not the query: keyed on the query, the field would
   // vanish as the user typed the first letter into an empty one.
-  const consent = usePermissions({ dataCollection: accessKey ? SEARCH_TERMS : [] });
+  const consent = usePermissions({
+    dataCollection: isUnsplash && accessKey ? SEARCH_TERMS : [],
+  });
 
-  if (!unsplash) {
+  const keyFields = isUnsplash && (
+    <GeneratedFields
+      fields={keyField}
+      values={{ unsplashAccessKey: accessKey }}
+      idPrefix="sp-unsplash"
+      onChange={(_, value) => {
+        const key = typeof value === 'string' && value.trim() !== '' ? value : null;
+        onChangeAccessKey(key);
+      }}
+    />
+  );
+
+  if (!web) {
     return (
-      <button
-        type="button"
-        className={styles.upload}
-        onClick={() => {
-          // Blur and dim carry over from a photo: they were tuned for this page.
-          const kept = background.kind === 'image' ? background : { blur: 0, dim: 0 };
-          onChangeBackground({
-            kind: 'unsplash',
-            query: 'landscape',
-            refresh: 'daily',
-            blur: kept.blur,
-            dim: kept.dim,
-          });
-        }}
-      >
-        Photos from Unsplash
-      </button>
+      <div className={styles.photo}>
+        {keyFields}
+        {isUnsplash && !accessKey && (
+          <p className={fields.help}>
+            Unsplash needs an access key, free from unsplash.com/developers: create an
+            app and copy its Access Key. For photos with no setup, choose Lorem Picsum.
+          </p>
+        )}
+      </div>
     );
   }
 
   // Only a problem with the source in use now: a refused key says nothing about a
   // new one, or about Picsum.
   const problem =
-    state?.error && state.error.key === (accessKey || null)
+    state?.error &&
+    state.source === source &&
+    state.error.key === (isUnsplash ? accessKey || null : null)
       ? PROBLEMS[state.error.kind]
       : null;
-  // Picsum cannot search, so the field would do nothing. Without consent it would
-  // send nothing either: the Allow below takes its place.
-  const searchable = accessKey && consent.state === 'granted';
+  // Picsum cannot search. Without consent Unsplash would send nothing either: the
+  // Allow below takes the field's place.
+  const searchable = isUnsplash && accessKey && consent.state === 'granted';
   const shownFields = searchable
     ? schemaFields
     : schemaFields.filter((field) => field.key !== 'query');
-  const blocked = Boolean(accessKey) && consent.state !== 'granted';
+  const blocked = isUnsplash && (!accessKey || consent.state !== 'granted');
 
   const skip = async () => {
     setSkipping(true);
@@ -94,7 +118,7 @@ export function UnsplashFields({
         {
           adapter: localAdapter,
           key: accessKey,
-          background: unsplash,
+          background: web,
           width: wantedWidth(),
         },
         { force: true },
@@ -106,7 +130,7 @@ export function UnsplashFields({
 
   return (
     <div className={styles.photo}>
-      <p className={styles.sourceHeading}>Photos from Unsplash</p>
+      {keyFields}
 
       <div className={styles.customiseRow}>
         <button
@@ -119,15 +143,14 @@ export function UnsplashFields({
         </button>
       </div>
 
-      {!accessKey && (
+      {!isUnsplash && (
         <p className={fields.help}>
           Random photos from a curated set of about a thousand on Unsplash, via Lorem
-          Picsum. To search Unsplash for your own subject, add an Unsplash access key
-          under General.
+          Picsum. To search for your own subject, choose Unsplash.
         </p>
       )}
 
-      {accessKey && consent.state === 'missing' && (
+      {isUnsplash && accessKey && consent.state === 'missing' && (
         <div className={styles.consent}>
           <p className={fields.help}>
             Searching sends your search words to Unsplash. Firefox asks you to allow
@@ -147,13 +170,10 @@ export function UnsplashFields({
 
       <GeneratedFields
         fields={shownFields}
-        values={unsplash}
+        values={web}
         idPrefix="sp-background-unsplash"
         onChange={(key, value) => {
-          const next = unsplashBackgroundSchema.safeParse({
-            ...unsplash,
-            [key]: value,
-          });
+          const next = unsplashBackgroundSchema.safeParse({ ...web, [key]: value });
           if (next.success) onChangeBackground(next.data satisfies UnsplashBackground);
         }}
       />

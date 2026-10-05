@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { PhotoSource } from '@/core/unsplash/api';
 import {
   type BackgroundConfig,
   type Profile,
@@ -19,6 +20,7 @@ import { UNSPLASH_PREVIEW_ID } from '@/core/unsplash/state';
 import { PhotoFields } from './PhotoFields';
 import { UnsplashFields } from './UnsplashFields';
 import { TokenOverrides } from './TokenOverrides';
+import controls from './controls/Controls.module.css';
 import fields from './Fields.module.css';
 import styles from './ThemeSettings.module.css';
 
@@ -49,8 +51,25 @@ export interface ThemeFieldsProps {
 export interface BackgroundFieldsProps {
   profile: Profile;
   onChangeBackground: (background: BackgroundConfig) => void;
-  /** The global Unsplash key. Decides between Unsplash search and Picsum. */
+  /** The global Unsplash key, needed only when Unsplash is the chosen source. */
   unsplashAccessKey?: string | null;
+  /** Saves the key app-wide. Without it, the Unsplash view cannot take one. */
+  onChangeAccessKey?: (key: string | null) => void;
+}
+
+export type BackgroundMode = 'colour' | 'photo' | PhotoSource;
+
+const MODES: Record<BackgroundMode, string> = {
+  colour: 'Colour',
+  photo: 'My photo',
+  picsum: 'Lorem Picsum',
+  unsplash: 'Unsplash',
+};
+
+export function backgroundMode(background: BackgroundConfig): BackgroundMode {
+  if (background.kind === 'image') return 'photo';
+  if (background.kind === 'unsplash') return background.source;
+  return 'colour';
 }
 
 export function ThemeFields({ profile, onChangeTheme }: ThemeFieldsProps) {
@@ -164,9 +183,18 @@ export function BackgroundFields({
   profile,
   onChangeBackground,
   unsplashAccessKey = null,
+  onChangeAccessKey = () => {},
 }: BackgroundFieldsProps) {
   const active = getPreset(profile.theme.preset);
   const activeGradient = matchGradient(profile.background);
+  const current = backgroundMode(profile.background);
+
+  // What the dropdown shows. Usually the background in use, but a choice that needs
+  // setup first — a photo not yet uploaded, Unsplash without a key — shows its setup
+  // while the page keeps its old background. A change from elsewhere (a profile
+  // switch, an import) wins over a pending choice.
+  const [chosen, setChosen] = useState({ mode: current, over: current });
+  const mode = chosen.over === current ? chosen.mode : current;
 
   // The theme as painted, overrides included: a text colour the user changed is the
   // one that has to be readable, not the preset's.
@@ -175,43 +203,103 @@ export function BackgroundFields({
   const ownText = '--sp-text' in profile.theme.overrides;
   const unreadable = contrast !== null && contrast < MIN_CONTRAST;
 
+  /** A web-photo background for `source`, keeping what was tuned for this page. */
+  const webPhoto = (source: PhotoSource): BackgroundConfig => {
+    const bg = profile.background;
+    const web = bg.kind === 'unsplash' ? bg : null;
+    const kept = bg.kind === 'image' || bg.kind === 'unsplash' ? bg : null;
+    return {
+      kind: 'unsplash',
+      source,
+      query: web?.query ?? 'landscape',
+      refresh: web?.refresh ?? 'daily',
+      blur: kept?.blur ?? 0,
+      dim: kept?.dim ?? 0,
+    };
+  };
+
+  const choose = (next: BackgroundMode) => {
+    setChosen({ mode: next, over: current });
+    if (next === current) return;
+    if (next === 'colour') {
+      onChangeBackground(gradientToBackground(GRADIENT_PRESETS[0]!));
+    } else if (next === 'picsum' || (next === 'unsplash' && unsplashAccessKey)) {
+      onChangeBackground(webPhoto(next));
+    }
+    // 'photo', and Unsplash without a key: setup first, applied when it is done.
+  };
+
+  const changeKey = (key: string | null) => {
+    onChangeAccessKey(key);
+    // The key was the one thing missing: Unsplash can start now.
+    if (key && mode === 'unsplash' && current !== 'unsplash') {
+      onChangeBackground(webPhoto('unsplash'));
+    }
+  };
+
   return (
     <>
-      <PhotoFields
-        background={profile.background}
-        onChangeBackground={onChangeBackground}
-      />
-
-      <UnsplashFields
-        background={profile.background}
-        onChangeBackground={onChangeBackground}
-        accessKey={unsplashAccessKey}
-      />
-
-      <div className={styles.grid} role="radiogroup" aria-label="Background">
-        {GRADIENT_PRESETS.map((gradient) => (
-          <button
-            key={gradient.id}
-            type="button"
-            role="radio"
-            aria-checked={gradient.id === activeGradient?.id}
-            aria-label={gradient.name}
-            className={styles.swatch}
-            title={gradient.name}
-            onClick={() => onChangeBackground(gradientToBackground(gradient))}
-          >
-            <span
-              className={styles.preview}
-              style={{
-                background:
-                  backgroundToCss(gradientToBackground(gradient)) ?? undefined,
-              }}
-              aria-hidden="true"
-            />
-            <span className={styles.swatchName}>{gradient.name}</span>
-          </button>
-        ))}
+      <div className={fields.field}>
+        <label className={fields.label} htmlFor="sp-background-mode">
+          Type
+        </label>
+        <select
+          id="sp-background-mode"
+          className={controls.select}
+          value={mode}
+          onChange={(event) => choose(event.target.value as BackgroundMode)}
+        >
+          {Object.entries(MODES).map(([id, name]) => (
+            <option key={id} value={id}>
+              {name}
+            </option>
+          ))}
+        </select>
       </div>
+
+      {mode === 'photo' && (
+        <PhotoFields
+          background={profile.background}
+          onChangeBackground={onChangeBackground}
+        />
+      )}
+
+      {(mode === 'picsum' || mode === 'unsplash') && (
+        <UnsplashFields
+          source={mode}
+          background={profile.background}
+          onChangeBackground={onChangeBackground}
+          accessKey={unsplashAccessKey}
+          onChangeAccessKey={changeKey}
+        />
+      )}
+
+      {mode === 'colour' && (
+        <div className={styles.grid} role="radiogroup" aria-label="Background">
+          {GRADIENT_PRESETS.map((gradient) => (
+            <button
+              key={gradient.id}
+              type="button"
+              role="radio"
+              aria-checked={gradient.id === activeGradient?.id}
+              aria-label={gradient.name}
+              className={styles.swatch}
+              title={gradient.name}
+              onClick={() => onChangeBackground(gradientToBackground(gradient))}
+            >
+              <span
+                className={styles.preview}
+                style={{
+                  background:
+                    backgroundToCss(gradientToBackground(gradient)) ?? undefined,
+                }}
+                aria-hidden="true"
+              />
+              <span className={styles.swatchName}>{gradient.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* A measured number, not a hunch about what looks dark. It fires on the
             pairings that are genuinely illegible and stays quiet on the merely
@@ -229,14 +317,12 @@ export function BackgroundFields({
       {/* A background that is none of ours is a legitimate state — an import, a
             hand-edited export, later a photograph. Saying so beats showing ten
             swatches with none selected and leaving the user to wonder. */}
-      {activeGradient === undefined &&
-        profile.background.kind !== 'image' &&
-        profile.background.kind !== 'unsplash' && (
-          <p className={fields.help}>
-            This profile uses a background that is not one of these. Picking one
-            replaces it.
-          </p>
-        )}
+      {mode === 'colour' && current === 'colour' && activeGradient === undefined && (
+        <p className={fields.help}>
+          This profile uses a background that is not one of these. Picking one replaces
+          it.
+        </p>
+      )}
     </>
   );
 }

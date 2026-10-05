@@ -209,8 +209,8 @@ describe('the general section', () => {
     const toggle = screen.getByLabelText('Allow editing the layout');
     expect(toggle).toHaveProperty('checked', true);
     expect(screen.queryByLabelText('Language')).toBeNull();
-    // Shown since S14, now that there is an Unsplash background for it to enable.
-    expect(screen.getByLabelText('Unsplash access key')).toBeTruthy();
+    // Under Background → Unsplash since S22, where it is used.
+    expect(screen.queryByLabelText('Unsplash access key')).toBeNull();
 
     await userEvent.click(toggle);
     expect(applied().app.editModeEnabled).toBe(false);

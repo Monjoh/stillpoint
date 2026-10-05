@@ -10,6 +10,7 @@ import { useUnsplash } from './use-unsplash';
 
 const unsplash: UnsplashBackground = {
   kind: 'unsplash',
+  source: 'unsplash',
   query: 'mountains',
   refresh: 'daily',
   blur: 0,
@@ -42,16 +43,17 @@ describe('useUnsplash', () => {
     URL.revokeObjectURL = vi.fn();
   });
 
-  // No key means Picsum, not "off": what the last tab left is shown either way.
-  it('works without a key', async () => {
+  // Picsum needs no key: what the last tab left is shown either way.
+  it('works on Picsum, without a key', async () => {
+    const picsum = { ...unsplash, source: 'picsum' as const };
     await refreshUnsplash({
       adapter: localAdapter,
       key: null,
-      background: unsplash,
+      background: picsum,
       width: 2560,
       fetcher: server.fetcher,
     });
-    const { result } = renderHook(() => useUnsplash(unsplash, null));
+    const { result } = renderHook(() => useUnsplash(picsum, null));
     await waitFor(() => expect(result.current.source?.url).toMatch(/^blob:test/));
     // Picsum names the photographer but has no profile to link.
     expect(result.current.credit?.profileUrl).toBeNull();

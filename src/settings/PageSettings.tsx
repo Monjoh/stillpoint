@@ -19,7 +19,14 @@ import { describeSchema } from './describe';
 import { GeneratedFields } from './generate';
 import { NameField } from './NameField';
 import { Section } from './Section';
-import { BackgroundFields, ThemeFields } from './ThemeSettings';
+import { backgroundMode, BackgroundFields, ThemeFields } from './ThemeSettings';
+
+/** A colour background summarises as its gradient's name instead. */
+const BACKGROUND_SUMMARY: Partial<Record<ReturnType<typeof backgroundMode>, string>> = {
+  photo: 'Photo',
+  picsum: 'Lorem Picsum',
+  unsplash: 'Unsplash',
+};
 import { getPreset } from '@/core/theme/presets';
 import { matchGradient } from '@/core/theme/gradients';
 // The section frame and the input chrome come from the two stylesheets the generator
@@ -74,7 +81,15 @@ export function PageSettings({
   onToggleSection,
 }: PageSettingsProps) {
   const layoutFields = useMemo(() => describeSchema(layoutSchema), []);
-  const appFields = useMemo(() => describeSchema(appSettingsSchema), []);
+  // The Unsplash key is offered under Background → Unsplash, where it is used. The
+  // options page still lists it with the other app-wide settings.
+  const appFields = useMemo(
+    () =>
+      describeSchema(appSettingsSchema).filter(
+        (field) => field.key !== 'unsplashAccessKey',
+      ),
+    [],
+  );
 
   const preset = getPreset(profile.theme.preset);
   const gradient = matchGradient(profile.background);
@@ -181,15 +196,20 @@ export function PageSettings({
           {...section(
             'background',
             'Background',
-            profile.background.kind === 'image'
-              ? 'Photo'
-              : (gradient?.name ?? 'Custom'),
+            BACKGROUND_SUMMARY[backgroundMode(profile.background)] ??
+              gradient?.name ??
+              'Custom',
           )}
         >
           <BackgroundFields
             profile={profile}
             onChangeBackground={onChangeBackground}
             unsplashAccessKey={config.app.unsplashAccessKey}
+            onChangeAccessKey={(key) =>
+              onChangeConfig((c) =>
+                setAppSettings(c, { ...c.app, unsplashAccessKey: key }),
+              )
+            }
           />
         </Section>
 

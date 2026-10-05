@@ -60,6 +60,28 @@ export const migrations: Record<number, Migration> = {
         )
       : v2.profiles,
   }),
+
+  /**
+   * v4 gives a web-photo background an explicit `source`. Until now the service was
+   * implied by the global key: Unsplash with one, Lorem Picsum without. Each existing
+   * background keeps showing what it showed.
+   */
+  4: (v3) => {
+    const key = v3?.app?.unsplashAccessKey;
+    const source = typeof key === 'string' && key.trim() !== '' ? 'unsplash' : 'picsum';
+    return {
+      ...v3,
+      version: 4,
+      profiles: Array.isArray(v3.profiles)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          v3.profiles.map((profile: any) =>
+            profile?.background?.kind === 'unsplash'
+              ? { ...profile, background: { ...profile.background, source } }
+              : profile,
+          )
+        : v3.profiles,
+    };
+  },
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

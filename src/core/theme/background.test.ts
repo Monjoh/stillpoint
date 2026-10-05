@@ -49,6 +49,7 @@ describe('backgroundBlur', () => {
     expect(
       backgroundBlur({
         kind: 'unsplash',
+        source: 'unsplash',
         query: 'x',
         refresh: 'daily',
         blur: 9,

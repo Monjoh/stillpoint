@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Profile } from '@/core/config/schema';
+import { ShortcutHelp } from './ShortcutHelp';
 import { WidgetPicker } from './WidgetPicker';
 import styles from './EditToolbar.module.css';
 
@@ -27,7 +28,9 @@ export function EditToolbar({
   onExit,
 }: EditToolbarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const addButton = useRef<HTMLButtonElement>(null);
+  const helpButton = useRef<HTMLButtonElement>(null);
 
   return (
     <div
@@ -50,13 +53,22 @@ export function EditToolbar({
         Add widget
       </button>
 
-      <span className={styles.separator} aria-hidden="true" />
-      <span className={styles.profile}>{profile.name}</span>
-      <span className={styles.separator} aria-hidden="true" />
-
-      <span className={styles.hint}>
-        Drag to move · arrows nudge · shift+arrows resize
+      <span className={styles.profile} title="Profile">
+        {profile.name}
       </span>
+
+      {/* The shortcuts used to be spelled out here, which made the bar too wide for a
+          half-screen window. Listed on demand instead: nothing depends on them. */}
+      <button
+        ref={helpButton}
+        type="button"
+        className={styles.help}
+        aria-label="Keyboard shortcuts"
+        aria-expanded={helpOpen}
+        onClick={() => setHelpOpen((open) => !open)}
+      >
+        ?
+      </button>
 
       {/* The panel is open for the whole of edit mode, so this is the only way to get
           the width back — and on a window too narrow to displace the canvas it is how
@@ -76,6 +88,15 @@ export function EditToolbar({
       <button type="button" className={styles.done} onClick={onExit}>
         Done
       </button>
+
+      {helpOpen && (
+        <ShortcutHelp
+          onClose={() => {
+            setHelpOpen(false);
+            helpButton.current?.focus();
+          }}
+        />
+      )}
 
       {pickerOpen && (
         <WidgetPicker

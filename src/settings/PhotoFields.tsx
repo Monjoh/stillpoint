@@ -119,8 +119,8 @@ export function PhotoFields({ background, onChangeBackground }: PhotoFieldsProps
           before photos were exported, or storage cleared underneath us. */}
       {image && !preview && !busy && (
         <p className={styles.warning} role="status">
-          This photo is no longer stored here. Upload it again, or pick a background
-          below.
+          This photo is no longer stored here. Upload it again, or choose another type
+          above.
         </p>
       )}
 

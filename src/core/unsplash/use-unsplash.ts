@@ -55,16 +55,19 @@ export function useUnsplash(
   adapter: StorageAdapter = localAdapter,
 ): UnsplashView {
   const unsplash = background?.kind === 'unsplash' ? background : null;
-  // No key is not "off": photos then come from Lorem Picsum. See `refresh.ts`.
+  // Both sources rotate the same way; `refresh.ts` picks the service by `source`.
   const active = unsplash !== null;
   const key = accessKey || null;
   const query = unsplash?.query ?? '';
   const refresh = unsplash?.refresh ?? 'daily';
-  // A search with a key sends its words to Unsplash, which Firefox asks consent for.
+  // An Unsplash search sends its words to Unsplash, which Firefox asks consent for.
   // Picsum has no search, so it needs none. Until it is given, the photo already
   // fetched stays up and nothing new is asked for; the panel offers Allow.
   const consent = usePermissions({
-    dataCollection: searchSendsTerms(key, query) ? SEARCH_TERMS : [],
+    dataCollection:
+      unsplash?.source === 'unsplash' && searchSendsTerms(key, query)
+        ? SEARCH_TERMS
+        : [],
   }).state;
 
   const [shown, setShown] = useState<{

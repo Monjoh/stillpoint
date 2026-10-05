@@ -88,7 +88,7 @@ describe('WidgetFrame and data-collection consent', () => {
 
     render(<WidgetFrame instance={weather} geometry={geometry} isEditing={false} />);
     expect(await screen.findByText('Weather needs your permission')).toBeTruthy();
-    expect(screen.getByText(/It sends the place you chose/)).toBeTruthy();
+    expect(screen.getByText(/It sends the place you picked/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Allow' }));
     expect(request).toHaveBeenCalledWith({ data_collection: ['locationInfo'] });

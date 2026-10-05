@@ -15,7 +15,7 @@ z.config({ jitless: true });
  * Bump for ANY shape change, including additive ones, and write a migration.
  * Two releases sharing a version number with different shapes is unrecoverable.
  */
-export const CONFIG_VERSION = 3;
+export const CONFIG_VERSION = 4;
 
 /**
  * A position on the canvas in grid cells, not pixels. Both axes are relative:
@@ -154,11 +154,19 @@ export const imageBackgroundSchema = z.object({
 });
 
 /**
- * A photograph from Unsplash, chosen at random for `query`. The same export-and-hide
- * arrangement as `imageBackgroundSchema`. `.meta()` only: no shape change.
+ * A photograph from the web, picked at random and rotated: from Lorem Picsum (a
+ * curated set of Unsplash photos, no key, no search) or from the Unsplash API (the
+ * user's key, with search). The same export-and-hide arrangement as
+ * `imageBackgroundSchema`.
+ *
+ * `kind` stays `'unsplash'` for both, since it is permanent in stored configs and the
+ * rotation, paint cache and credit are shared. `source` was added in v4: before it,
+ * which service answered depended on whether a key happened to be saved, and the user
+ * could not tell which one they were looking at.
  */
 export const unsplashBackgroundSchema = z.object({
   kind: z.literal('unsplash').meta({ hidden: true }),
+  source: z.enum(['picsum', 'unsplash']).default('picsum').meta({ hidden: true }),
   query: z.string().default('landscape').meta({
     label: 'Search',
     help: 'Photos are picked at random from Unsplash results for this. Try “mountains”, “ocean” or “architecture”.',

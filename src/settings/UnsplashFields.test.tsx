@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import type { BackgroundConfig, UnsplashBackground } from '@/core/config/schema';
+import type { PhotoSource } from '@/core/unsplash/api';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import { emptyState } from '@/core/unsplash/state';
@@ -11,22 +12,30 @@ import { UnsplashFields } from './UnsplashFields';
 
 const unsplash: UnsplashBackground = {
   kind: 'unsplash',
+  source: 'unsplash',
   query: 'mountains',
   refresh: 'daily',
   blur: 0,
   dim: 0,
 };
 
-function setup(background: BackgroundConfig, accessKey: string | null = 'k') {
+function setup(
+  background: BackgroundConfig,
+  accessKey: string | null = 'k',
+  source: PhotoSource = background.kind === 'unsplash' ? background.source : 'unsplash',
+) {
   const onChangeBackground = vi.fn();
+  const onChangeAccessKey = vi.fn();
   render(
     <UnsplashFields
+      source={source}
       background={background}
       onChangeBackground={onChangeBackground}
       accessKey={accessKey}
+      onChangeAccessKey={onChangeAccessKey}
     />,
   );
-  return { onChangeBackground };
+  return { onChangeBackground, onChangeAccessKey };
 }
 
 describe('UnsplashFields', () => {
@@ -34,28 +43,24 @@ describe('UnsplashFields', () => {
     fakeBrowser.reset();
   });
 
-  it('switches to Unsplash, keeping the blur and dim chosen for a photo', async () => {
-    const { onChangeBackground } = setup(
-      { kind: 'image', assetId: 'a', fit: 'cover', blur: 8, dim: 0.3 },
-      null,
-    );
-    await userEvent.click(screen.getByRole('button', { name: 'Photos from Unsplash' }));
-    expect(onChangeBackground).toHaveBeenCalledWith({
-      kind: 'unsplash',
-      query: 'landscape',
-      refresh: 'daily',
-      blur: 8,
-      dim: 0.3,
-    });
-  });
-
-  // Works with nothing set up. Only search needs a key, so only Search is missing.
-  it('works without a key, and leaves out the search it cannot do', () => {
-    setup(unsplash, null);
+  it('runs Lorem Picsum with no setup, and leaves out the search it cannot do', () => {
+    setup({ ...unsplash, source: 'picsum' }, null);
     expect(screen.getByRole('button', { name: 'Show another photo' })).toBeTruthy();
     expect(screen.getByRole('group', { name: 'New photo' })).toBeTruthy();
     expect(screen.queryByLabelText('Search')).toBeNull();
+    expect(screen.queryByLabelText('Unsplash access key')).toBeNull();
     expect(screen.getByText(/via Lorem Picsum/)).toBeTruthy();
+  });
+
+  it('asks Unsplash for its key first, and shows nothing else until then', async () => {
+    const { onChangeAccessKey } = setup({ kind: 'solid', color: '#000' }, null);
+    expect(screen.getByText(/needs an access key/)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Show another photo' })).toBeNull();
+
+    fireEvent.change(screen.getByLabelText('Unsplash access key'), {
+      target: { value: 'abc' },
+    });
+    expect(onChangeAccessKey).toHaveBeenLastCalledWith('abc');
   });
 
   it('offers search, timing, blur and dim, generated from the schema', () => {
@@ -65,6 +70,17 @@ describe('UnsplashFields', () => {
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'ocean' } });
     expect(onChangeBackground).toHaveBeenCalledWith({ ...unsplash, query: 'ocean' });
+  });
+
+  it('shows Picsum’s own trouble even with an Unsplash key saved', async () => {
+    await localAdapter.set(StorageKeys.unsplash, {
+      ...emptyState('mountains', 'picsum'),
+      error: { kind: 'network', at: Date.now(), key: null },
+    });
+    setup({ ...unsplash, source: 'picsum' }, 'k');
+    expect((await screen.findByRole('status')).textContent).toMatch(
+      /could not be reached/,
+    );
   });
 
   it('says what went wrong with Unsplash, in words', async () => {

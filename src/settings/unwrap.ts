@@ -84,7 +84,12 @@ export function unwrap(schema: z.ZodType): Unwrapped {
 
     if (!meta) {
       const own = node.meta?.();
-      if (own && typeof own.label === 'string') meta = own as FieldMeta;
+      // A label marks our metadata; so does `hidden` alone, which needs no label
+      // because nothing is drawn. Requiring a label here once let `{ hidden: true }`
+      // fall through, and a photo background's panel showed its asset id (S23).
+      if (own && (typeof own.label === 'string' || own.hidden === true)) {
+        meta = own as FieldMeta;
+      }
     }
 
     if (!WRAPPERS.has(node.def.type)) break;

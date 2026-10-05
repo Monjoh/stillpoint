@@ -45,7 +45,11 @@ import {
 
 export interface RefreshContext {
   adapter: StorageAdapter;
-  /** An Unsplash access key, or null to use Lorem Picsum, which needs none. */
+  /**
+   * The user's Unsplash access key. Used only when `background.source` is
+   * `'unsplash'`, and without it that source has nothing to fetch with. Lorem Picsum
+   * needs none.
+   */
   key: string | null;
   background: UnsplashBackground;
   /** The width to download at, in device pixels. */
@@ -98,9 +102,20 @@ export function refreshUnsplash(
   context: RefreshContext,
   options: { force?: boolean } = {},
 ): Promise<RefreshResult> {
-  const result = running.then(() => refresh(context, options.force ?? false));
+  const result = running.then(() =>
+    refresh(forSource(context), options.force ?? false),
+  );
   running = result.catch(() => {});
   return result;
+}
+
+/**
+ * The key belongs to the Unsplash source alone. With Picsum chosen, a saved key must
+ * not decide which service is asked, be pinged with downloads, or be blamed for an
+ * error, so from here on it is as if there were none.
+ */
+function forSource(context: RefreshContext): RefreshContext {
+  return context.background.source === 'unsplash' ? context : { ...context, key: null };
 }
 
 async function refresh(
@@ -111,9 +126,18 @@ async function refresh(
   const now = context.now ?? Date.now();
   const fetcher = context.fetcher ?? fetch;
 
-  const source: PhotoSource = key ? 'unsplash' : 'picsum';
+  const source: PhotoSource = background.source;
 
   let state = await loadState(adapter);
+  // Unsplash chosen but no key yet: nothing can be fetched, and the photos already
+  // stored are left alone for when one arrives — or for a switch back to Picsum.
+  if (source === 'unsplash' && !key) {
+    return {
+      state: state ?? emptyState(background.query, source),
+      showNow: null,
+      changed: false,
+    };
+  }
   if (
     !state ||
     state.source !== source ||
