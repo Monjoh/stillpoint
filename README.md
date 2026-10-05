@@ -56,15 +56,25 @@ when.
 
 ## Build from source
 
-Requirements: Node.js and npm (developed on Node 26).
+These steps reproduce the published package exactly. They were checked by building
+from the source archive in an empty folder and comparing every file.
+
+Requirements: Node.js 26 and npm 11 (built with Node 26.3.0 and npm 11.16.0 on
+macOS).
 
 ```sh
-npm ci
-npm run build        # Firefox build in .output/firefox-mv3/
-npm run zip          # packaged for addons.mozilla.org, in .output/
+npm ci               # exact versions, from package-lock.json
+npm run build        # the Firefox build, in .output/firefox-mv3/
+npm run zip          # the same build, packaged for addons.mozilla.org, in .output/
 ```
 
-Every dependency is pinned to an exact version in `package-lock.json`.
+`.output/firefox-mv3/` is the extension as uploaded: bundled and minified by
+[Vite](https://vite.dev) through WXT. Nothing is downloaded during the build, and no
+code is generated from anything outside this repository.
+
+npm 11 may print an "allow-scripts" notice during `npm ci` about install scripts it
+did not run (`fsevents`, and this project's own `wxt prepare`). The build doesn't need
+them: `npm run build` prepares WXT itself.
 
 ### Development
 
