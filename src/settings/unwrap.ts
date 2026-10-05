@@ -160,8 +160,11 @@ export function numericRange(inner: z.ZodType): NumericRange {
   return range;
 }
 
-/** `{ maxLength }` from a string schema's checks, for the text controls. */
-export function stringLength(inner: z.ZodType): { maxLength?: number } {
+/**
+ * `{ maxLength }` from a string's or an array's checks: characters for the text
+ * controls, rows for the list control. zod writes `.max()` as the same check on both.
+ */
+export function maxLength(inner: z.ZodType): { maxLength?: number } {
   const node = internals(inner);
   for (const check of node?.def.checks ?? []) {
     const def = check._zod?.def;

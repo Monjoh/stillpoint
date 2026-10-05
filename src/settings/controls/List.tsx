@@ -16,6 +16,8 @@ export interface ListControlProps {
   id: string;
   label: string;
   rows: unknown[];
+  /** Add is disabled at this many rows, the schema's `.max()`. */
+  maxRows?: number;
   renderRow: (index: number) => ReactNode;
   onAdd: () => void;
   onRemove: (index: number) => void;
@@ -26,6 +28,7 @@ export function ListControl({
   id,
   label,
   rows,
+  maxRows,
   renderRow,
   onAdd,
   onRemove,
@@ -80,9 +83,15 @@ export function ListControl({
         </div>
       ))}
 
-      <button type="button" className={styles.addRow} onClick={onAdd}>
-        {i18n.t('controls.list.add', { item: label })}
-      </button>
+      {maxRows !== undefined && rows.length >= maxRows ? (
+        <p className={styles.listEmpty}>
+          {i18n.t('controls.list.full', { n: maxRows })}
+        </p>
+      ) : (
+        <button type="button" className={styles.addRow} onClick={onAdd}>
+          {i18n.t('controls.list.add', { item: label })}
+        </button>
+      )}
     </div>
   );
 }

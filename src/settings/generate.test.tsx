@@ -389,6 +389,102 @@ describe('the list control', () => {
   });
 });
 
+describe('a list at its limit', () => {
+  // A list past its `.max()` fails to parse on read, and the whole field is reset:
+  // every row lost for the sake of the one too many. So Add stops at the limit.
+  const schema = z.object({
+    tags: z
+      .array(
+        z.object({
+          name: z
+            .string()
+            .default('')
+            .meta(field({ label: 'Name' })),
+        }),
+      )
+      .max(2)
+      .default([])
+      .meta(field({ label: 'Tags', itemLabel: 'tag' })),
+  });
+
+  it('offers Add until the list is full, then says so', async () => {
+    render(<Form schema={schema} initial={{ tags: [{ name: 'a' }] }} />);
+    await userEvent.click(screen.getByRole('button', { name: '+ Add tag' }));
+    expect(screen.queryByRole('button', { name: '+ Add tag' })).toBeNull();
+    expect(
+      screen.getByText('This list is full, at 2. Remove one to add another.'),
+    ).toBeTruthy();
+  });
+});
+
+describe('a list inside a list row', () => {
+  // Links' folders: a row whose kind decides its fields, one of which is a list.
+  const schema = z.object({
+    items: z
+      .array(
+        z.object({
+          kind: z
+            .enum(['one', 'many'])
+            .default('one')
+            .meta(
+              field({
+                label: 'Type',
+                control: 'segmented',
+                options: { one: 'One', many: 'Many' },
+              }),
+            ),
+          url: z
+            .string()
+            .default('')
+            .meta(field({ label: 'URL', showIf: { field: 'kind', equals: 'one' } })),
+          children: z
+            .array(
+              z.object({
+                url: z
+                  .string()
+                  .default('')
+                  .meta(field({ label: 'URL' })),
+              }),
+            )
+            .default([])
+            .meta(
+              field({
+                label: 'Inside',
+                itemLabel: 'child',
+                showIf: { field: 'kind', equals: 'many' },
+              }),
+            ),
+        }),
+      )
+      .default([])
+      .meta(field({ label: 'Items', itemLabel: 'item' })),
+  });
+
+  it('shows each kind its own fields, and edits the inner list in its row', async () => {
+    const onValues = vi.fn();
+    render(
+      <Form
+        schema={schema}
+        initial={{ items: [{ kind: 'one', url: 'a', children: [] }] }}
+        onValues={onValues}
+      />,
+    );
+    expect(screen.getByLabelText('URL')).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Inside' })).toBeNull();
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Many' }));
+    expect(screen.queryByLabelText('URL')).toBeNull();
+    const inside = screen.getByRole('group', { name: 'Inside' });
+    await userEvent.click(within(inside).getByRole('button', { name: '+ Add child' }));
+    await userEvent.type(within(inside).getByLabelText('URL'), 'b');
+
+    // The link's own address is kept, so switching back loses nothing.
+    expect(onValues).toHaveBeenLastCalledWith({
+      items: [{ kind: 'many', url: 'a', children: [{ url: 'b' }] }],
+    });
+  });
+});
+
 describe('the custom escape hatch', () => {
   // Built before any widget needs it, deliberately: the failure mode is one widget
   // needing something unusual, nobody wanting to touch the generator, and that widget

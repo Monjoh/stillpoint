@@ -213,6 +213,7 @@ function ListField({ field, value, onChange, idPrefix }: GeneratedFieldProps) {
         id={id}
         label={field.itemLabel ?? field.label}
         rows={rows}
+        maxRows={field.maxLength}
         onAdd={() => write([...rows, blankRow(rowFields)])}
         onRemove={(index) => write(rows.filter((_, i) => i !== index))}
         onMove={(index, delta) => write(swap(rows, index, index + delta))}

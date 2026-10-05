@@ -277,6 +277,7 @@ controls:
     moveUp: 'Move {item} {n} up'
     moveDown: 'Move {item} {n} down'
     remove: 'Remove {item} {n}'
+    full: 'This list is full, at {n}. Remove one to add another.'
 
 # Labels and help for settings generated from the config schema.
 config:
@@ -486,14 +487,25 @@ widget:
     view:
       noneOpen: 'None of these addresses can be opened. Check them in this widget’s settings.'
       empty: 'Add your sites in this widget’s settings.'
+      folder: 'Folder'
     links:
       row:
+        kind:
+          label: 'Type'
+          option:
+            link: 'Link'
+            folder: 'Folder'
         url:
           label: 'Address'
           help: 'For example github.com'
         label:
           label: 'Name'
           help: 'Leave empty to show the address.'
+        name:
+          label: 'Folder name'
+          help: 'Leave empty to call it Folder.'
+        links:
+          label: 'In this folder'
       label: 'Links'
       itemLabel: 'link'
     layout:

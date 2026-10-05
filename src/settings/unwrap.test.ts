@@ -5,7 +5,7 @@ import {
   enumValues,
   numericRange,
   objectShape,
-  stringLength,
+  maxLength,
   unwrap,
 } from './unwrap';
 
@@ -108,8 +108,9 @@ describe('shape readers', () => {
   });
 
   it('reads a max length', () => {
-    expect(stringLength(z.string().max(40))).toEqual({ maxLength: 40 });
-    expect(stringLength(z.string())).toEqual({});
+    expect(maxLength(z.string().max(40))).toEqual({ maxLength: 40 });
+    expect(maxLength(z.string())).toEqual({});
+    expect(maxLength(z.array(z.string()).max(48))).toEqual({ maxLength: 48 });
   });
 
   it('reads an object shape', () => {

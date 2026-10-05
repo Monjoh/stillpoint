@@ -19,17 +19,17 @@ export interface LinksLayout {
 }
 
 /** A tile's footprint, in multiples of its icon size. */
-const FOOTPRINT: Record<LinksMode, { w: number; h: number }> = {
+export const FOOTPRINT: Record<LinksMode, { w: number; h: number }> = {
   tiles: { w: 2, h: 2 },
   icons: { w: 1.5, h: 1.5 },
   list: { w: 8, h: 1.6 },
 };
 
-const MIN_ICON = 16;
+export const MIN_ICON = 16;
 /** Below this, a name under a tile is too small to read: drop the names. */
 const MIN_TILE_ICON = 28;
 /** A list row's icon is a little smaller than a tile's at the same setting. */
-const LIST_SCALE = 0.6;
+export const LIST_SCALE = 0.6;
 
 export function layoutLinks(input: {
   count: number;

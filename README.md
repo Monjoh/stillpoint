@@ -32,7 +32,7 @@ developer.
 | **Calendar**     | This month as a grid with today marked, and the months before and after a click away                                                                |
 | **Countdown**    | The days left until a date, or the days, hours and minutes to a moment, and the time since once it has passed                                       |
 | **Search**       | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                                                        |
-| **Links**        | Your favourite sites as tiles, with each site's own icon                                                                                            |
+| **Links**        | Your favourite sites as tiles, with each site's own icon, and folders that open like a phone's                                                      |
 | **Weather**      | Current conditions and the next days, from [Open-Meteo](https://open-meteo.com)                                                                     |
 | **Quote**        | A quote from a built-in collection, or your own                                                                                                     |
 | **Stocks**       | A watchlist with each price and the day's change, from [Twelve Data](https://twelvedata.com) with your free key (US markets, currencies and crypto) |

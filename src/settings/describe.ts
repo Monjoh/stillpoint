@@ -5,7 +5,7 @@ import {
   enumValues,
   numericRange,
   objectShape,
-  stringLength,
+  maxLength,
   unwrap,
 } from './unwrap';
 
@@ -158,14 +158,16 @@ export function describeField(
       const options = meta?.options
         ? Object.entries(meta.options).map(([value, label]) => ({ value, label }))
         : undefined;
-      return { ...base, control, options, ...stringLength(inner) };
+      return { ...base, control, options, ...maxLength(inner) };
     }
 
     case 'array': {
       const element = arrayElement(inner);
       const rowFields = element ? describeSchema(element, path) : [];
       if (rowFields.length === 0) return base;
-      return { ...base, control: 'list', fields: rowFields };
+      // The row cap travels with the list, so Add stops there. A list past its `.max()`
+      // fails to parse on read, and `resolveSettings` then drops the whole field.
+      return { ...base, control: 'list', fields: rowFields, ...maxLength(inner) };
     }
 
     case 'object': {

@@ -1,10 +1,12 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
-import { linksSettingsSchema, type LinksSettings } from './definition';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { z } from 'zod';
+import { linksSettingsSchema } from './definition';
 import LinksView from './LinksView';
 
 const size = { width: 800, height: 200 };
-const settings = (overrides: Partial<LinksSettings> = {}) =>
+// As stored, not as parsed: rows saved before folders have no `kind`.
+const settings = (overrides: z.input<typeof linksSettingsSchema> = {}) =>
   linksSettingsSchema.parse(overrides);
 const two = [
   { url: 'github.com', label: 'GitHub' },
@@ -130,5 +132,77 @@ describe('LinksView', () => {
   it('takes the links out of the tab order in edit mode', () => {
     render(<LinksView settings={settings({ links: two })} size={size} isEditing />);
     for (const link of screen.getAllByRole('link')) expect(link.tabIndex).toBe(-1);
+  });
+});
+
+describe('LinksView folders', () => {
+  const folder = {
+    kind: 'folder' as const,
+    name: 'Work',
+    links: [
+      { url: 'github.com', label: 'GitHub' },
+      { url: 'linear.app', label: '' },
+    ],
+  };
+  const show = (isEditing = false) =>
+    render(
+      <LinksView
+        settings={settings({ links: [two[0]!, folder] })}
+        size={size}
+        isEditing={isEditing}
+      />,
+    );
+
+  /** What the browser does after the tile's click: open it and say so. jsdom can't. */
+  function opened(popover: HTMLElement) {
+    const event = Object.assign(new Event('toggle'), {
+      oldState: 'closed',
+      newState: 'open',
+    });
+    act(() => {
+      popover.dispatchEvent(event);
+    });
+  }
+
+  it('shows a folder as a tile named for it, beside the links', () => {
+    show();
+    const tile = screen.getByRole('button', { name: 'Work' });
+    expect(tile.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.getByRole('link', { name: /GitHub/ })).toBeTruthy();
+    // Its links aren't on the page until it is opened.
+    expect(screen.queryByRole('link', { name: /linear\.app/ })).toBeNull();
+  });
+
+  it('opens beside its tile, on its first link', () => {
+    show();
+    const tile = screen.getByRole('button', { name: 'Work' });
+    const popover = document.getElementById(tile.getAttribute('popovertarget')!)!;
+    expect(popover.getAttribute('popover')).toBe('auto');
+
+    // jsdom won't focus inside a popover it never shows; Firefox is the check that
+    // focus lands. Here: that it is asked to, on the first link.
+    const focus = vi.spyOn(HTMLAnchorElement.prototype, 'focus');
+    fireEvent.click(tile);
+    expect(popover.style.top).toMatch(/px$/);
+    opened(popover);
+
+    expect(tile.getAttribute('aria-expanded')).toBe('true');
+    // jsdom never shows a popover, so its contents count as hidden to role queries.
+    expect(popover.getAttribute('role')).toBe('dialog');
+    expect(popover.getAttribute('aria-label')).toBe('Work');
+    const inside = within(popover);
+    expect(
+      inside.getByRole('link', { name: /linear\.app/, hidden: true }),
+    ).toBeTruthy();
+    expect(focus.mock.contexts[0]).toBe(
+      inside.getAllByRole('link', { hidden: true })[0],
+    );
+  });
+
+  it('does not open in edit mode', () => {
+    show(true);
+    const tile = screen.getByRole('button', { name: 'Work' });
+    expect(tile.hasAttribute('popovertarget')).toBe(false);
+    expect(tile.tabIndex).toBe(-1);
   });
 });

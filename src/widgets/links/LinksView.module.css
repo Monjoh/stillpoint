@@ -20,6 +20,15 @@
   text-decoration: none;
 }
 
+/* A folder's tile is a button that looks like a link's. */
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .links[data-mode='icons'] .link {
   width: auto;
 }
@@ -30,7 +39,8 @@
   width: calc(var(--icon) * 7.5);
 }
 
-.link:hover .label {
+.link:hover .label,
+.link[aria-expanded='true'] .label {
   color: var(--sp-accent, #7aa2f7);
 }
 
@@ -89,4 +99,52 @@
   font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
   font-size: min(14px, 30cqh, 6cqw);
   color: var(--sp-text-muted, #a0a3ad);
+}
+
+/* A folder's icon: its first four sites' icons, two by two, as on a phone. --tile
+   carries the tile's size into .mini, which sets its own --icon from it. */
+.folderIcon {
+  --tile: var(--icon);
+  grid-template-columns: repeat(2, 1fr);
+  align-content: center;
+  gap: calc(var(--tile) * 0.08);
+  box-sizing: border-box;
+  padding: calc(var(--tile) * 0.12);
+}
+
+.mini {
+  --icon: calc(var(--tile) * 0.34);
+  display: grid;
+}
+
+/* The open folder, in the top layer. Placed by folder-layout.ts in the click that
+   opens it, sized there too, so nothing here measures. */
+.folder {
+  position: fixed;
+  inset: auto;
+  box-sizing: border-box;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
+  border-radius: var(--sp-radius, 10px);
+  /* The theme's card surface is a faint tint, made to sit on the background. Over
+     other widgets it would leave the folder unreadable, so it is laid over black
+     under light text, or white under dark text. Relative colours and the popover
+     API are both older than the Firefox 140 floor. */
+  background:
+    linear-gradient(var(--sp-surface), var(--sp-surface)),
+    rgb(
+      from var(--sp-text, #f2f2f2) clamp(0, (128 - (r + g + b) / 3) * 1000, 255)
+        clamp(0, (128 - (r + g + b) / 3) * 1000, 255)
+        clamp(0, (128 - (r + g + b) / 3) * 1000, 255) / 0.85
+    );
+  box-shadow: var(--sp-shadow, 0 8px 32px rgb(0 0 0 / 0.35));
+  backdrop-filter: blur(var(--sp-surface-blur, 0px));
+  color: var(--sp-text, #f2f2f2);
+}
+
+.folder:popover-open {
+  display: grid;
 }

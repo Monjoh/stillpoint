@@ -21,6 +21,13 @@ Three new widgets:
   before and after. The week starts on the day your language and region expect, or
   on Monday or Sunday, and week numbers can be shown.
 
+Links can hold folders, as on a phone. A folder's tile shows its first four sites'
+icons, and a click opens its links beside it. Make one in the widget's settings by
+setting a row's Type to Folder.
+
+Fixed: adding more rows than a list allows, such as a 49th link, could reset the
+whole list. The Add button now stops at the limit and says so.
+
 Accessibility, for keyboard and screen-reader users:
 
 - The page has landmarks, so a screen reader can jump straight to the widgets or to

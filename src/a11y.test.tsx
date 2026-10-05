@@ -30,7 +30,14 @@ async function violations(): Promise<string[]> {
 
 /** One of every widget, with enough settings that each shows real content. */
 const SETTINGS: Record<string, unknown> = {
-  'stillpoint.links': { links: [{ url: 'https://example.com', label: 'Example' }] },
+  // A folder too: its tile on the page, and a list inside a list row in the panel.
+  // The open folder can't be checked here, since jsdom never shows a popover.
+  'stillpoint.links': {
+    links: [
+      { url: 'https://example.com', label: 'Example' },
+      { kind: 'folder', name: 'Work', links: [{ url: 'https://example.org' }] },
+    ],
+  },
   'stillpoint.todo': { items: [{ id: 'a', text: 'Milk', done: false }] },
   'stillpoint.weather': {
     location: { name: 'Paris', latitude: 48.85, longitude: 2.35 },
