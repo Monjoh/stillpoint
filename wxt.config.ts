@@ -1,6 +1,5 @@
 import { defineConfig } from 'wxt';
 import { OPTIONAL_DATA_COLLECTION } from './src/core/data-collection';
-import { YAHOO_ORIGIN } from './src/widgets/stocks/origins';
 
 /**
  * Permanent. Firefox keys stored extension data to this id, so changing it after the
@@ -20,9 +19,9 @@ export default defineConfig({
     short_name: '__MSG_manifest_name__',
     description: '__MSG_manifest_description__',
     permissions: ['storage'],
-    // Asked for only when a widget needs one, from a click; never at install. Each
-    // widget declares the origins it uses in its definition's `origins`.
-    optional_host_permissions: [YAHOO_ORIGIN],
+    // No host permissions: every service a widget uses sends CORS headers. A widget
+    // that needs one declares it in its definition's `origins`, and the origin must be
+    // listed here as `optional_host_permissions`, asked for from a click.
     // Firefox-only keys. Chrome rejects unknown top-level manifest keys, so they are
     // added per-target rather than unconditionally.
     ...(browser === 'firefox'

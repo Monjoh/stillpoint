@@ -24,15 +24,15 @@ developer.
 
 ### Widgets
 
-| Widget      | What it shows                                                                                                 |
-| ----------- | ------------------------------------------------------------------------------------------------------------- |
-| **Clock**   | The time, in any time zone, 12- or 24-hour                                                                    |
-| **Date**    | Today's date, written out, short or in numbers, in any time zone                                              |
-| **Search**  | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                  |
-| **Links**   | Your favourite sites as tiles, with each site's own icon                                                      |
-| **Weather** | Current conditions and the next days, from [Open-Meteo](https://open-meteo.com)                               |
-| **Quote**   | A quote from a built-in collection, or your own                                                               |
-| **Stocks**  | A watchlist with each price and the day's change, from Yahoo Finance or [Twelve Data](https://twelvedata.com) |
+| Widget      | What it shows                                                                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Clock**   | The time, in any time zone, 12- or 24-hour                                                                                                          |
+| **Date**    | Today's date, written out, short or in numbers, in any time zone                                                                                    |
+| **Search**  | A search box for DuckDuckGo, Google, Bing, Brave, Ecosia, Startpage, Kagi or your own engine                                                        |
+| **Links**   | Your favourite sites as tiles, with each site's own icon                                                                                            |
+| **Weather** | Current conditions and the next days, from [Open-Meteo](https://open-meteo.com)                                                                     |
+| **Quote**   | A quote from a built-in collection, or your own                                                                                                     |
+| **Stocks**  | A watchlist with each price and the day's change, from [Twelve Data](https://twelvedata.com) with your free key (US markets, currencies and crypto) |
 
 Every widget's settings, and whether it sits on a card, are in the edit panel. Press
 <kbd>E</kbd> on a new tab, or use the **Edit layout** button at the top of the page.
@@ -86,7 +86,19 @@ The language follows the browser's.
 
 ## Licence
 
-[MIT](LICENSE)
+Copyright (C) 2026 Monjoh
+
+Stillpoint is free software: you can redistribute it and/or modify it under the terms
+of the GNU General Public License as published by the Free Software Foundation, either
+version 3 of the License, or (at your option) any later version. It is distributed in
+the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See [LICENSE](LICENSE)
+for the full text.
+
+In short: you may study, change and share Stillpoint, but anything you distribute that
+is based on it must be released under the GPL too, with its source.
+
+Versions published before 2026-10-05 were released under the MIT License.
 
 Background photographs belong to their photographers and are used under the
 [Unsplash License](https://unsplash.com/license); each one is credited on the page.

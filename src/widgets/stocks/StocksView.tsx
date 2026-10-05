@@ -22,7 +22,7 @@ export default function StocksView({
     // No key means nothing was fetched: the data source returned no cache key.
     return (
       <p className={styles.notice}>
-        {settings.source === 'twelvedata' && !settings.apiKey.trim()
+        {!settings.apiKey.trim()
           ? i18n.t('widget.stocks.view.addKey')
           : i18n.t('widget.stocks.view.addSymbols')}
       </p>
@@ -44,8 +44,7 @@ export default function StocksView({
     return symbol && all.findIndex((e) => normalizeSymbol(e.symbol) === symbol) === i;
   });
   // Twelve Data is asked for the first few only; the rest would read as missing.
-  const truncated =
-    settings.source === 'twelvedata' && unique.length > TWELVE_DATA_MAX_SYMBOLS;
+  const truncated = unique.length > TWELVE_DATA_MAX_SYMBOLS;
   const rows = unique
     .slice(0, truncated ? TWELVE_DATA_MAX_SYMBOLS : undefined)
     .map((entry) => {

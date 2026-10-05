@@ -1,40 +1,7 @@
 /**
- * Response bodies in the shapes Yahoo's chart endpoint and Twelve Data's quote
- * endpoint return, trimmed to the fields read. Twelve Data's values are strings, as
+ * Response bodies in the shapes Twelve Data's quote endpoint returns, trimmed to the fields read. Twelve Data's values are strings, as
  * on the wire.
  */
-
-export function yahooChart(meta: Record<string, unknown>) {
-  return { chart: { result: [{ meta, timestamp: [], indicators: {} }], error: null } };
-}
-
-export const yahooApple = yahooChart({
-  currency: 'USD',
-  symbol: 'AAPL',
-  exchangeName: 'NMS',
-  regularMarketTime: 1790971200,
-  regularMarketPrice: 333.69,
-  chartPreviousClose: 330.32,
-  shortName: 'Apple Inc.',
-  longName: 'Apple Inc.',
-});
-
-export const yahooToyota = yahooChart({
-  currency: 'JPY',
-  symbol: '7203.T',
-  exchangeName: 'JPX',
-  regularMarketTime: 1790924400,
-  regularMarketPrice: 2850,
-  chartPreviousClose: 2900,
-  shortName: 'TOYOTA MOTOR CORP',
-});
-
-export const yahooNotFound = {
-  chart: {
-    result: null,
-    error: { code: 'Not Found', description: 'No data found, symbol may be delisted' },
-  },
-};
 
 export function twelveQuote(symbol: string, close: string, previous: string) {
   const change = (Number(close) - Number(previous)).toFixed(5);

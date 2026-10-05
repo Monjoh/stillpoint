@@ -506,7 +506,7 @@ widget:
         m15: '15 minutes'
         m30: '30 minutes'
         m60: 'Hour'
-      help: 'While a new tab is open. A long watchlist may refresh less often than this, to stay within the service’s limits: Twelve Data’s free 800 credits a day cover 8 symbols every 15 minutes.'
+      help: 'While a new tab is open. Twelve Data’s free 800 credits a day cover 8 symbols every 15 minutes.'
     view:
       firstOnly: 'Twelve Data’s free plan takes {count} symbols at a time, so only the first {count} are shown.'
       addKey: 'Add your Twelve Data key in this widget’s settings.'
@@ -519,24 +519,14 @@ widget:
       twelveDown: 'Twelve Data is not answering right now.'
       twelveKey: 'Twelve Data did not accept this key.'
       twelveRate: 'This Twelve Data key has used its allowance. The free plan allows 8 symbols a minute and 800 a day.'
-      yahooUnreachable: 'Yahoo Finance could not be reached.'
-      yahooRefusing: 'Yahoo Finance is refusing requests for now. Try again later.'
-      yahooDown: 'Yahoo Finance is not answering right now.'
-      yahooUnreadable: 'Yahoo Finance sent something unreadable.'
-    source:
-      label: 'Prices from'
-      option:
-        yahoo: 'Yahoo Finance'
-        twelvedata: 'Twelve Data'
-      help: 'Yahoo needs no key and covers every market, but is unofficial and may stop working. Twelve Data needs a free key and covers US markets.'
     apiKey:
       label: 'Twelve Data key'
-      help: 'Free at twelvedata.com, for up to 8 symbols. It is saved with your settings, so exports include it.'
+      help: 'Free at twelvedata.com. The free plan covers US markets, currencies and crypto, 8 symbols at a time. The key is saved with your settings, so exports include it.'
     symbols:
       row:
         symbol:
           label: 'Symbol'
-          help: 'As Yahoo writes it: AAPL, 7203.T for Tokyo, MC.PA for Paris.'
+          help: 'AAPL for a stock, EUR/USD for a currency, BTC/USD for crypto.'
         label:
           label: 'Name'
           help: 'Leave empty to show the symbol.'

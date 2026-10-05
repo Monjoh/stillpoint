@@ -10,7 +10,7 @@ export interface Quote {
   /** Since the previous close. */
   change: number;
   changePercent: number;
-  /** ISO 4217, except Yahoo's minor units: `GBp` is pence, `ZAc` cents. */
+  /** ISO 4217, except the minor units some feeds use: `GBp` is pence, `ZAc` cents. */
   currency: string;
   /** When the price was set, in ms. Old on a weekend: the market is shut. */
   time: number;
@@ -43,38 +43,20 @@ export function watchlist(entries: readonly { symbol: string }[]): string[] {
  */
 export const TWELVE_DATA_MAX_SYMBOLS = 8;
 
-/** The symbols a source will actually be asked for, in watchlist order. */
-export function fetchedSymbols(
-  source: 'yahoo' | 'twelvedata',
-  entries: readonly { symbol: string }[],
-): string[] {
-  const all = watchlist(entries);
-  return source === 'twelvedata' ? all.slice(0, TWELVE_DATA_MAX_SYMBOLS) : all;
+/** The symbols Twelve Data will actually be asked for, in watchlist order. */
+export function fetchedSymbols(entries: readonly { symbol: string }[]): string[] {
+  return watchlist(entries).slice(0, TWELVE_DATA_MAX_SYMBOLS);
 }
 
 /**
  * The shortest refresh interval, in minutes, a watchlist this long can afford on a
  * tab left open all day. Twelve Data: 800 credits a day at one per symbol per
- * refresh, so 1,440 / 800 = 1.8 minutes per symbol. Yahoo publishes no limit and
- * answers 429 readily; 30 seconds per symbol keeps it near 120 requests an hour.
+ * refresh, so 1,440 / 800 = 1.8 minutes per symbol.
  */
-export function minRefreshMinutes(
-  source: 'yahoo' | 'twelvedata',
-  symbols: number,
-): number {
-  const perSymbol = source === 'twelvedata' ? (24 * 60) / 800 : 0.5;
-  return Math.ceil(symbols * perSymbol);
+export function minRefreshMinutes(symbols: number): number {
+  return Math.ceil((symbols * 24 * 60) / 800);
 }
 
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
-}
-
-/** Change and percent from a price and the close before it. */
-export function changeSince(price: number, previousClose: number) {
-  const change = price - previousClose;
-  return {
-    change,
-    changePercent: previousClose === 0 ? 0 : (change / previousClose) * 100,
-  };
 }

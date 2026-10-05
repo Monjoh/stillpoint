@@ -3,13 +3,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { browser } from 'wxt/browser';
 import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import { layoutSchema, widgetInstanceSchema } from '@/core/config/schema';
+import { widgetRegistry } from '@/core/registry';
 import { computeGeometry } from './geometry';
 import { WidgetFrame } from './WidgetFrame';
 
 /**
  * A widget whose data source needs a host permission fetches nothing until it has
- * one, and the frame offers the click that asks for it.
+ * one, and the frame offers the click that asks for it. No shipped widget needs one
+ * since Yahoo was removed (S26), so Stocks is lent an origin here.
  */
+
+const ORIGIN = 'https://api.example.com/*';
 
 const geometry = computeGeometry(layoutSchema.parse({}), { width: 1200, height: 800 });
 const stocks = (settings: object = {}) =>
@@ -21,12 +25,26 @@ const stocks = (settings: object = {}) =>
     frame: {},
   });
 
+const realGet = widgetRegistry.get.bind(widgetRegistry);
+
 beforeEach(() => {
   for (const event of [browser.permissions.onAdded, browser.permissions.onRemoved]) {
     vi.spyOn(event, 'addListener').mockImplementation(() => {});
     vi.spyOn(event, 'removeListener').mockImplementation(() => {});
   }
 });
+
+/** Stocks, needing `ORIGIN` whenever it has a key. */
+function lendStocksAnOrigin() {
+  vi.spyOn(widgetRegistry, 'get').mockImplementation((id) => {
+    const definition = realGet(id);
+    if (id !== 'stillpoint.stocks' || !definition) return definition;
+    return {
+      ...definition,
+      origins: (s) => ((s as { apiKey: string }).apiKey ? [ORIGIN] : []),
+    };
+  });
+}
 
 describe('WidgetFrame and host permissions', () => {
   it('offers Allow in place of the widget, and fetches nothing', async () => {
@@ -35,34 +53,36 @@ describe('WidgetFrame and host permissions', () => {
       .spyOn(browser.permissions, 'request')
       .mockImplementation(async () => false);
     const fetch = vi.spyOn(globalThis, 'fetch');
+    lendStocksAnOrigin();
 
-    render(<WidgetFrame instance={stocks()} geometry={geometry} isEditing={false} />);
+    render(
+      <WidgetFrame
+        instance={stocks({ apiKey: 'k' })}
+        geometry={geometry}
+        isEditing={false}
+      />,
+    );
     expect(await screen.findByText('Stocks needs your permission')).toBeTruthy();
-    expect(screen.getByText(/query1\.finance\.yahoo\.com/)).toBeTruthy();
+    expect(screen.getByText(/api\.example\.com/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Allow' }));
-    expect(request).toHaveBeenCalledWith({
-      origins: ['https://query1.finance.yahoo.com/*'],
-    });
+    expect(request).toHaveBeenCalledWith({ origins: [ORIGIN] });
     expect(fetch).not.toHaveBeenCalled();
   });
 
   it('points out of edit mode, where its layer covers the button', async () => {
     vi.spyOn(browser.permissions, 'contains').mockImplementation(async () => false);
-    render(<WidgetFrame instance={stocks()} geometry={geometry} isEditing />);
+    lendStocksAnOrigin();
+    render(
+      <WidgetFrame instance={stocks({ apiKey: 'k' })} geometry={geometry} isEditing />,
+    );
     expect(await screen.findByText(/Leave edit mode to allow it/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Allow' })).toBeNull();
   });
 
-  it('asks nothing of a source that needs no permission', async () => {
+  it('asks nothing of a widget that needs no permission', async () => {
     const contains = vi.spyOn(browser.permissions, 'contains');
-    render(
-      <WidgetFrame
-        instance={stocks({ source: 'twelvedata' })}
-        geometry={geometry}
-        isEditing={false}
-      />,
-    );
+    render(<WidgetFrame instance={stocks()} geometry={geometry} isEditing={false} />);
     expect(await screen.findByText(/Add your Twelve Data key/)).toBeTruthy();
     expect(contains).not.toHaveBeenCalled();
   });

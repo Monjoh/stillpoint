@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { browser } from 'wxt/browser';
 import { originHost, supportsDataCollection, usePermissions } from './permissions';
 
-const ORIGIN = 'https://query1.finance.yahoo.com/*';
+const ORIGIN = 'https://api.example.com/*';
 
 describe('usePermissions: origins', () => {
   beforeEach(() => {
@@ -125,6 +125,6 @@ describe('usePermissions: data collection', () => {
 
 describe('originHost', () => {
   it('names the host of a match pattern', () => {
-    expect(originHost(ORIGIN)).toBe('query1.finance.yahoo.com');
+    expect(originHost(ORIGIN)).toBe('api.example.com');
   });
 });

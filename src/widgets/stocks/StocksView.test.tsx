@@ -86,7 +86,7 @@ describe('StocksView', () => {
         isEditing={false}
         data={{
           status: 'error',
-          error: 'Yahoo Finance could not be reached.',
+          error: 'Twelve Data could not be reached.',
           data: stocks,
           fetchedAt: Date.now() - 2 * 60 * 60 * 1000,
         }}
@@ -112,15 +112,15 @@ describe('StocksView', () => {
 
   it('asks for a Twelve Data key, or for symbols, before fetching anything', () => {
     const { rerender } = render(
-      <StocksView
-        settings={settings({ source: 'twelvedata' })}
-        size={size}
-        isEditing={false}
-      />,
+      <StocksView settings={settings({})} size={size} isEditing={false} />,
     );
     expect(screen.getByText(/Add your Twelve Data key/)).toBeTruthy();
     rerender(
-      <StocksView settings={settings({ symbols: [] })} size={size} isEditing={false} />,
+      <StocksView
+        settings={settings({ apiKey: 'k', symbols: [] })}
+        size={size}
+        isEditing={false}
+      />,
     );
     expect(screen.getByText(/Add symbols/)).toBeTruthy();
   });
@@ -174,7 +174,7 @@ describe('StocksView', () => {
     const symbols = 'ABCDEFGHIJ'.split('').map((s) => ({ symbol: s, label: '' }));
     render(
       <StocksView
-        settings={settings({ source: 'twelvedata', apiKey: 'k', symbols })}
+        settings={settings({ apiKey: 'k', symbols })}
         size={{ width: 400, height: 600 }}
         isEditing={false}
         data={ready({ quotes: {}, missing: [] })}

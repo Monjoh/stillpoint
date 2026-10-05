@@ -1,25 +1,12 @@
 import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
-import { YAHOO_ORIGIN } from './origins';
 import { fetchedSymbols, minRefreshMinutes, type StocksData } from './quotes';
 
 export const stocksSettingsSchema = z.object({
-  source: z
-    .enum(['yahoo', 'twelvedata'])
-    .default('yahoo')
-    .meta(
-      field({
-        label: i18n.t('widget.stocks.source.label'),
-        control: 'select',
-        options: {
-          yahoo: i18n.t('widget.stocks.source.option.yahoo'),
-          twelvedata: i18n.t('widget.stocks.source.option.twelvedata'),
-        },
-        help: i18n.t('widget.stocks.source.help'),
-      }),
-    ),
-
+  // Prices come from Twelve Data only. Yahoo Finance was a second source (S20–S26),
+  // removed: it publishes no API and its terms forbid this use. A stored `source`
+  // field is stripped on parse.
   apiKey: z
     .string()
     .max(100)
@@ -28,7 +15,6 @@ export const stocksSettingsSchema = z.object({
       field({
         label: i18n.t('widget.stocks.apiKey.label'),
         help: i18n.t('widget.stocks.apiKey.help'),
-        showIf: { field: 'source', equals: 'twelvedata' },
       }),
     ),
 
@@ -134,37 +120,24 @@ export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
   defaultSize: { w: 5, h: 3 },
   minSize: { w: 2, h: 1 },
   component: () => import('./StocksView'),
-  origins: (s) => (s.source === 'yahoo' ? [YAHOO_ORIGIN] : []),
   dataSource: {
     // The key is part of the identity: a new one deserves a new answer, not the
     // refusal cached for the old one. Hashed before it is stored.
     key: (s) => {
-      const symbols = fetchedSymbols(s.source, s.symbols);
-      if (symbols.length === 0) return null;
-      if (s.source === 'twelvedata') {
-        return s.apiKey.trim()
-          ? `twelvedata:${s.apiKey.trim()}:${symbols.join(',')}`
-          : null;
-      }
-      return `yahoo:${symbols.join(',')}`;
+      const symbols = fetchedSymbols(s.symbols);
+      if (symbols.length === 0 || !s.apiKey.trim()) return null;
+      return `twelvedata:${s.apiKey.trim()}:${symbols.join(',')}`;
     },
     // The network code loads only when there is something to fetch.
     fetch: async (s, signal) => {
-      const symbols = fetchedSymbols(s.source, s.symbols);
-      if (s.source === 'twelvedata') {
-        const { fetchTwelveData } = await import('./twelve-data');
-        return fetchTwelveData(symbols, s.apiKey.trim(), signal);
-      }
-      const { fetchYahoo } = await import('./yahoo');
-      return fetchYahoo(symbols, signal);
+      const { fetchTwelveData } = await import('./twelve-data');
+      return fetchTwelveData(fetchedSymbols(s.symbols), s.apiKey.trim(), signal);
     },
     // The user's choice, but never faster than the watchlist can afford: see
     // `minRefreshMinutes`. The setting's help says so.
     ttlMs: (s) =>
-      Math.max(
-        Number(s.refresh),
-        minRefreshMinutes(s.source, fetchedSymbols(s.source, s.symbols).length),
-      ) * MINUTE,
+      Math.max(Number(s.refresh), minRefreshMinutes(fetchedSymbols(s.symbols).length)) *
+      MINUTE,
     // Friday's close is still the price on Sunday.
     maxAgeMs: 4 * 24 * 60 * MINUTE,
   },

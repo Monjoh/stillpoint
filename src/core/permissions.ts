@@ -125,7 +125,7 @@ export function supportsDataCollection(): boolean {
   }
 }
 
-/** "query1.finance.yahoo.com" for "https://query1.finance.yahoo.com/*". */
+/** "api.example.com" for "https://api.example.com/*". */
 export function originHost(pattern: string): string {
   return pattern.replace(/^[a-z*]+:\/\//, '').replace(/\/.*$/, '');
 }
