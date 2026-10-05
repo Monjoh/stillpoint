@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { z } from 'zod';
+import type { DataCollection } from '../data-collection';
 
 /**
  * The widget contract. See docs/03-widget-api.md — changes here are ADR-worthy.
@@ -85,6 +86,15 @@ export interface WidgetDefinition<S = unknown, D = unknown> {
    * Allow button in their place (see `core/permissions.ts`).
    */
   origins?: (settings: S) => readonly string[];
+
+  /**
+   * Firefox's data-collection categories the data source sends off the device, given
+   * these settings — a location to a forecast service, say. Each must also be in
+   * `OPTIONAL_DATA_COLLECTION`. Gated like `origins`: nothing is fetched, and the
+   * frame shows Allow, until the user consents. Chrome has no such consent; there it
+   * counts as granted.
+   */
+  dataCollection?: (settings: S) => readonly DataCollection[];
 }
 
 /**

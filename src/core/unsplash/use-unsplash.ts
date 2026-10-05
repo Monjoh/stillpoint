@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ImageSource } from '@/core/assets/image';
 import { dataUrlToBlob } from '@/core/assets/image';
 import type { BackgroundConfig } from '@/core/config/schema';
+import { usePermissions } from '@/core/permissions';
 import { StorageKeys, type StorageAdapter } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import { readImagePreview } from '@/core/storage/paint-cache';
@@ -59,6 +60,12 @@ export function useUnsplash(
   const key = accessKey || null;
   const query = unsplash?.query ?? '';
   const refresh = unsplash?.refresh ?? 'daily';
+  // A search with a key sends its words to Unsplash, which Firefox asks consent for.
+  // Picsum has no search, so it needs none. Until it is given, the photo already
+  // fetched stays up and nothing new is asked for; the panel offers Allow.
+  const consent = usePermissions({
+    dataCollection: searchSendsTerms(key, query) ? SEARCH_TERMS : [],
+  }).state;
 
   const [shown, setShown] = useState<{
     query: string;
@@ -95,7 +102,7 @@ export function useUnsplash(
   );
 
   useEffect(() => {
-    if (!active || !unsplash) return;
+    if (!active || !unsplash || consent === 'checking') return;
     let cancelled = false;
 
     const show = async (photo: ShownPhoto, forQuery: string) => {
@@ -125,6 +132,10 @@ export function useUnsplash(
       if (state?.current && sameQuery(state.query, query) && !settled.current) {
         showing = query;
         await show(state.current, query);
+      }
+      if (consent !== 'granted') {
+        settled.current = true;
+        return;
       }
 
       const result = await refreshUnsplash({
@@ -166,7 +177,7 @@ export function useUnsplash(
     // `unsplash` is read through `query` and `refresh`; its blur and dim change
     // nothing about which photo to show.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, key, query, refresh, adapter]);
+  }, [active, key, query, refresh, adapter, consent]);
 
   if (!active) return {};
   if (shown) {
@@ -180,4 +191,11 @@ export function useUnsplash(
     };
   }
   return preview ? { source: preview } : {};
+}
+
+const SEARCH_TERMS = ['searchTerms'] as const;
+
+/** Only the Unsplash API searches, and only it needs the user's key. */
+export function searchSendsTerms(key: string | null, query: string): boolean {
+  return Boolean(key) && query.trim() !== '';
 }

@@ -1,7 +1,8 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import type { BackgroundConfig, UnsplashBackground } from '@/core/config/schema';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
@@ -85,5 +86,41 @@ describe('UnsplashFields', () => {
     setup(unsplash, 'new');
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.queryByRole('status')).toBeNull();
+  });
+});
+
+describe('UnsplashFields, where Firefox asks consent for sending search words', () => {
+  beforeEach(() => fakeBrowser.reset());
+  afterEach(() => {
+    // Unmount first: the consent hook removes its listeners on the way out.
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('holds search back until the user allows it', async () => {
+    const { request } = actAsFirefox({ granted: false });
+    setup(unsplash);
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Allow search' }));
+    expect(request).toHaveBeenCalledWith({ data_collection: ['searchTerms'] });
+    expect(await screen.findByLabelText('Search')).toBeTruthy();
+  });
+
+  it('fetches no new photo by search before then', async () => {
+    actAsFirefox({ granted: false });
+    setup(unsplash);
+    await screen.findByRole('button', { name: 'Allow search' });
+    expect(screen.queryByLabelText('Search')).toBeNull();
+    expect(
+      (screen.getByRole('button', { name: 'Show another photo' }) as HTMLButtonElement)
+        .disabled,
+    ).toBe(true);
+  });
+
+  it('needs no consent without a key: Picsum sends no search words', () => {
+    const { request } = actAsFirefox({ granted: false });
+    setup(unsplash, null);
+    expect(screen.queryByRole('button', { name: 'Allow search' })).toBeNull();
+    expect(request).not.toHaveBeenCalled();
   });
 });

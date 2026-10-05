@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { createDefaultConfig } from './defaults';
-import { CONFIG_VERSION, configSchema, layoutSchema, profileSchema } from './schema';
+import {
+  CONFIG_VERSION,
+  configSchema,
+  layoutSchema,
+  profileSchema,
+  type Rect,
+} from './schema';
 
 const gradient = { kind: 'gradient', from: '#000', to: '#fff' } as const;
 
@@ -138,16 +144,37 @@ describe('createDefaultConfig', () => {
     expect(configSchema.safeParse(createDefaultConfig()).success).toBe(true);
   });
 
-  it('starts with one profile, a gradient and a clock', () => {
-    // The clock is deliberate: Firefox asks the user whether to keep the new tab
-    // override, and an empty page is a bad case to make. See defaults.ts.
+  it('starts with one profile, a gradient, a clock, a date and a search box', () => {
+    // Deliberate: Firefox asks the user whether to keep the new tab override, and an
+    // empty page is a bad case to make. See defaults.ts.
     const config = createDefaultConfig();
     expect(config.profiles).toHaveLength(1);
     expect(config.activeProfileId).toBe(config.profiles[0]!.id);
     expect(config.profiles[0]!.background.kind).toBe('gradient');
     expect(config.profiles[0]!.widgets.map((w) => w.type)).toEqual([
       'stillpoint.clock',
+      'stillpoint.date',
+      'stillpoint.search',
     ]);
+  });
+
+  it('lays the first-run widgets out inside the grid, without overlap', () => {
+    const { layout, widgets } = createDefaultConfig().profiles[0]!;
+    for (const { rect } of widgets) {
+      expect(rect.x + rect.w).toBeLessThanOrEqual(layout.columns);
+      expect(rect.y + rect.h).toBeLessThanOrEqual(layout.rows);
+    }
+    const overlaps = (a: Rect, b: Rect) =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    for (const [i, a] of widgets.entries()) {
+      for (const b of widgets.slice(i + 1))
+        expect(overlaps(a.rect, b.rect)).toBe(false);
+    }
+  });
+
+  it('has not completed first run', () => {
+    // The one-time "press E" hint in NewTab.tsx keys off this.
+    expect(createDefaultConfig().app.hasCompletedFirstRun).toBe(false);
   });
 
   it('gives each call distinct ids', () => {

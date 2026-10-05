@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { browser } from 'wxt/browser';
+import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import { layoutSchema, widgetInstanceSchema } from '@/core/config/schema';
 import { computeGeometry } from './geometry';
 import { WidgetFrame } from './WidgetFrame';
@@ -64,5 +65,33 @@ describe('WidgetFrame and host permissions', () => {
     );
     expect(await screen.findByText(/Add your Twelve Data key/)).toBeTruthy();
     expect(contains).not.toHaveBeenCalled();
+  });
+});
+
+describe('WidgetFrame and data-collection consent', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  const weather = widgetInstanceSchema.parse({
+    instanceId: 'w2',
+    type: 'stillpoint.weather',
+    rect: { x: 0, y: 0, w: 6, h: 3 },
+    settings: { location: { name: 'Paris', latitude: 48.85, longitude: 2.35 } },
+    frame: {},
+  });
+
+  it('sends no location before Firefox has the user’s consent', async () => {
+    const { request } = actAsFirefox({ granted: false });
+    const fetch = vi.spyOn(globalThis, 'fetch');
+
+    render(<WidgetFrame instance={weather} geometry={geometry} isEditing={false} />);
+    expect(await screen.findByText('Weather needs your permission')).toBeTruthy();
+    expect(screen.getByText(/It sends the place you chose/)).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Allow' }));
+    expect(request).toHaveBeenCalledWith({ data_collection: ['locationInfo'] });
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

@@ -8,7 +8,12 @@ import {
 } from 'react';
 import type { WidgetInstance } from '@/core/config/schema';
 import { useResource } from '@/core/data/resource';
-import { originHost, useOrigins } from '@/core/permissions';
+import {
+  DATA_COLLECTION_PHRASE,
+  originHost,
+  usePermissions,
+  type PermissionNeeds,
+} from '@/core/permissions';
 import { widgetRegistry } from '@/core/registry';
 import type { DataSourceSpec, WidgetProps } from '@/core/registry/types';
 import { resolveSettings } from '@/core/registry/settings';
@@ -91,7 +96,10 @@ export function WidgetFrame({
           <WithData
             widgetType={definition.id}
             name={definition.name}
-            origins={definition.origins?.(resolved.settings) ?? NO_ORIGINS}
+            needs={{
+              origins: definition.origins?.(resolved.settings),
+              dataCollection: definition.dataCollection?.(resolved.settings),
+            }}
             spec={definition.dataSource}
             Widget={Widget}
             settings={resolved.settings}
@@ -155,8 +163,6 @@ export function WidgetFrame({
   );
 }
 
-const NO_ORIGINS: readonly string[] = [];
-
 interface DataProps {
   widgetType: string;
   spec: DataSourceSpec<unknown, unknown>;
@@ -171,32 +177,47 @@ interface DataProps {
  * touches the network or the cache, and draws `empty` as the same skeleton as a
  * loading chunk: a widget needs no loading state of its own.
  *
- * A source that needs a host permission fetches nothing until it is granted. The
- * request has to come from a click, so the frame offers one. Edit mode covers the
- * canvas with its own layer, so there the notice says where the button is instead.
+ * A source that needs a host permission, or sends data Firefox asks consent for,
+ * fetches nothing until it is granted. The request has to come from a click, so the
+ * frame offers one. Edit mode covers the canvas with its own layer, so there the
+ * notice says where the button is instead.
  */
 function WithData({
   name,
-  origins,
+  needs,
   ...props
-}: DataProps & { name: string; origins: readonly string[] }) {
-  const { state, request } = useOrigins(origins);
+}: DataProps & { name: string; needs: PermissionNeeds }) {
+  const { state, request } = usePermissions(needs);
   if (state === 'checking') return null;
   if (state === 'missing') {
-    const hosts = origins.map(originHost).join(', ');
+    const what = describeNeeds(needs);
     return (
       <FrameNotice
         title={`${name} needs your permission`}
         detail={
           props.isEditing
-            ? `It gets its data from ${hosts}. Leave edit mode to allow it.`
-            : `It gets its data from ${hosts}, which Firefox asks you to allow once.`
+            ? `${what}. Leave edit mode to allow it.`
+            : `${what}, which Firefox asks you to allow once.`
         }
         action={props.isEditing ? undefined : { label: 'Allow', onClick: request }}
       />
     );
   }
   return <Fetching {...props} />;
+}
+
+/** "It gets its data from a.com" / "It sends the place you chose" / both. */
+function describeNeeds({ origins = [], dataCollection = [] }: PermissionNeeds): string {
+  const parts: string[] = [];
+  if (origins.length > 0) {
+    parts.push(`gets its data from ${origins.map(originHost).join(', ')}`);
+  }
+  if (dataCollection.length > 0) {
+    parts.push(
+      `sends ${dataCollection.map((c) => DATA_COLLECTION_PHRASE[c]).join(' and ')}`,
+    );
+  }
+  return `It ${parts.join(' and ')}`;
 }
 
 function Fetching({ widgetType, spec, Widget, settings, size, isEditing }: DataProps) {

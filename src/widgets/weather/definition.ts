@@ -91,4 +91,6 @@ export const weatherDefinition: WidgetDefinition<WeatherSettings, WeatherData> =
     // A forecast older than a day says more about yesterday than today.
     maxAgeMs: 24 * 60 * MINUTE,
   },
+  // The forecast request carries the place's coordinates.
+  dataCollection: (s) => (s.location ? ['locationInfo'] : []),
 };

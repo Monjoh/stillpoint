@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePermissions } from '@/core/permissions';
 import type { ControlProps } from '@/core/registry/types';
 import type { WeatherLocation } from './definition';
 import { roundCoordinate, searchPlaces, type Place } from './geocode';
@@ -24,8 +25,12 @@ export default function LocationControl({
   const [problem, setProblem] = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
 
+  // Typing a city sends it to Open-Meteo, and so does every forecast after. Firefox
+  // asks consent for that, and only from a click, so the picker starts with one.
+  const consent = usePermissions({ dataCollection: LOCATION });
+
   const wanted = query.trim();
-  const searchable = wanted.length >= 2;
+  const searchable = wanted.length >= 2 && consent.state === 'granted';
 
   useEffect(() => {
     if (!searchable) return;
@@ -103,6 +108,37 @@ export default function LocationControl({
     );
   }
 
+  if (consent.state === 'checking') return null;
+  if (consent.state === 'missing') {
+    return (
+      <div className={styles.picker}>
+        <p className={styles.status}>
+          Weather sends the place you choose to Open-Meteo, the forecast service.
+          Firefox asks you to allow that once.
+        </p>
+        <div className={styles.actions}>
+          <button
+            id={id}
+            type="button"
+            className={styles.button}
+            onClick={consent.request}
+          >
+            Allow
+          </button>
+          {value && (
+            <button
+              type="button"
+              className={styles.link}
+              onClick={() => setChanging(false)}
+            >
+              Keep {value.name}
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   const places = found && found.query === wanted ? found.places : null;
   const status = problem
     ? problem
@@ -170,3 +206,5 @@ export default function LocationControl({
     </div>
   );
 }
+
+const LOCATION = ['locationInfo'] as const;

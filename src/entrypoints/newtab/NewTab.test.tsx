@@ -69,6 +69,38 @@ describe('NewTab', () => {
     expect(screen.getByRole('button', { name: 'Edit layout' })).toBeTruthy();
   });
 
+  describe('first run', () => {
+    const storedApp = async () =>
+      (
+        (await browser.storage.local.get(StorageKeys.config))[StorageKeys.config] as {
+          app: { hasCompletedFirstRun: boolean };
+        }
+      ).app;
+
+    it('keeps the way in visible, with the shortcut, until the user edits', async () => {
+      const user = userEvent.setup();
+      render(<NewTab />);
+      expect(await screen.findByText(/to customise this page/)).toBeTruthy();
+
+      await user.keyboard('e');
+      await screen.findByRole('toolbar', { name: 'Edit layout' });
+      await user.keyboard('{Escape}');
+
+      expect(screen.queryByText(/to customise this page/)).toBeNull();
+      expect((await storedApp()).hasCompletedFirstRun).toBe(true);
+    });
+
+    it('can be dismissed without editing', async () => {
+      const user = userEvent.setup();
+      render(<NewTab />);
+      await user.click(await screen.findByRole('button', { name: 'Got it' }));
+
+      expect(screen.queryByText(/to customise this page/)).toBeNull();
+      expect(screen.getByRole('button', { name: 'Edit layout' })).toBeTruthy();
+      expect((await storedApp()).hasCompletedFirstRun).toBe(true);
+    });
+  });
+
   it('shows the empty state when the profile has no widgets', async () => {
     await browser.storage.local.set({
       [StorageKeys.config]: {

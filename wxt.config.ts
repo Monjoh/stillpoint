@@ -1,4 +1,5 @@
 import { defineConfig } from 'wxt';
+import { OPTIONAL_DATA_COLLECTION } from './src/core/data-collection';
 import { YAHOO_ORIGIN } from './src/widgets/stocks/origins';
 
 /**
@@ -29,10 +30,20 @@ export default defineConfig({
               id: GECKO_ID,
               // 140 is the floor for data_collection_permissions below.
               strict_min_version: '140.0',
-              // Required for new AMO listings since 2025-11-03. Stillpoint stores
-              // everything locally and sends nothing anywhere, so: none.
-              data_collection_permissions: { required: ['none'] },
+              // Required for new AMO listings since 2025-11-03. Nothing is sent to
+              // the developer, and nothing leaves the browser by default. A few
+              // features send data to a service the user picked — a place to the
+              // weather service, search words to Unsplash — and Firefox asks for
+              // those from the click that turns the feature on. See
+              // src/core/data-collection.ts.
+              data_collection_permissions: {
+                required: ['none'],
+                optional: [...OPTIONAL_DATA_COLLECTION],
+              },
             },
+            // Android gained data_collection_permissions in 142. Without this the
+            // desktop floor above is assumed for Android too, and web-ext lint warns.
+            gecko_android: { strict_min_version: '142.0' },
           },
         }
       : {}),

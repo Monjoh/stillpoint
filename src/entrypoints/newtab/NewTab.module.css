@@ -69,6 +69,42 @@
   padding-top: 10px;
 }
 
+.editZone[data-first-run] {
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-space-2, 8px);
+  height: auto;
+}
+
+.firstRun {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-space-2, 8px);
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--sp-text-muted);
+}
+
+.dismiss {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--sp-text-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  color: var(--sp-text);
+}
+
+.dismiss:focus-visible {
+  outline: 2px solid var(--sp-accent);
+  outline-offset: 2px;
+}
+
 .editButton {
   padding: 5px 14px;
   border: 1px solid var(--sp-surface-border, rgb(255 255 255 / 0.1));
@@ -83,6 +119,7 @@
 }
 
 .editZone:hover .editButton,
+.editZone[data-first-run] .editButton,
 .editButton:focus-visible {
   opacity: 1;
   color: var(--sp-text);

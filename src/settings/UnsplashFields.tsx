@@ -4,6 +4,7 @@ import {
   type BackgroundConfig,
   type UnsplashBackground,
 } from '@/core/config/schema';
+import { usePermissions } from '@/core/permissions';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import type { UnsplashErrorKind } from '@/core/unsplash/api';
@@ -45,6 +46,9 @@ export function UnsplashFields({
   const schemaFields = useMemo(() => describeSchema(unsplashBackgroundSchema), []);
   const state = useUnsplashState(unsplash !== null);
   const [skipping, setSkipping] = useState(false);
+  // Asked of the key alone, not the query: keyed on the query, the field would
+  // vanish as the user typed the first letter into an empty one.
+  const consent = usePermissions({ dataCollection: accessKey ? SEARCH_TERMS : [] });
 
   if (!unsplash) {
     return (
@@ -74,10 +78,13 @@ export function UnsplashFields({
     state?.error && state.error.key === (accessKey || null)
       ? PROBLEMS[state.error.kind]
       : null;
-  // Picsum cannot search, so the field would do nothing.
-  const shownFields = accessKey
+  // Picsum cannot search, so the field would do nothing. Without consent it would
+  // send nothing either: the Allow below takes its place.
+  const searchable = accessKey && consent.state === 'granted';
+  const shownFields = searchable
     ? schemaFields
     : schemaFields.filter((field) => field.key !== 'query');
+  const blocked = Boolean(accessKey) && consent.state !== 'granted';
 
   const skip = async () => {
     setSkipping(true);
@@ -105,7 +112,7 @@ export function UnsplashFields({
         <button
           type="button"
           className={styles.customise}
-          disabled={skipping}
+          disabled={skipping || blocked}
           onClick={() => void skip()}
         >
           {skipping ? 'Fetching a photo…' : 'Show another photo'}
@@ -118,6 +125,18 @@ export function UnsplashFields({
           Picsum. To search Unsplash for your own subject, add an Unsplash access key
           under General.
         </p>
+      )}
+
+      {accessKey && consent.state === 'missing' && (
+        <div className={styles.consent}>
+          <p className={fields.help}>
+            Searching sends your search words to Unsplash. Firefox asks you to allow
+            that once.
+          </p>
+          <button type="button" className={styles.customise} onClick={consent.request}>
+            Allow search
+          </button>
+        </div>
       )}
 
       {problem && (
@@ -141,6 +160,8 @@ export function UnsplashFields({
     </div>
   );
 }
+
+const SEARCH_TERMS = ['searchTerms'] as const;
 
 /** The rotation state, kept current, so a failure shows up here as it happens. */
 function useUnsplashState(enabled: boolean): UnsplashState | null {

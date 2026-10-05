@@ -84,7 +84,9 @@ describe('duplicateProfile', () => {
       'Default 2',
       'Last',
     ]);
-    expect(copied.profiles[1]?.widgets).toHaveLength(1);
+    expect(copied.profiles[1]?.widgets).toHaveLength(
+      source.profiles[0]!.widgets.length,
+    );
     expect(isValidConfig(config)).toBe(true);
   });
 

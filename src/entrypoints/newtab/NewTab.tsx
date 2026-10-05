@@ -66,6 +66,22 @@ export function NewTab() {
   });
 
   /**
+   * Entering edit mode is what the first-run hint asks for, so doing it — by the
+   * button, the shortcut or anything else — is what retires the hint.
+   */
+  const firstRun = status === 'ready' && config?.app.hasCompletedFirstRun === false;
+  const completeFirstRun = useCallback(() => {
+    configStore.getState().update((current) => ({
+      ...current,
+      app: { ...current.app, hasCompletedFirstRun: true },
+    }));
+    void configStore.getState().flush();
+  }, []);
+  useEffect(() => {
+    if (session.isEditing && firstRun) completeFirstRun();
+  }, [session.isEditing, firstRun, completeFirstRun]);
+
+  /**
    * The panel belongs to edit mode, not to the selection. Asked of the session rather
    * than derived from `selectedId`, which is what it used to be: the stage gives up
    * the panel's width, so a panel that appeared on selection moved every widget on
@@ -127,7 +143,11 @@ export function NewTab() {
           {profile.widgets.length === 0 && !session.isEditing && <EmptyCanvas />}
 
           {!session.isEditing && config?.app.editModeEnabled && (
-            <EditAffordance onEnter={session.enter} />
+            <EditAffordance
+              onEnter={session.enter}
+              firstRun={firstRun}
+              onDismiss={completeFirstRun}
+            />
           )}
         </>
       )}
@@ -172,13 +192,34 @@ function EmptyCanvas() {
  * View mode shows nothing of ours, which leaves the keyboard shortcut as the only way
  * in — and a shortcut nobody can discover is not a way in. A strip along the top edge
  * reveals the button on hover or on focus, and is otherwise invisible.
+ *
+ * Except on first run. Firefox has just asked whether to keep this page, and a page
+ * whose only way in is invisible until hovered cannot be judged on what it can become.
+ * Until the user first edits or dismisses it, the button stays in view with the
+ * shortcut beside it.
  */
-function EditAffordance({ onEnter }: { onEnter: () => void }) {
+function EditAffordance({
+  onEnter,
+  firstRun,
+  onDismiss,
+}: {
+  onEnter: () => void;
+  firstRun: boolean;
+  onDismiss: () => void;
+}) {
   return (
-    <div className={styles.editZone}>
+    <div className={styles.editZone} data-first-run={firstRun || undefined}>
       <button type="button" className={styles.editButton} onClick={onEnter}>
         Edit layout
       </button>
+      {firstRun && (
+        <p className={styles.firstRun}>
+          or press <kbd className={styles.kbd}>E</kbd> to customise this page
+          <button type="button" className={styles.dismiss} onClick={onDismiss}>
+            Got it
+          </button>
+        </p>
+      )}
     </div>
   );
 }

@@ -49,7 +49,7 @@ describe('profiles', () => {
       'Default',
     );
     expect(within(rows[0]!).getByRole('radio')).toHaveProperty('checked', true);
-    expect(within(rows[0]!).getByText('1 widget')).toBeTruthy();
+    expect(within(rows[0]!).getByText('3 widgets')).toBeTruthy();
   });
 
   it('adds a profile and persists it', async () => {
@@ -93,7 +93,7 @@ describe('profiles', () => {
     await user.click(screen.getByRole('button', { name: 'Duplicate Default' }));
     const config = await stored();
     expect(config.profiles.map((p) => p.name)).toEqual(['Default', 'Default 2']);
-    expect(config.profiles[1]?.widgets).toHaveLength(1);
+    expect(config.profiles[1]?.widgets).toHaveLength(3);
   });
 
   it('reorders, and disables the moves that would fall off the ends', async () => {

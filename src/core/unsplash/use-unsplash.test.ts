@@ -1,6 +1,7 @@
-import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
+import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import type { BackgroundConfig, UnsplashBackground } from '@/core/config/schema';
 import { localAdapter } from '@/core/storage/local';
 import { fakeUnsplash } from './__fixtures__/fake-unsplash';
@@ -85,5 +86,34 @@ describe('useUnsplash', () => {
 
     await act(() => previousTab(server, true));
     await waitFor(() => expect(result.current.credit?.name).toBe('Author 2'));
+  });
+});
+
+describe('useUnsplash, where Firefox asks consent for sending search words', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+    localStorage.clear();
+    let n = 0;
+    URL.createObjectURL = vi.fn(() => `blob:test/${++n}`);
+    URL.revokeObjectURL = vi.fn();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('keeps the photo it has until allowed', async () => {
+    await previousTab(fakeUnsplash());
+    actAsFirefox({ granted: false });
+    const { result } = renderHook(() => useUnsplash(unsplash, 'k'));
+    await waitFor(() => expect(result.current.source?.url).toMatch(/^blob:test/));
+  });
+
+  it('sends no search on first use until allowed', async () => {
+    actAsFirefox({ granted: false });
+    const fetch = vi.spyOn(globalThis, 'fetch');
+    renderHook(() => useUnsplash(unsplash, 'k'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

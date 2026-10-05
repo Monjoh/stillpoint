@@ -1,5 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import { searchPlaces } from './geocode';
 import LocationControl from './LocationControl';
 
@@ -105,5 +106,25 @@ describe('LocationControl', () => {
       latitude: 51.51,
       longitude: -0.13,
     });
+  });
+});
+
+describe('LocationControl, where Firefox asks consent for sending a location', () => {
+  afterEach(() => {
+    // Unmount first: the hook removes its listeners on the way out.
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('sends nothing until the user allows it, from a click', async () => {
+    const { request } = actAsFirefox({ granted: false });
+    render(
+      <LocationControl id="place" value={null} onChange={vi.fn()} field={field} />,
+    );
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Allow' }));
+    expect(request).toHaveBeenCalledWith({ data_collection: ['locationInfo'] });
+    expect(await screen.findByRole('searchbox')).toBeTruthy();
+    expect(searchPlaces).not.toHaveBeenCalled();
   });
 });
