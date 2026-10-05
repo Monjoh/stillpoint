@@ -55,7 +55,9 @@ export function Canvas({
   const geometry = size ? computeGeometry(profile.layout, size) : null;
 
   return (
-    <div className={styles.stage} data-panel={panelOpen || undefined}>
+    // `main`: the widgets are the page's content, and the landmark is how a screen
+    // reader user jumps to them (S29; the page had none).
+    <main className={styles.stage} data-panel={panelOpen || undefined}>
       <div
         className={styles.canvas}
         ref={canvasRef}
@@ -76,6 +78,6 @@ export function Canvas({
           ))}
         {geometry && overlay?.(geometry)}
       </div>
-    </div>
+    </main>
   );
 }

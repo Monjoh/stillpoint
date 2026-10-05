@@ -1,9 +1,9 @@
 import { i18n } from '#i18n';
-import { useCallback, useState } from 'react';
+import { useCallback, useId, useState } from 'react';
 import type { Profile, Rect } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
 import { rectToPixels, type CanvasGeometry } from '../geometry';
-import { placeWidget, removeWidget } from '../operations';
+import { placeWidget } from '../operations';
 import { alignmentGuides } from './guides';
 import {
   cellDelta,
@@ -36,6 +36,10 @@ export interface EditLayerProps {
   onChange: (profile: Profile) => void;
   /** ⌘D. Handled by EditMode, which also says when there is no room. */
   onDuplicate: (instanceId: string) => void;
+  /** Delete. Handled by EditMode, which moves the focus on and says so. */
+  onRemove: (instanceId: string) => void;
+  /** Says something to a screen reader: the result of a keyboard move. */
+  onAnnounce: (text: string) => void;
   /** Called when an interaction finishes, to flush the debounced write. */
   onCommit?: () => void;
 }
@@ -57,9 +61,12 @@ export function EditLayer({
   onSelect,
   onChange,
   onDuplicate,
+  onRemove,
+  onAnnounce,
   onCommit,
 }: EditLayerProps) {
   const [drag, setDrag] = useState<DragState | null>(null);
+  const helpId = useId();
 
   // `profile` can be read directly in these handlers, with no "latest value" ref.
   // Pointer capture is taken on the box, so the moves retarget to it and bubble to
@@ -138,16 +145,36 @@ export function EditLayer({
       const instance = profile.widgets.find((w) => w.instanceId === instanceId);
       if (!instance) return;
 
-      const minSize = widgetRegistry.get(instance.type)?.minSize ?? { w: 1, h: 1 };
+      const definition = widgetRegistry.get(instance.type);
+      const name = definition?.name ?? instance.type;
+      const minSize = definition?.minSize ?? { w: 1, h: 1 };
       const next = resizing
         ? resizeRect(instance.rect, 'se', dCols, dRows, profile.layout, minSize)
         : moveRect(instance.rect, dCols, dRows, profile.layout);
 
-      if (!isPlacementValid(next, instanceId, profile.widgets)) return;
+      // The box's own label already carries the position, but a screen reader does
+      // not re-read the focused element when its label changes: say what happened.
+      if (sameRect(next, instance.rect)) {
+        onAnnounce(i18n.t('edit.announce.edge', { name }));
+        return;
+      }
+      if (!isPlacementValid(next, instanceId, profile.widgets)) {
+        onAnnounce(i18n.t('edit.announce.blocked'));
+        return;
+      }
       onChange(placeWidget(profile, instanceId, next));
       onCommit?.();
+      onAnnounce(
+        resizing
+          ? i18n.t('edit.announce.resized', { name, width: next.w, height: next.h })
+          : i18n.t('edit.announce.moved', {
+              name,
+              column: next.x + 1,
+              row: next.y + 1,
+            }),
+      );
     },
-    [profile, onChange, onCommit],
+    [profile, onChange, onCommit, onAnnounce],
   );
 
   const onBoxKeyDown = useCallback(
@@ -161,9 +188,7 @@ export function EditLayer({
 
       if (event.key === 'Delete' || event.key === 'Backspace') {
         event.preventDefault();
-        onChange(removeWidget(profile, instanceId));
-        onSelect(null);
-        onCommit?.();
+        onRemove(instanceId);
         return;
       }
 
@@ -172,7 +197,7 @@ export function EditLayer({
         onDuplicate(instanceId);
       }
     },
-    [profile, nudge, onChange, onDuplicate, onSelect, onCommit],
+    [nudge, onDuplicate, onRemove],
   );
 
   const dragged = drag
@@ -227,6 +252,11 @@ export function EditLayer({
         />
       ))}
 
+      {/* How to move a box, for every box. Read after its name. */}
+      <p id={helpId} className={styles.hidden}>
+        {i18n.t('edit.boxHelp')}
+      </p>
+
       {profile.widgets.map((instance) => {
         const box = rectToPixels(instance.rect, geometry);
         const selected = instance.instanceId === selectedId;
@@ -251,6 +281,8 @@ export function EditLayer({
               height: instance.rect.h,
             })}
             aria-pressed={selected}
+            aria-describedby={helpId}
+            data-box={instance.instanceId}
             style={{
               left: `${box.left}px`,
               top: `${box.top}px`,

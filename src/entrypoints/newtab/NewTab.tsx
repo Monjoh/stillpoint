@@ -248,7 +248,8 @@ function EditAffordance({
   onDismiss: () => void;
 }) {
   return (
-    <div className={styles.editZone} data-first-run={firstRun || undefined}>
+    // `header`, so the page's one control sits in a landmark (S29).
+    <header className={styles.editZone} data-first-run={firstRun || undefined}>
       <button type="button" className={styles.editButton} onClick={onEnter}>
         {i18n.t('newtab.editLayout')}
       </button>
@@ -262,6 +263,6 @@ function EditAffordance({
           </button>
         </p>
       )}
-    </div>
+    </header>
   );
 }

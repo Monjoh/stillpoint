@@ -61,6 +61,15 @@ edit:
   widgetBox: '{name}, column {column}, row {row}, {width} by {height} cells'
   noRoom: 'There is no room for {name}. Make space by moving, shrinking or removing a widget.'
   dismiss: 'Dismiss'
+  boxHelp: 'Arrow keys move it. Shift and the arrow keys resize it. Delete removes it.'
+  # Read out by a screen reader after a keyboard edit.
+  announce:
+    moved: '{name} moved to column {column}, row {row}.'
+    resized: '{name} resized to {width} by {height} cells.'
+    edge: '{name} is already at the edge.'
+    blocked: 'Another widget is in the way.'
+    removed: '{name} removed.'
+    duplicated: 'Copy of {name} added at column {column}, row {row}.'
 
 # The keyboard shortcut list behind the toolbar's ? button.
 shortcuts:

@@ -187,8 +187,10 @@ describe('typing in a generated settings field', () => {
     box.focus();
     await user.keyboard('{Delete}');
     expect(stage?.hasAttribute('data-panel')).toBe(true);
-    // The widget is gone, so the panel has nothing to show but the page itself.
-    expect(screen.getByRole('complementary', { name: 'Page settings' })).toBeTruthy();
+    // The keyboard moves on to the next widget (S29), which selects it: the panel
+    // follows the focus, and the stage still does not move.
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^Date, column/);
+    expect(screen.getByRole('complementary', { name: 'Date settings' })).toBeTruthy();
   });
 
   it('keeps focus and accumulates the value across keystrokes', async () => {

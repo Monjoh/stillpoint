@@ -178,12 +178,15 @@ describe('adding a widget', () => {
     await user.click(screen.getByRole('menuitem', { name: /Clock/ }));
 
     expect(state.profile.widgets).toHaveLength(1);
-    expect(screen.getByRole('status').textContent).toMatch(
-      /There is no room for Clock\. Make space by moving, shrinking or removing/,
-    );
+    expect(
+      screen.getByText(
+        /There is no room for Clock\. Make space by moving, shrinking or removing/,
+      ),
+    ).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.getByRole('status', { hidden: true }).hidden).toBe(true);
+    const toolbar = screen.getByRole('toolbar', { hidden: true });
+    expect(within(toolbar).getByRole('status', { hidden: true }).hidden).toBe(true);
   });
 
   it('says so when the panel’s Duplicate has no room', async () => {
@@ -196,7 +199,7 @@ describe('adding a widget', () => {
     // Beside the button that was pressed, not under the toolbar a screen away.
     const panel = screen.getByRole('complementary', { name: 'Clock settings' });
     expect(within(panel).getByRole('status').textContent).toMatch(/no room for Clock/);
-    expect(screen.getAllByRole('status')).toHaveLength(1);
+    expect(screen.getAllByText(/no room for Clock/)).toHaveLength(1);
   });
 
   it('says the same when a duplicate has no room', async () => {
@@ -206,7 +209,7 @@ describe('adding a widget', () => {
     widgetBox(0).focus();
     await user.keyboard('{Control>}d{/Control}');
     expect(state.profile.widgets).toHaveLength(1);
-    expect(screen.getByRole('status').textContent).toMatch(/no room for Clock/);
+    expect(screen.getByText(/no room for Clock/)).toBeTruthy();
   });
 
   it('closes the picker on Escape without leaving edit mode', async () => {
@@ -506,5 +509,97 @@ describe('the settings panel', () => {
     await userEvent.click(widgetBox(0));
     await userEvent.click(screen.getByLabelText('Size'));
     expect(screen.getByRole('complementary')).toBeTruthy();
+  });
+});
+
+describe('for a screen reader (S29)', () => {
+  /** The polite region EditMode reads keyboard edits into. */
+  const announced = () =>
+    [...document.querySelectorAll('[role="status"]')]
+      .map((el) => el.textContent?.trim())
+      .filter(Boolean)
+      .join(' | ');
+
+  it('says where a widget went, and why it did not', async () => {
+    const user = userEvent.setup();
+    setup(profile([clock('a', 0, 0), clock('b', 9, 0)]), { panelOpen: false });
+
+    widgetBox(0).focus();
+    await user.keyboard('{ArrowDown}');
+    expect(announced()).toBe('Clock moved to column 1, row 2.');
+
+    await user.keyboard('{Shift>}{ArrowRight}{/Shift}');
+    expect(announced()).toBe('Clock resized to 9 by 3 cells.');
+
+    await user.keyboard('{ArrowLeft}');
+    expect(announced()).toBe('Clock is already at the edge.');
+
+    await user.keyboard('{ArrowUp}{Shift>}{ArrowRight}{/Shift}');
+    expect(announced()).toBe('Another widget is in the way.');
+  });
+
+  it('tells each widget how it can be moved', () => {
+    setup(profile([clock('a', 0, 0)]), { panelOpen: false });
+    const help = document.getElementById(
+      widgetBox(0).getAttribute('aria-describedby')!,
+    );
+    expect(help?.textContent).toBe(
+      'Arrow keys move it. Shift and the arrow keys resize it. Delete removes it.',
+    );
+  });
+
+  it('moves the focus to the next widget after Delete, or to Add widget', async () => {
+    const user = userEvent.setup();
+    setup(profile([clock('a', 0, 0), clock('b', 9, 0)]), { panelOpen: false });
+
+    widgetBox(0).focus();
+    await user.keyboard('{Delete}');
+    expect(announced()).toBe('Clock removed.');
+    expect(document.activeElement).toBe(widgetBox(0));
+
+    await user.keyboard('{Delete}');
+    expect(document.activeElement).toBe(
+      screen.getByRole('button', { name: 'Add widget' }),
+    );
+  });
+
+  it('keeps the focus in the panel after its Remove', async () => {
+    const user = userEvent.setup();
+    setup(profile([clock('a', 0, 0), clock('b', 9, 0)]));
+    await user.click(widgetBox(0));
+    await user.click(screen.getByRole('button', { name: 'Remove' }));
+    await user.click(screen.getByRole('button', { name: 'Remove widget' }));
+
+    expect(document.activeElement).toBe(
+      screen.getByRole('heading', { name: 'Page settings' }),
+    );
+  });
+
+  it('moves through the picker with the arrow keys, Home, End and a letter', async () => {
+    const user = userEvent.setup();
+    setup(profile(), { panelOpen: false });
+    await user.click(screen.getByRole('button', { name: 'Add widget' }));
+
+    const items = screen.getAllByRole('menuitem');
+    expect(document.activeElement).toBe(items[0]);
+    // Named by the widget alone; what it does is its description.
+    expect(items[0]!.textContent).toContain(items[0]!.getAttribute('aria-label') ?? '');
+    expect(screen.getByRole('menuitem', { name: 'Clock' })).toBeTruthy();
+
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(items[1]);
+    await user.keyboard('{ArrowUp}{ArrowUp}');
+    expect(document.activeElement).toBe(items[items.length - 1]);
+    await user.keyboard('{Home}');
+    expect(document.activeElement).toBe(items[0]);
+    await user.keyboard('{End}');
+    expect(document.activeElement).toBe(items[items.length - 1]);
+    await user.keyboard('w');
+    expect(document.activeElement).toBe(
+      screen.getByRole('menuitem', { name: 'Weather' }),
+    );
+
+    await user.keyboard('{Tab}');
+    expect(screen.queryByRole('menu')).toBeNull();
   });
 });

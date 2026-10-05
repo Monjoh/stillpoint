@@ -41,6 +41,7 @@ export default defineConfig({
       'README.md',
       'LICENSE',
       'PRIVACY.md',
+      'CHANGELOG.md',
     ],
   },
   manifestVersion: 3,

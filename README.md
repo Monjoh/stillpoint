@@ -46,6 +46,10 @@ load it from `about:debugging` → **This Firefox** → **Load Temporary Add-on*
 `.output/firefox-mv3/manifest.json`. A temporary add-on is removed when Firefox
 closes.
 
+## What's new
+
+See [CHANGELOG.md](CHANGELOG.md) for each version's changes.
+
 ## Privacy
 
 A new install makes no network requests. Weather, web photo backgrounds, Links icons

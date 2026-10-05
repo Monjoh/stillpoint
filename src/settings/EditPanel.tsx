@@ -125,7 +125,10 @@ export function EditPanel({
           </button>
         )}
 
-        <h2 className={styles.title}>{title}</h2>
+        {/* Focusable by script only: where focus lands after the panel's Remove. */}
+        <h2 className={styles.title} tabIndex={-1} data-panel-title>
+          {title}
+        </h2>
 
         <button
           type="button"

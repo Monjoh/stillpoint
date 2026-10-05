@@ -22,6 +22,11 @@
   --sp-ui-text: #e8e8ea;
   --sp-ui-text-muted: #9a9aa4;
   --sp-ui-border: #2c2c34;
+  /* The edge of a control (a text field, a select, a toggle), which WCAG 1.4.11 asks
+     to be 3:1 against what is around it: 3.6 on --sp-ui-bg, 3.3 on -raised.
+     --sp-ui-border is 1.3, fine for dividers and buttons labelled by their text, not
+     for a field whose only outline it is (S29). */
+  --sp-ui-control-border: #6e6e7a;
   --sp-ui-accent: #7aa2f7;
   /* Destructive actions: removing a widget, deleting everything. */
   --sp-ui-danger: #e06c75;
