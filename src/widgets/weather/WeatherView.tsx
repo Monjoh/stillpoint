@@ -1,5 +1,5 @@
 import { i18n } from '#i18n';
-import { formatAge, unit } from '@/lib/age';
+import { formatAge, formatClockTime, unit } from '@/lib/age';
 import type { WidgetProps } from '@/core/registry/types';
 import { useNow } from '@/lib/use-now';
 import type { WeatherData } from './api';
@@ -49,6 +49,8 @@ export default function WeatherView({
     temperature,
     details: settings.details,
     forecastDays: days.length,
+    // A failed refresh already says how old the data is, in the summary line.
+    updated: settings.showUpdated && data.status === 'ready',
   });
 
   // Old data stays up when a refresh fails, with a note saying how old. The words
@@ -110,6 +112,14 @@ export default function WeatherView({
             );
           })}
         </ol>
+      )}
+
+      {layout.showUpdated && data.status === 'ready' && (
+        <p className={styles.line}>
+          {i18n.t('widget.common.updated', {
+            time: formatClockTime(data.fetchedAt, now),
+          })}
+        </p>
       )}
     </div>
   );

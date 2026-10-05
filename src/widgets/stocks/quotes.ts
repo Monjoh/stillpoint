@@ -37,6 +37,35 @@ export function watchlist(entries: readonly { symbol: string }[]): string[] {
   return [...seen];
 }
 
+/**
+ * Twelve Data's free plan allows 8 credits a minute, and one request costs a credit
+ * per symbol: a request for 9 fails, at any interval. So it is asked for the first 8.
+ */
+export const TWELVE_DATA_MAX_SYMBOLS = 8;
+
+/** The symbols a source will actually be asked for, in watchlist order. */
+export function fetchedSymbols(
+  source: 'yahoo' | 'twelvedata',
+  entries: readonly { symbol: string }[],
+): string[] {
+  const all = watchlist(entries);
+  return source === 'twelvedata' ? all.slice(0, TWELVE_DATA_MAX_SYMBOLS) : all;
+}
+
+/**
+ * The shortest refresh interval, in minutes, a watchlist this long can afford on a
+ * tab left open all day. Twelve Data: 800 credits a day at one per symbol per
+ * refresh, so 1,440 / 800 = 1.8 minutes per symbol. Yahoo publishes no limit and
+ * answers 429 readily; 30 seconds per symbol keeps it near 120 requests an hour.
+ */
+export function minRefreshMinutes(
+  source: 'yahoo' | 'twelvedata',
+  symbols: number,
+): number {
+  const perSymbol = source === 'twelvedata' ? (24 * 60) / 800 : 0.5;
+  return Math.ceil(symbols * perSymbol);
+}
+
 export function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }

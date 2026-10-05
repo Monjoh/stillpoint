@@ -22,6 +22,16 @@ describe('layoutWeather', () => {
     expect(sliver).toMatchObject({ showSummary: false, showDetails: false });
   });
 
+  it('drops the update time before anything else', () => {
+    const roomy = layoutWeather({ ...base, width: 400, height: 300, updated: true });
+    expect(roomy).toMatchObject({ showUpdated: true, showForecast: true });
+    const tight = layoutWeather({ ...base, width: 400, height: 190, updated: true });
+    expect(tight.showUpdated).toBe(false);
+    expect(tight.showForecast).toBe(
+      layoutWeather({ ...base, width: 400, height: 190 }).showForecast,
+    );
+  });
+
   it('keeps the temperature, smaller, in a cell too small for anything else', () => {
     const tiny = layoutWeather({ ...base, width: 60, height: 24 });
     expect(tiny.tempPx).toBeGreaterThanOrEqual(12);

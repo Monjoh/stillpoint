@@ -18,3 +18,16 @@ export function unit(value: number, name: string): string {
     unitDisplay: 'short',
   }).format(value);
 }
+
+/**
+ * When something was fetched, as a clock time: "14:05", or "Mon 14:05" when it was
+ * not today. The browser's language decides the format.
+ */
+export function formatClockTime(at: number, now: number): string {
+  const sameDay = new Date(at).toDateString() === new Date(now).toDateString();
+  return new Intl.DateTimeFormat(undefined, {
+    ...(sameDay ? {} : { weekday: 'short' }),
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(at);
+}

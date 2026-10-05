@@ -2,7 +2,7 @@ import { i18n } from '#i18n';
 import { z } from 'zod';
 import { field, type WidgetDefinition } from '@/core/registry/types';
 import { YAHOO_ORIGIN } from './origins';
-import { watchlist, type StocksData } from './quotes';
+import { fetchedSymbols, minRefreshMinutes, type StocksData } from './quotes';
 
 export const stocksSettingsSchema = z.object({
   source: z
@@ -32,15 +32,16 @@ export const stocksSettingsSchema = z.object({
       }),
     ),
 
-  // Minutes, as strings: an enum gives the panel a select with named choices.
+  // Minutes, as strings: an enum gives the panel a select with named choices. Five
+  // minutes was offered at first (S25) and dropped: a stored '5' is pruned to the
+  // default by resolveSettings.
   refresh: z
-    .enum(['5', '15', '30', '60'])
+    .enum(['15', '30', '60'])
     .default('15')
     .meta(
       field({
         label: i18n.t('widget.stocks.refresh.label'),
         options: {
-          '5': i18n.t('widget.stocks.refresh.option.m5'),
           '15': i18n.t('widget.stocks.refresh.option.m15'),
           '30': i18n.t('widget.stocks.refresh.option.m30'),
           '60': i18n.t('widget.stocks.refresh.option.m60'),
@@ -97,6 +98,11 @@ export const stocksSettingsSchema = z.object({
       }),
     ),
 
+  showUpdated: z
+    .boolean()
+    .default(false)
+    .meta(field({ label: i18n.t('widget.common.showUpdated') })),
+
   fontSize: z
     .number()
     .min(12)
@@ -133,7 +139,7 @@ export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
     // The key is part of the identity: a new one deserves a new answer, not the
     // refusal cached for the old one. Hashed before it is stored.
     key: (s) => {
-      const symbols = watchlist(s.symbols);
+      const symbols = fetchedSymbols(s.source, s.symbols);
       if (symbols.length === 0) return null;
       if (s.source === 'twelvedata') {
         return s.apiKey.trim()
@@ -144,7 +150,7 @@ export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
     },
     // The network code loads only when there is something to fetch.
     fetch: async (s, signal) => {
-      const symbols = watchlist(s.symbols);
+      const symbols = fetchedSymbols(s.source, s.symbols);
       if (s.source === 'twelvedata') {
         const { fetchTwelveData } = await import('./twelve-data');
         return fetchTwelveData(symbols, s.apiKey.trim(), signal);
@@ -152,9 +158,13 @@ export const stocksDefinition: WidgetDefinition<StocksSettings, StocksData> = {
       const { fetchYahoo } = await import('./yahoo');
       return fetchYahoo(symbols, signal);
     },
-    // The user's choice. Prices only move while markets are open, and Twelve Data
-    // charges a credit per symbol per refresh: see the setting's help.
-    ttlMs: (s) => Number(s.refresh) * MINUTE,
+    // The user's choice, but never faster than the watchlist can afford: see
+    // `minRefreshMinutes`. The setting's help says so.
+    ttlMs: (s) =>
+      Math.max(
+        Number(s.refresh),
+        minRefreshMinutes(s.source, fetchedSymbols(s.source, s.symbols).length),
+      ) * MINUTE,
     // Friday's close is still the price on Sunday.
     maxAgeMs: 4 * 24 * 60 * MINUTE,
   },

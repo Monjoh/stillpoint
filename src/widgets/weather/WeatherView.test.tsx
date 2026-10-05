@@ -118,4 +118,16 @@ describe('WeatherView', () => {
       ),
     ).toBeTruthy();
   });
+
+  it('says when the weather was fetched, if asked to', () => {
+    render(
+      <WeatherView
+        settings={settings({ showUpdated: true })}
+        size={size}
+        isEditing={false}
+        data={ready()}
+      />,
+    );
+    expect(screen.getByText(/^Updated /)).toBeTruthy();
+  });
 });

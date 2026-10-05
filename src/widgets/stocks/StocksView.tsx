@@ -1,11 +1,11 @@
 import { i18n } from '#i18n';
-import { formatAge } from '@/lib/age';
+import { formatAge, formatClockTime } from '@/lib/age';
 import type { WidgetProps } from '@/core/registry/types';
 import { useNow } from '@/lib/use-now';
 import type { StocksSettings } from './definition';
 import { direction, formatChange, formatPrice } from './format';
 import { layoutStocks } from './layout';
-import { normalizeSymbol, type StocksData } from './quotes';
+import { normalizeSymbol, TWELVE_DATA_MAX_SYMBOLS, type StocksData } from './quotes';
 import styles from './StocksView.module.css';
 
 const ARROW = { up: '▲', down: '▼', flat: '' } as const;
@@ -39,11 +39,15 @@ export default function StocksView({
     );
   }
 
-  const rows = settings.symbols
-    .filter((entry, i, all) => {
-      const symbol = normalizeSymbol(entry.symbol);
-      return symbol && all.findIndex((e) => normalizeSymbol(e.symbol) === symbol) === i;
-    })
+  const unique = settings.symbols.filter((entry, i, all) => {
+    const symbol = normalizeSymbol(entry.symbol);
+    return symbol && all.findIndex((e) => normalizeSymbol(e.symbol) === symbol) === i;
+  });
+  // Twelve Data is asked for the first few only; the rest would read as missing.
+  const truncated =
+    settings.source === 'twelvedata' && unique.length > TWELVE_DATA_MAX_SYMBOLS;
+  const rows = unique
+    .slice(0, truncated ? TWELVE_DATA_MAX_SYMBOLS : undefined)
     .map((entry) => {
       const symbol = normalizeSymbol(entry.symbol);
       const quote = stocks.quotes[symbol];
@@ -56,12 +60,24 @@ export default function StocksView({
       };
     });
 
-  // Old prices stay up when a refresh fails, with a line saying how old.
+  // One note under the prices, the most important first: old prices after a failed
+  // refresh, then a watchlist Twelve Data cannot take whole, then, if asked for, when
+  // the prices were fetched.
   const failedAt = data.status === 'error' ? data.fetchedAt : undefined;
+  const note =
+    failedAt !== undefined
+      ? i18n.t('widget.stocks.view.stale', { age: formatAge(now - failedAt) })
+      : truncated
+        ? i18n.t('widget.stocks.view.firstOnly', { count: TWELVE_DATA_MAX_SYMBOLS })
+        : settings.showUpdated && data.status === 'ready'
+          ? i18n.t('widget.common.updated', {
+              time: formatClockTime(data.fetchedAt, now),
+            })
+          : null;
   const longest = (pick: (row: (typeof rows)[number]) => string) =>
     Math.max(1, ...rows.map((row) => pick(row).length));
   const layout = layoutStocks({
-    count: rows.length + (failedAt === undefined ? 0 : 1),
+    count: rows.length + (note === null ? 0 : 1),
     width: size.width,
     height: size.height,
     maxPx: settings.fontSize,
@@ -73,8 +89,8 @@ export default function StocksView({
     changeChars: longest((row) => row.change),
   });
   // The note takes a row, but never the only one: a price beats a caveat.
-  const showStale = failedAt !== undefined && layout.rows > 1;
-  const shown = rows.slice(0, showStale ? layout.rows - 1 : layout.rows);
+  const showNote = note !== null && layout.rows > 1;
+  const shown = rows.slice(0, showNote ? layout.rows - 1 : layout.rows);
 
   return (
     <div className={styles.stocks} style={{ fontSize: `${layout.fontPx}px` }}>
@@ -117,11 +133,7 @@ export default function StocksView({
           })}
         </tbody>
       </table>
-      {showStale && (
-        <p className={styles.stale}>
-          {i18n.t('widget.stocks.view.stale', { age: formatAge(now - failedAt!) })}
-        </p>
-      )}
+      {showNote && <p className={styles.stale}>{note}</p>}
     </div>
   );
 }

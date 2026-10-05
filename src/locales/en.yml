@@ -382,6 +382,9 @@ options:
 
 # Each widget's name, description and settings. Keys follow the settings schema.
 widget:
+  common:
+    showUpdated: 'Show last update'
+    updated: 'Updated {time}'
   clock:
     format:
       label: 'Time format'
@@ -505,12 +508,12 @@ widget:
     refresh:
       label: 'Refresh every'
       option:
-        m5: '5 minutes'
         m15: '15 minutes'
         m30: '30 minutes'
         m60: 'Hour'
-      help: 'While a new tab is open. With Twelve Data each refresh costs one credit per symbol, and the free plan has 800 a day: 8 symbols every 15 minutes, all day, use 768.'
+      help: 'While a new tab is open. A long watchlist may refresh less often than this, to stay within the service’s limits: Twelve Data’s free 800 credits a day cover 8 symbols every 15 minutes.'
     view:
+      firstOnly: 'Twelve Data’s free plan takes {count} symbols at a time, so only the first {count} are shown.'
       addKey: 'Add your Twelve Data key in this widget’s settings.'
       addSymbols: 'Add symbols in this widget’s settings.'
       unavailable: 'Prices unavailable.'

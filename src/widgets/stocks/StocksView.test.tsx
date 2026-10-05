@@ -137,4 +137,50 @@ describe('StocksView', () => {
     );
     expect(rows().length).toBeLessThan(10);
   });
+
+  it('says when the prices were fetched, if asked to', () => {
+    const at = new Date();
+    at.setHours(14, 5, 0, 0);
+    render(
+      <StocksView
+        settings={settings({ showUpdated: true })}
+        size={size}
+        isEditing={false}
+        data={{ ...ready(), fetchedAt: at.getTime() } as ResourceState<StocksData>}
+      />,
+    );
+    expect(screen.getByText(/^Updated 2:05\sPM$/)).toBeTruthy();
+  });
+
+  it('puts the failure ahead of the update time', () => {
+    render(
+      <StocksView
+        settings={settings({ showUpdated: true })}
+        size={size}
+        isEditing={false}
+        data={{
+          status: 'error',
+          error: 'x',
+          data: stocks,
+          fetchedAt: Date.now() - 2 * 60 * 60 * 1000,
+        }}
+      />,
+    );
+    expect(screen.getByText('Not updated for 2 hr')).toBeTruthy();
+    expect(screen.queryByText(/^Updated/)).toBeNull();
+  });
+
+  it('shows Twelve Data’s first eight, and says why the rest are missing', () => {
+    const symbols = 'ABCDEFGHIJ'.split('').map((s) => ({ symbol: s, label: '' }));
+    render(
+      <StocksView
+        settings={settings({ source: 'twelvedata', apiKey: 'k', symbols })}
+        size={{ width: 400, height: 600 }}
+        isEditing={false}
+        data={ready({ quotes: {}, missing: [] })}
+      />,
+    );
+    expect(rows()).toHaveLength(8);
+    expect(screen.getByText(/only the first 8 are shown/)).toBeTruthy();
+  });
 });

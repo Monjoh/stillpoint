@@ -56,6 +56,11 @@ export const weatherSettingsSchema = z.object({
     .default(true)
     .meta(field({ label: i18n.t('widget.weather.forecast.label') })),
 
+  showUpdated: z
+    .boolean()
+    .default(false)
+    .meta(field({ label: i18n.t('widget.common.showUpdated') })),
+
   fontSize: z
     .number()
     .min(24)

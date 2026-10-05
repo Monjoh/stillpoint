@@ -58,6 +58,7 @@ describe('weatherSettingsSchema', () => {
       units: 'auto',
       details: true,
       forecast: true,
+      showUpdated: false,
       fontSize: 64,
     });
   });

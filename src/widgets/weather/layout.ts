@@ -17,6 +17,8 @@ export interface WeatherLayout {
   showSummary: boolean;
   showDetails: boolean;
   showForecast: boolean;
+  /** "Updated 14:05", when asked for. The first line to go when room is short. */
+  showUpdated: boolean;
 }
 
 const LINE = 1.4;
@@ -35,6 +37,8 @@ export function layoutWeather(input: {
   temperature: string;
   details: boolean;
   forecastDays: number;
+  /** The "Updated …" line is wanted. */
+  updated?: boolean;
 }): WeatherLayout {
   const { width, height } = input;
   const smallPx = Math.round(clamp(Math.min(width * 0.045, height * 0.09), 11, 16));
@@ -45,26 +49,38 @@ export function layoutWeather(input: {
   const minTemp = Math.max(24, smallPx * 2.5, input.maxPx * 0.5);
 
   const forecastFits = input.forecastDays * FORECAST_DAY_EM * smallPx <= width;
-  const candidates: [summary: boolean, details: boolean, forecast: boolean][] = [
-    [true, input.details, input.forecastDays > 0 && forecastFits],
-    [true, input.details, false],
-    [true, false, false],
-    [false, false, false],
+  const forecast = input.forecastDays > 0 && forecastFits;
+  const updated = input.updated === true;
+  const candidates: [
+    summary: boolean,
+    details: boolean,
+    forecast: boolean,
+    updated: boolean,
+  ][] = [
+    [true, input.details, forecast, updated],
+    [true, input.details, forecast, false],
+    [true, input.details, false, false],
+    [true, false, false, false],
+    [false, false, false, false],
   ];
 
-  for (const [summary, details, forecast] of candidates) {
+  for (const [summary, details, forecast, updated] of candidates) {
     const lines =
-      (summary ? LINE : 0) + (details ? LINE : 0) + (forecast ? FORECAST_LINES : 0);
-    const gaps = [summary, details, forecast].filter(Boolean).length * gap;
+      (summary ? LINE : 0) +
+      (details ? LINE : 0) +
+      (forecast ? FORECAST_LINES : 0) +
+      (updated ? LINE : 0);
+    const gaps = [summary, details, forecast, updated].filter(Boolean).length * gap;
     const room = height - lines * smallPx - gaps;
     const tempPx = Math.floor(Math.min(input.maxPx, room / 1.05, widthBound));
-    if (tempPx >= minTemp || (!summary && !details && !forecast)) {
+    if (tempPx >= minTemp || (!summary && !details && !forecast && !updated)) {
       return {
         tempPx: Math.max(12, tempPx),
         smallPx,
         showSummary: summary,
         showDetails: details,
         showForecast: forecast,
+        showUpdated: updated,
       };
     }
   }
