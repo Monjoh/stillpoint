@@ -2,7 +2,7 @@ import { i18n } from '#i18n';
 import { lazy, Suspense, useCallback, useEffect } from 'react';
 import { Background } from '@/canvas/Background';
 import { Canvas } from '@/canvas/Canvas';
-import { removeWidget, withProfile } from '@/canvas/operations';
+import { removeWidget, updateWidgetSettings, withProfile } from '@/canvas/operations';
 import { useEditSession } from '@/canvas/useEditSession';
 import { browser } from 'wxt/browser';
 import { configStore, useConfig } from '@/core/config/store';
@@ -55,6 +55,40 @@ export function NewTab() {
       const active = current.profiles.find((p) => p.id === current.activeProfileId);
       return active ? withProfile(current, removeWidget(active, instanceId)) : current;
     });
+  }, []);
+
+  /**
+   * A widget saving its own content (a note as it is typed). The recipe runs on the
+   * instance as the store holds it at this moment, inside the store's own update.
+   */
+  const handleUpdateWidgetSettings = useCallback(
+    (instanceId: string, recipe: (stored: unknown) => unknown) => {
+      configStore.getState().update((current) => {
+        const active = current.profiles.find((p) => p.id === current.activeProfileId);
+        const instance = active?.widgets.find((w) => w.instanceId === instanceId);
+        if (!active || !instance) return current;
+        return withProfile(
+          current,
+          updateWidgetSettings(active, instanceId, recipe(instance.settings)),
+        );
+      });
+    },
+    [],
+  );
+
+  // Typing is saved after a short pause. Closing the tab, or switching away, is the
+  // moment to stop waiting: the last few keystrokes of a note must not be lost.
+  useEffect(() => {
+    const flush = () => void configStore.getState().flush();
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('pagehide', flush);
+    };
   }, []);
 
   /** Writes are debounced; an interaction ending is the moment to stop waiting. */
@@ -118,6 +152,7 @@ export function NewTab() {
             isEditing={session.isEditing}
             panelOpen={panelOpen}
             onRemoveWidget={handleRemoveWidget}
+            onUpdateWidgetSettings={handleUpdateWidgetSettings}
             overlay={
               session.isEditing
                 ? (geometry) => (

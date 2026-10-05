@@ -45,6 +45,8 @@ export interface EditPanelProps {
   onDuplicate: (instanceId: string) => void;
   /** Removes the widget; the panel returns to the page settings. */
   onRemove: (instanceId: string) => void;
+  /** A line in the widget footer: why Duplicate did nothing. */
+  notice?: string | null;
   onChangeLayout: (layout: LayoutConfig) => void;
   onChangeTheme: (theme: ThemeConfig) => void;
   onChangeBackground: (background: BackgroundConfig) => void;
@@ -66,6 +68,7 @@ export function EditPanel({
   onChangeFrame,
   onDuplicate,
   onRemove,
+  notice,
   onChangeLayout,
   onChangeTheme,
   onChangeBackground,
@@ -144,6 +147,7 @@ export function EditPanel({
           onChangeFrame={onChangeFrame}
           onDuplicate={onDuplicate}
           onRemove={onRemove}
+          notice={notice}
           onCommit={onCommit}
         />
       ) : (

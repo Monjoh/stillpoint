@@ -3,9 +3,9 @@ import { profileSchema, type Profile } from '@/core/config/schema';
 import type { AnyWidgetDefinition } from '@/core/registry/types';
 import {
   addWidget,
-  centredRect,
   duplicateWidget,
   findFreeRect,
+  findRoomFor,
   placeWidget,
   removeWidget,
   setLayout,
@@ -29,6 +29,7 @@ function profile(widgets: unknown[] = [], layout?: Record<string, number>): Prof
 const testWidget = {
   id: 'stillpoint.clock',
   defaultSize: { w: 8, h: 3 },
+  minSize: { w: 2, h: 1 },
 } as AnyWidgetDefinition;
 
 const at = (x: number, y: number, w: number, h: number, id = `w${x}${y}`) => ({
@@ -53,9 +54,29 @@ describe('findFreeRect', () => {
   });
 });
 
+describe('findRoomFor', () => {
+  it('prefers the full size, then the largest that fits, wider first', () => {
+    const p = profile([at(0, 0, 24, 9)]);
+    expect(findRoomFor(p, { w: 8, h: 3 })).toEqual({ x: 0, y: 9, w: 8, h: 3 });
+    // Three rows left; 4 × 4 does not fit, 5 × 3 and 4 × 3 do: the larger wins.
+    expect(findRoomFor(p, { w: 5, h: 4 })).toEqual({ x: 0, y: 9, w: 5, h: 3 });
+  });
+
+  it('never goes below the minimum', () => {
+    const p = profile([at(0, 0, 24, 11)]);
+    expect(findRoomFor(p, { w: 8, h: 3 }, { w: 2, h: 2 })).toBeNull();
+    expect(findRoomFor(p, { w: 8, h: 3 }, { w: 2, h: 1 })).toEqual({
+      x: 0,
+      y: 11,
+      w: 8,
+      h: 1,
+    });
+  });
+});
+
 describe('addWidget', () => {
   it('places the widget and fills in the frame defaults from the schema', () => {
-    const next = addWidget(profile(), testWidget);
+    const next = addWidget(profile(), testWidget)!;
     const added = next.widgets[0]!;
 
     expect(next.widgets).toHaveLength(1);
@@ -65,10 +86,21 @@ describe('addWidget', () => {
     expect(added.settings).toEqual({});
   });
 
-  it('centres the widget when the grid is full rather than refusing to add it', () => {
-    const p = profile([at(0, 0, 24, 12)]);
-    const next = addWidget(p, testWidget);
-    expect(next.widgets[1]!.rect).toEqual(centredRect(p, testWidget.defaultSize));
+  it('shrinks toward its minimum size to fit a gap smaller than its default', () => {
+    // Everything taken but a 4 × 2 hole in the bottom-right corner.
+    const p = profile([at(0, 0, 24, 10), at(0, 10, 20, 2)]);
+    expect(addWidget(p, testWidget)!.widgets[2]!.rect).toEqual({
+      x: 20,
+      y: 10,
+      w: 4,
+      h: 2,
+    });
+  });
+
+  it('refuses rather than piling onto another widget when nothing fits', () => {
+    // A 1 × 1 hole: smaller than the widget's 2 × 1 minimum.
+    const p = profile([at(0, 0, 24, 11), at(0, 11, 23, 1)]);
+    expect(addWidget(p, testWidget)).toBeNull();
   });
 
   it('does not mutate the profile it was given', () => {
@@ -80,7 +112,7 @@ describe('addWidget', () => {
   it('clamps an oversized explicit rect into the grid', () => {
     const next = addWidget(profile(), testWidget, {
       rect: { x: 30, y: 30, w: 40, h: 40 },
-    });
+    })!;
     expect(next.widgets[0]!.rect).toEqual({ x: 0, y: 0, w: 24, h: 12 });
   });
 });
@@ -88,7 +120,7 @@ describe('addWidget', () => {
 describe('duplicateWidget', () => {
   it('copies settings but never the instance id', () => {
     const p = profile([{ ...at(0, 0, 4, 2, 'a'), settings: { format: '12h' } }]);
-    const next = duplicateWidget(p, 'a');
+    const next = duplicateWidget(p, 'a')!;
     const copy = next.widgets[1]!;
 
     expect(next.widgets).toHaveLength(2);
@@ -98,11 +130,16 @@ describe('duplicateWidget', () => {
     expect(copy.rect).toEqual({ x: 4, y: 0, w: 4, h: 2 });
   });
 
-  it('offsets from the original when the grid has no room left', () => {
-    const p = profile([at(0, 0, 24, 12, 'a')]);
-    const copy = duplicateWidget(p, 'a').widgets[1]!;
-    expect(copy.rect).toEqual({ x: 0, y: 0, w: 24, h: 12 });
-    expect(copy.instanceId).not.toBe('a');
+  it('shrinks the copy toward a minimum size, and refuses below it', () => {
+    const p = profile([at(0, 0, 12, 12, 'a'), at(12, 0, 12, 10, 'b')]);
+    // The free strip is 12 × 2: no room at 12 × 12, room at 12 × 2.
+    expect(duplicateWidget(p, 'a', { w: 2, h: 2 })!.widgets[2]!.rect).toEqual({
+      x: 12,
+      y: 10,
+      w: 12,
+      h: 2,
+    });
+    expect(duplicateWidget(p, 'a', { w: 2, h: 3 })).toBeNull();
   });
 
   it('is a no-op for an unknown instance', () => {
@@ -139,7 +176,7 @@ describe('withProfile', () => {
     const a = profile();
     const b = { ...profile(), id: 'p2' };
     const config = { profiles: [a, b], activeProfileId: 'p1' };
-    const edited = addWidget(a, testWidget);
+    const edited = addWidget(a, testWidget)!;
 
     const next = withProfile(config, edited);
     expect(next.profiles[0]!.widgets).toHaveLength(1);

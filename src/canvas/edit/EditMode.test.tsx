@@ -169,6 +169,46 @@ describe('adding a widget', () => {
     expect(onSelect).toHaveBeenLastCalledWith(state.profile.widgets[0]!.instanceId);
   });
 
+  it('says there is no room instead of piling a widget onto another', async () => {
+    const user = userEvent.setup();
+    // The default 24 × 12 grid, filled.
+    const { state } = setup(profile([clock('a', 0, 0, 24, 12)]));
+
+    await user.click(screen.getByRole('button', { name: 'Add widget' }));
+    await user.click(screen.getByRole('menuitem', { name: /Clock/ }));
+
+    expect(state.profile.widgets).toHaveLength(1);
+    expect(screen.getByRole('status').textContent).toMatch(
+      /There is no room for Clock\. Make space by moving, shrinking or removing/,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.getByRole('status', { hidden: true }).hidden).toBe(true);
+  });
+
+  it('says so when the panel’s Duplicate has no room', async () => {
+    const user = userEvent.setup();
+    const { state } = setup(profile([clock('a', 0, 0, 24, 12)]));
+
+    await user.click(widgetBox(0));
+    await user.click(screen.getByRole('button', { name: 'Duplicate' }));
+    expect(state.profile.widgets).toHaveLength(1);
+    // Beside the button that was pressed, not under the toolbar a screen away.
+    const panel = screen.getByRole('complementary', { name: 'Clock settings' });
+    expect(within(panel).getByRole('status').textContent).toMatch(/no room for Clock/);
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  it('says the same when a duplicate has no room', async () => {
+    const user = userEvent.setup();
+    const { state } = setup(profile([clock('a', 0, 0, 24, 12)]), { panelOpen: false });
+
+    widgetBox(0).focus();
+    await user.keyboard('{Control>}d{/Control}');
+    expect(state.profile.widgets).toHaveLength(1);
+    expect(screen.getByRole('status').textContent).toMatch(/no room for Clock/);
+  });
+
   it('closes the picker on Escape without leaving edit mode', async () => {
     const user = userEvent.setup();
     const { onExit } = setup(profile());
@@ -413,13 +453,14 @@ describe('the settings panel', () => {
     expect(onSelect).toHaveBeenLastCalledWith(null);
   });
 
-  it('duplicates the selected widget from the panel', async () => {
-    const { state } = setup(profile([clock('a', 0, 0)]));
+  it('duplicates the selected widget from the panel, and selects the copy', async () => {
+    const { state, onSelect } = setup(profile([clock('a', 0, 0)]));
     await userEvent.click(widgetBox(0));
     await userEvent.click(screen.getByRole('button', { name: 'Duplicate' }));
 
     expect(state.profile.widgets).toHaveLength(2);
     expect(state.profile.widgets[1]!.type).toBe('stillpoint.clock');
+    expect(onSelect).toHaveBeenLastCalledWith(state.profile.widgets[1]!.instanceId);
   });
 
   it('writes a setting through to the profile, leaving the layout alone', async () => {

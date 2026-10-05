@@ -59,6 +59,16 @@ export interface WidgetProps<S, D = unknown> {
    * or its `key` is null.
    */
   data?: ResourceState<D>;
+  /**
+   * Save settings from the widget itself, for content edited on the canvas: a note,
+   * a checklist. Settings are otherwise written only by the panel.
+   *
+   * The recipe is given the settings as the store holds them *now*, not as they were
+   * when this render happened, so keystrokes in quick succession compose instead of
+   * each overwriting the last. Written through the store's debounce, and flushed when
+   * the tab is hidden. Absent where nothing can be saved (tests, a preview).
+   */
+  updateSettings?: (recipe: (current: S) => S) => void;
 }
 
 export interface WidgetDefinition<S = unknown, D = unknown> {

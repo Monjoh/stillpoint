@@ -1,0 +1,124 @@
+/* No background of its own: with Card off the list sits on the user's background,
+   with Card on the card holds it. */
+.todo {
+  display: flex;
+  flex-direction: column;
+  /* The cell, not 100%: see NotesView.module.css. */
+  width: 100cqw;
+  height: 100cqh;
+  gap: 0.35em;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.4;
+  color: var(--sp-text, #f2f2f2);
+}
+
+.list {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--sp-text, #f2f2f2) 25%, transparent)
+    transparent;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  padding-block: 0.15em;
+}
+
+.check {
+  flex: none;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: var(--sp-accent, #7aa2f7);
+}
+
+.check:focus-visible,
+.remove:focus-visible {
+  outline: 2px solid var(--sp-accent, #7aa2f7);
+  outline-offset: 2px;
+}
+
+.text,
+.add {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-overflow: ellipsis;
+  outline: none;
+}
+
+/* Focus on a text field is an accent underline, as on the search box: thicker as well
+   as coloured, so it is not shown by colour alone. */
+.text:focus-visible {
+  box-shadow: 0 2px 0 -0.5px var(--sp-accent, #7aa2f7);
+}
+
+/* Done is said by the strike and the tick, not by colour alone. */
+.item[data-done] .text {
+  color: var(--sp-text-muted, #a0a3ad);
+  text-decoration: line-through;
+}
+
+.remove {
+  display: flex;
+  flex: none;
+  padding: 0.15em;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--sp-text-muted, #a0a3ad);
+  cursor: pointer;
+  /* Out of the way until the row is pointed at or focused. */
+  opacity: 0;
+}
+
+.item:hover .remove,
+.item:focus-within .remove {
+  opacity: 1;
+}
+
+.remove:hover {
+  color: var(--sp-text, #f2f2f2);
+}
+
+.remove svg {
+  width: 0.9em;
+  height: 0.9em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.add {
+  flex: none;
+  padding-block: 0.3em;
+  border-bottom: 1px solid color-mix(in srgb, var(--sp-text, #f2f2f2) 25%, transparent);
+}
+
+.add:focus-visible {
+  border-bottom-color: var(--sp-accent, #7aa2f7);
+  box-shadow: 0 1px 0 var(--sp-accent, #7aa2f7);
+}
+
+.add::placeholder {
+  color: var(--sp-text-muted, #a0a3ad);
+  opacity: 1;
+}
+
+.note {
+  flex: 1;
+  margin: 0;
+  color: var(--sp-text-muted, #a0a3ad);
+}

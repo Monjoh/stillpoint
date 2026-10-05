@@ -175,3 +175,76 @@
   text-align: center;
   color: var(--sp-ui-text);
 }
+
+/* A callout hanging under the bar, centred on it. Not a row of the bar's own: a bar
+   wide enough never wraps, so a "full-width row" sat squeezed beside the buttons. */
+.notice {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: max-content;
+  max-width: min(46ch, calc(100vw - 32px));
+  margin: 0;
+  padding: 7px 6px 7px 10px;
+  border: 1px solid var(--sp-ui-warning);
+  border-radius: 7px;
+  /* Amber, not red: nothing failed, the widget just did not fit. Red means destructive
+     in this UI (Remove). The icon says it too, so colour is not the only signal. */
+  background: color-mix(in srgb, var(--sp-ui-warning) 18%, var(--sp-ui-bg));
+  box-shadow: var(--sp-ui-shadow);
+  line-height: 1.4;
+  color: var(--sp-ui-text);
+}
+
+.noticeIcon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--sp-ui-warning);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.noticeText {
+  flex: 1;
+}
+
+.notice[hidden] {
+  display: none;
+}
+
+.dismiss {
+  display: flex;
+  flex: none;
+  padding: 3px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--sp-ui-text-muted);
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  color: var(--sp-ui-text);
+}
+
+.dismiss:focus-visible {
+  outline: 2px solid var(--sp-ui-accent);
+  outline-offset: 1px;
+}
+
+.dismiss svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+}

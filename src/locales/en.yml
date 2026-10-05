@@ -59,6 +59,8 @@ edit:
   settings: 'Settings'
   done: 'Done'
   widgetBox: '{name}, column {column}, row {row}, {width} by {height} cells'
+  noRoom: 'There is no room for {name}. Make space by moving, shrinking or removing a widget.'
+  dismiss: 'Dismiss'
 
 # The keyboard shortcut list behind the toolbar's ? button.
 shortcuts:
@@ -449,6 +451,14 @@ widget:
       help: 'An upper limit. Icons shrink to fit their cell, and names are dropped first.'
     name: 'Links'
     description: 'Your sites, one click away, with their icons.'
+  notes:
+    name: 'Notes'
+    description: 'A note you type straight onto the page.'
+    label: 'Note'
+    placeholder: 'Write something…'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The text shrinks in a narrow cell.'
   quote:
     view:
       empty: 'No quotes to show. Add your own, or turn the built-in ones back on, in this widget’s settings.'
@@ -545,6 +555,22 @@ widget:
       help: 'An upper limit. Rows shrink to fit, and the change is dropped first.'
     name: 'Stocks'
     description: 'A watchlist with the latest prices.'
+  todo:
+    name: 'To-do'
+    description: 'A checklist you edit on the page.'
+    label: 'Tasks'
+    task: 'Task'
+    untitled: 'Untitled task'
+    add: 'Add a task'
+    full: 'The list is full'
+    remove: 'Remove {task}'
+    allDone: 'All done.'
+    hideDone:
+      label: 'Hide finished tasks'
+      help: 'Ticked tasks disappear. They are kept, and come back if this is turned off.'
+    fontSize:
+      label: 'Size'
+      help: 'An upper limit. The text shrinks in a narrow cell.'
   weather:
     condition:
       clear: 'Clear'

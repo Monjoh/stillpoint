@@ -3,7 +3,7 @@ import { useCallback, useState } from 'react';
 import type { Profile, Rect } from '@/core/config/schema';
 import { widgetRegistry } from '@/core/registry';
 import { rectToPixels, type CanvasGeometry } from '../geometry';
-import { duplicateWidget, placeWidget, removeWidget } from '../operations';
+import { placeWidget, removeWidget } from '../operations';
 import { alignmentGuides } from './guides';
 import {
   cellDelta,
@@ -34,6 +34,8 @@ export interface EditLayerProps {
   selectedId: string | null;
   onSelect: (instanceId: string | null) => void;
   onChange: (profile: Profile) => void;
+  /** ⌘D. Handled by EditMode, which also says when there is no room. */
+  onDuplicate: (instanceId: string) => void;
   /** Called when an interaction finishes, to flush the debounced write. */
   onCommit?: () => void;
 }
@@ -54,6 +56,7 @@ export function EditLayer({
   selectedId,
   onSelect,
   onChange,
+  onDuplicate,
   onCommit,
 }: EditLayerProps) {
   const [drag, setDrag] = useState<DragState | null>(null);
@@ -166,11 +169,10 @@ export function EditLayer({
 
       if (event.key.toLowerCase() === 'd' && (event.metaKey || event.ctrlKey)) {
         event.preventDefault();
-        onChange(duplicateWidget(profile, instanceId));
-        onCommit?.();
+        onDuplicate(instanceId);
       }
     },
-    [profile, nudge, onChange, onSelect, onCommit],
+    [profile, nudge, onChange, onDuplicate, onSelect, onCommit],
   );
 
   const dragged = drag

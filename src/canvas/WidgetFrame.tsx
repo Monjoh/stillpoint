@@ -2,6 +2,7 @@ import { i18n } from '#i18n';
 import {
   Component,
   Suspense,
+  useCallback,
   useMemo,
   type ComponentType,
   type ErrorInfo,
@@ -40,6 +41,11 @@ export interface WidgetFrameProps {
   isEditing: boolean;
   /** Offered in the failure state. Omitted in view mode, where nothing is editable. */
   onRemove?: () => void;
+  /**
+   * Replace this instance's stored settings with what `recipe` makes of them. Behind
+   * `WidgetProps.updateSettings`; the caller applies it to the store's latest copy.
+   */
+  onUpdateSettings?: (instanceId: string, recipe: (stored: unknown) => unknown) => void;
 }
 
 export function WidgetFrame({
@@ -47,6 +53,7 @@ export function WidgetFrame({
   geometry,
   isEditing,
   onRemove,
+  onUpdateSettings,
 }: WidgetFrameProps) {
   const box = rectToPixels(instance.rect, geometry);
   const { frame } = instance;
@@ -61,6 +68,23 @@ export function WidgetFrame({
         : { settings: null, repaired: false },
     [definition, instance.settings],
   );
+
+  const schema = definition?.settingsSchema;
+  const { instanceId } = instance;
+  // Resolved against the stored value inside the recipe, not against `resolved`: a
+  // render-time copy would make the second of two quick keystrokes undo the first.
+  // Unusable settings are left alone rather than overwritten with a guess.
+  const updateSettings = useCallback(
+    (recipe: (current: unknown) => unknown) => {
+      if (!schema || !onUpdateSettings) return;
+      onUpdateSettings(instanceId, (stored) => {
+        const current = resolveSettings(schema, stored).settings;
+        return current === null ? stored : recipe(current);
+      });
+    },
+    [schema, onUpdateSettings, instanceId],
+  );
+  const canUpdate = onUpdateSettings ? updateSettings : undefined;
 
   const padding = frame.showBackground ? cardPadding(box) : 0;
   const fade = frame.opacity / 100;
@@ -106,10 +130,16 @@ export function WidgetFrame({
             settings={resolved.settings}
             size={size}
             isEditing={isEditing}
+            updateSettings={canUpdate}
           />
         ) : (
           // eslint-disable-next-line react-hooks/static-components
-          <Widget settings={resolved.settings} size={size} isEditing={isEditing} />
+          <Widget
+            settings={resolved.settings}
+            size={size}
+            isEditing={isEditing}
+            updateSettings={canUpdate}
+          />
         )}
       </Suspense>
     );
@@ -171,6 +201,7 @@ interface DataProps {
   settings: unknown;
   size: WidgetProps<unknown>['size'];
   isEditing: boolean;
+  updateSettings?: WidgetProps<unknown>['updateSettings'];
 }
 
 /**
@@ -230,7 +261,15 @@ function describeNeeds({ origins = [], dataCollection = [] }: PermissionNeeds): 
 /** "a, b and c", in the browser's language. */
 const listFormat = () => new Intl.ListFormat(undefined, { type: 'conjunction' });
 
-function Fetching({ widgetType, spec, Widget, settings, size, isEditing }: DataProps) {
+function Fetching({
+  widgetType,
+  spec,
+  Widget,
+  settings,
+  size,
+  isEditing,
+  updateSettings,
+}: DataProps) {
   const data = useResource(widgetType, spec, settings);
   // Reading the cache: a few milliseconds, drawn as nothing rather than a skeleton
   // that flashes on every tab.
@@ -238,7 +277,15 @@ function Fetching({ widgetType, spec, Widget, settings, size, isEditing }: DataP
   if (data?.status === 'empty') {
     return <div className={styles.skeleton} aria-hidden="true" />;
   }
-  return <Widget settings={settings} size={size} isEditing={isEditing} data={data} />;
+  return (
+    <Widget
+      settings={settings}
+      size={size}
+      isEditing={isEditing}
+      data={data}
+      updateSettings={updateSettings}
+    />
+  );
 }
 
 /**

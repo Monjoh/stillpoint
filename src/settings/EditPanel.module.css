@@ -154,6 +154,39 @@
   color: var(--sp-ui-danger);
 }
 
+/* Its own row above the footer's buttons. */
+.footerNotice {
+  display: flex;
+  flex-basis: 100%;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0 0 6px;
+  padding: 7px 9px;
+  border: 1px solid var(--sp-ui-warning);
+  border-radius: 6px;
+  /* Amber, as under the toolbar: see EditToolbar.module.css. */
+  background: color-mix(in srgb, var(--sp-ui-warning) 18%, var(--sp-ui-bg));
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--sp-ui-text);
+}
+
+.footerNotice svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+  fill: none;
+  stroke: var(--sp-ui-warning);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.footerNotice[hidden] {
+  display: none;
+}
+
 /* Reset sits apart, at the far end: it acts on the settings, not the widget. */
 .quiet[data-push] {
   margin-left: auto;

@@ -1,3 +1,5 @@
+import { i18n } from '#i18n';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type {
   BackgroundConfig,
@@ -59,16 +61,64 @@ export default function EditMode({
   onCommit,
   onExit,
 }: EditModeProps) {
+  /**
+   * Said when an add or a duplicate finds no room. Adding more columns or rows would
+   * not help (the layout rescales with the grid), so it says what does.
+   *
+   * Shown beside whatever was used: under the toolbar for Add and ⌘D, in the panel's
+   * footer for its Duplicate button. Under the toolbar only, it was a screen's height
+   * away from the button and went unseen (S27, user).
+   */
+  const [noRoom, setNoRoom] = useState<{
+    text: string;
+    at: 'toolbar' | 'panel';
+  } | null>(null);
+  useEffect(() => {
+    if (noRoom === null) return;
+    const timer = setTimeout(() => setNoRoom(null), 8000);
+    return () => clearTimeout(timer);
+  }, [noRoom]);
+
   const handleAdd = (widgetId: string) => {
     const definition = widgetRegistry.get(widgetId);
     if (!definition) return;
 
     const next = addWidget(profile, definition);
+    if (!next) {
+      setNoRoom({
+        text: i18n.t('edit.noRoom', { name: definition.name }),
+        at: 'toolbar',
+      });
+      return;
+    }
+    setNoRoom(null);
     onChange(next);
     onCommit();
     // Select what was just added, so it can be nudged or resized immediately rather
     // than having to be found and clicked first.
     onSelect(next.widgets[next.widgets.length - 1]?.instanceId ?? null);
+  };
+
+  /**
+   * From the panel's Duplicate and from ⌘D on the canvas alike. The copy is selected,
+   * as an added widget is: it may have been shrunk into a gap far from the original,
+   * and an unselected copy there looked like nothing had happened.
+   */
+  const handleDuplicate = (instanceId: string, at: 'toolbar' | 'panel') => {
+    const type = profile.widgets.find((w) => w.instanceId === instanceId)?.type;
+    const definition = type ? widgetRegistry.get(type) : null;
+    const next = duplicateWidget(profile, instanceId, definition?.minSize);
+    if (!next) {
+      setNoRoom({
+        text: i18n.t('edit.noRoom', { name: definition?.name ?? type ?? '' }),
+        at,
+      });
+      return;
+    }
+    setNoRoom(null);
+    onChange(next);
+    onCommit();
+    if (next !== profile) onSelect(next.widgets[next.widgets.length - 1]!.instanceId);
   };
 
   const selected = profile.widgets.find((w) => w.instanceId === selectedId);
@@ -84,6 +134,8 @@ export default function EditMode({
         <EditToolbar
           profile={profile}
           panelOpen={panelOpen}
+          notice={noRoom?.at === 'toolbar' ? noRoom.text : null}
+          onDismissNotice={() => setNoRoom(null)}
           onAdd={handleAdd}
           onTogglePanel={onTogglePanel}
           onExit={onExit}
@@ -107,10 +159,8 @@ export default function EditMode({
               onChange(updateWidgetFrame(profile, instanceId, frame))
             }
             // The same operations as Delete and ⌘D on the canvas (EditLayer).
-            onDuplicate={(instanceId) => {
-              onChange(duplicateWidget(profile, instanceId));
-              onCommit();
-            }}
+            onDuplicate={(instanceId) => handleDuplicate(instanceId, 'panel')}
+            notice={noRoom?.at === 'panel' ? noRoom.text : null}
             onRemove={(instanceId) => {
               onChange(removeWidget(profile, instanceId));
               onSelect(null);
@@ -141,6 +191,7 @@ export default function EditMode({
         selectedId={selectedId}
         onSelect={onSelect}
         onChange={onChange}
+        onDuplicate={(instanceId) => handleDuplicate(instanceId, 'toolbar')}
         onCommit={onCommit}
       />
     </>

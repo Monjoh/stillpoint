@@ -1,0 +1,42 @@
+/* No background or border of its own: with Card off the note is text on the user's
+   background, with Card on the card is the paper. */
+.note {
+  display: block;
+  /* The cell, not 100%: the frame's content wrapper has no height of its own, and a
+     percentage of it left the textarea at its default two rows (S27, user). */
+  width: 100cqw;
+  height: 100cqh;
+  box-sizing: border-box;
+  margin: 0;
+  /* The left rule is always there, transparent until focus, so focusing does not
+     shift the text. */
+  padding: 0 0 0 0.6em;
+  border: 0;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  resize: none;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--sp-text, #f2f2f2) 25%, transparent)
+    transparent;
+  font-family: var(--sp-font-body, 'Inter', system-ui, sans-serif);
+  line-height: 1.5;
+  color: var(--sp-text, #f2f2f2);
+  caret-color: var(--sp-accent, #7aa2f7);
+}
+
+.note::placeholder {
+  color: var(--sp-text-muted, #a0a3ad);
+  opacity: 1;
+}
+
+.note:focus {
+  outline: none;
+}
+
+/* A thin accent rule beside the text says "you are typing here" without boxing the
+   note in. Shown for the keyboard and the mouse alike, as a textarea's focus is. */
+.note:focus-visible {
+  border-left-color: var(--sp-accent, #7aa2f7);
+}

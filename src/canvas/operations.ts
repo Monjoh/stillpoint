@@ -37,27 +37,45 @@ export function findFreeRect(
   return null;
 }
 
-/** Centre a rect of this size in the grid. The fallback when nothing is free. */
-export function centredRect(profile: Profile, size: { w: number; h: number }): Rect {
-  const { columns, rows } = profile.layout;
-  const w = Math.min(Math.max(1, size.w), columns);
-  const h = Math.min(Math.max(1, size.h), rows);
-  return {
-    w,
-    h,
-    x: Math.floor((columns - w) / 2),
-    y: Math.floor((rows - h) / 2),
-  };
+/**
+ * Room for a widget: at `preferred` size if that fits anywhere, otherwise at the
+ * largest size down to `min` that does. `null` when not even `min` fits.
+ *
+ * Shrinking before refusing because a full-looking page usually has gaps, just not
+ * gaps of the default size. Largest area first; between equal areas, wider first.
+ */
+export function findRoomFor(
+  profile: Profile,
+  preferred: { w: number; h: number },
+  min: { w: number; h: number } = { w: 1, h: 1 },
+): Rect | null {
+  const sizes: { w: number; h: number }[] = [];
+  for (let w = preferred.w; w >= Math.min(min.w, preferred.w); w--) {
+    for (let h = preferred.h; h >= Math.min(min.h, preferred.h); h--) {
+      sizes.push({ w, h });
+    }
+  }
+  sizes.sort((a, b) => b.w * b.h - a.w * a.h || b.w - a.w);
+  for (const size of sizes) {
+    const rect = findFreeRect(profile, size);
+    if (rect) return rect;
+  }
+  return null;
 }
 
+/**
+ * Add a widget where there is room, shrinking it toward its `minSize` if need be.
+ * `null` when the grid has no room at all: the caller tells the user. It used to be
+ * centred on top of whatever was there (until S27), which looked like a bug.
+ */
 export function addWidget(
   profile: Profile,
   definition: AnyWidgetDefinition,
   options: { rect?: Rect; instanceId?: string } = {},
-): Profile {
-  const size = options.rect ?? definition.defaultSize;
+): Profile | null {
   const rect =
-    options.rect ?? findFreeRect(profile, size) ?? centredRect(profile, size);
+    options.rect ?? findRoomFor(profile, definition.defaultSize, definition.minSize);
+  if (!rect) return null;
 
   // Parsed rather than built literally so `frame` and `settings` get their schema
   // defaults; a hand-built instance would drift the moment the schema grows a field.
@@ -78,24 +96,23 @@ export function removeWidget(profile: Profile, instanceId: string): Profile {
 }
 
 /**
- * Copy a widget, settings and all, into the first free slot.
+ * Copy a widget, settings and all, into the first free slot, shrinking it toward
+ * `minSize` if its own size has no room.
  *
  * Not offset by a cell from the original, which is the obvious implementation: the
- * copy would then overlap the thing it was copied from, and the user has to drag the
- * widget they just made before they can see either of them. Only when the grid has no
- * room at all does it fall back to an offset, so the copy is at least somewhere
- * reachable rather than silently not created.
+ * copy would then overlap the thing it was copied from. `null` when there is no room
+ * at all, as for `addWidget`; an unknown instance returns the profile unchanged.
  */
-export function duplicateWidget(profile: Profile, instanceId: string): Profile {
+export function duplicateWidget(
+  profile: Profile,
+  instanceId: string,
+  minSize?: { w: number; h: number },
+): Profile | null {
   const source = profile.widgets.find((i) => i.instanceId === instanceId);
   if (!source) return profile;
 
-  const rect =
-    findFreeRect(profile, source.rect) ??
-    clampRect(
-      { ...source.rect, x: source.rect.x + 1, y: source.rect.y + 1 },
-      profile.layout,
-    );
+  const rect = findRoomFor(profile, source.rect, minSize);
+  if (!rect) return null;
 
   const copy: WidgetInstance = { ...source, instanceId: newId(), rect };
   return { ...profile, widgets: [...profile.widgets, copy] };

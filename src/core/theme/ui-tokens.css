@@ -25,6 +25,8 @@
   --sp-ui-accent: #7aa2f7;
   /* Destructive actions: removing a widget, deleting everything. */
   --sp-ui-danger: #e06c75;
+  /* Something could not be done, though nothing went wrong: no room for a widget. */
+  --sp-ui-warning: #e0af68;
 
   --sp-ui-radius: 10px;
   /* Read by the settings panel and, through a fallback, by the canvas stage, which

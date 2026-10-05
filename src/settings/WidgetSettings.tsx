@@ -32,6 +32,8 @@ export interface WidgetSettingsProps {
   onChangeFrame: (instanceId: string, frame: WidgetInstance['frame']) => void;
   onDuplicate: (instanceId: string) => void;
   onRemove: (instanceId: string) => void;
+  /** Why the last Duplicate did nothing, shown above the footer's buttons. */
+  notice?: string | null;
   onCommit: () => void;
 }
 
@@ -41,6 +43,7 @@ export function WidgetSettings({
   onChangeFrame,
   onDuplicate,
   onRemove,
+  notice,
   onCommit,
 }: WidgetSettingsProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -93,6 +96,15 @@ export function WidgetSettings({
       </div>
 
       <footer className={styles.footer}>
+        {/* Always in the tree, so a screen reader hears it when the text arrives. */}
+        <p className={styles.footerNotice} role="status" hidden={!notice}>
+          {notice && (
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 4 2.5 20h19L12 4Z M12 10v4.5 M12 17.2v.3" />
+            </svg>
+          )}
+          <span>{notice}</span>
+        </p>
         {confirmingRemove ? (
           <>
             <button

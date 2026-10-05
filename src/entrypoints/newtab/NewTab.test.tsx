@@ -208,3 +208,75 @@ describe('typing in a generated settings field', () => {
     expect(document.activeElement).toBe(screen.getByLabelText('Time zone'));
   });
 });
+
+describe('a widget saving its own content', () => {
+  beforeEach(() => {
+    fakeBrowser.reset();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    configStore.getState().dispose();
+  });
+
+  async function seedNote(text: string) {
+    await browser.storage.local.set({
+      [StorageKeys.config]: {
+        version: 1,
+        activeProfileId: 'p1',
+        profiles: [
+          {
+            id: 'p1',
+            name: 'Desk',
+            background: { kind: 'solid', color: '#000' },
+            widgets: [
+              {
+                instanceId: 'n1',
+                type: 'stillpoint.notes',
+                rect: { x: 0, y: 0, w: 6, h: 4 },
+                settings: { text },
+              },
+            ],
+          },
+        ],
+      },
+    });
+  }
+
+  const storedNote = async () => {
+    const stored = await browser.storage.local.get(StorageKeys.config);
+    const config = stored[StorageKeys.config] as {
+      profiles: { widgets: { settings: { text?: string } }[] }[];
+    };
+    return config.profiles[0]!.widgets[0]!.settings.text;
+  };
+
+  it('writes a note through the store, and saves it when the tab goes away', async () => {
+    const user = userEvent.setup();
+    await seedNote('Milk');
+    render(<NewTab />);
+
+    const note = await screen.findByRole('textbox', { name: 'Note' });
+    await user.type(note, ', eggs');
+    expect(
+      configStore.getState().config?.profiles[0]?.widgets[0]?.settings,
+    ).toMatchObject({ text: 'Milk, eggs' });
+
+    // Closing the tab inside the debounce window must not lose the last keystrokes.
+    window.dispatchEvent(new Event('pagehide'));
+    // Inside 150 ms: the debounce alone would write at 300.
+    await expect.poll(storedNote, { timeout: 150 }).toBe('Milk, eggs');
+  });
+
+  it('keeps the rest of the widget’s settings when it saves', async () => {
+    const user = userEvent.setup();
+    await seedNote('');
+    render(<NewTab />);
+    await user.type(await screen.findByRole('textbox', { name: 'Note' }), 'Hi');
+
+    expect(configStore.getState().config?.profiles[0]?.widgets[0]?.settings).toEqual({
+      text: 'Hi',
+      fontSize: 16,
+    });
+  });
+});

@@ -1,9 +1,11 @@
 import { clockDefinition } from '@/widgets/clock/definition';
 import { dateDefinition } from '@/widgets/date/definition';
 import { linksDefinition } from '@/widgets/links/definition';
+import { notesDefinition } from '@/widgets/notes/definition';
 import { quoteDefinition } from '@/widgets/quote/definition';
 import { searchDefinition } from '@/widgets/search/definition';
 import { stocksDefinition } from '@/widgets/stocks/definition';
+import { todoDefinition } from '@/widgets/todo/definition';
 import { weatherDefinition } from '@/widgets/weather/definition';
 import { createRegistry } from './registry';
 import type { AnyWidgetDefinition } from './types';
@@ -21,6 +23,8 @@ export const widgetDefinitions = [
   linksDefinition,
   weatherDefinition,
   stocksDefinition,
+  notesDefinition,
+  todoDefinition,
 ] as const satisfies readonly AnyWidgetDefinition[];
 
 /**

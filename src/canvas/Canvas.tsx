@@ -22,6 +22,11 @@ export interface CanvasProps {
   profile: Profile;
   isEditing: boolean;
   onRemoveWidget?: (instanceId: string) => void;
+  /** A widget saving its own content. See `WidgetProps.updateSettings`. */
+  onUpdateWidgetSettings?: (
+    instanceId: string,
+    recipe: (stored: unknown) => unknown,
+  ) => void;
   /**
    * Rendered inside the canvas box, over the widgets, with the geometry they were laid
    * out from. Edit mode uses it so that selection, handles, grid dots and alignment
@@ -42,6 +47,7 @@ export function Canvas({
   profile,
   isEditing,
   onRemoveWidget,
+  onUpdateWidgetSettings,
   overlay,
   panelOpen,
 }: CanvasProps) {
@@ -65,6 +71,7 @@ export function Canvas({
               onRemove={
                 onRemoveWidget ? () => onRemoveWidget(instance.instanceId) : undefined
               }
+              onUpdateSettings={onUpdateWidgetSettings}
             />
           ))}
         {geometry && overlay?.(geometry)}

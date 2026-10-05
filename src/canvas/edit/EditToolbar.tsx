@@ -16,6 +16,9 @@ export interface EditToolbarProps {
   profile: Profile;
   /** The settings sidebar has taken its width out of the stage; recentre over what is left. */
   panelOpen?: boolean;
+  /** One line under the buttons: why an add did nothing. */
+  notice?: string | null;
+  onDismissNotice?: () => void;
   onAdd: (widgetId: string) => void;
   onTogglePanel: () => void;
   onExit: () => void;
@@ -24,6 +27,8 @@ export interface EditToolbarProps {
 export function EditToolbar({
   profile,
   panelOpen,
+  notice,
+  onDismissNotice,
   onAdd,
   onTogglePanel,
   onExit,
@@ -89,6 +94,28 @@ export function EditToolbar({
       <button type="button" className={styles.done} onClick={onExit}>
         {i18n.t('edit.done')}
       </button>
+
+      {/* Always in the tree, so a screen reader hears it when the text arrives. */}
+      <p className={styles.notice} role="status" hidden={!notice}>
+        {notice && (
+          <svg viewBox="0 0 24 24" className={styles.noticeIcon} aria-hidden="true">
+            <path d="M12 4 2.5 20h19L12 4Z M12 10v4.5 M12 17.2v.3" />
+          </svg>
+        )}
+        <span className={styles.noticeText}>{notice}</span>
+        {notice && onDismissNotice && (
+          <button
+            type="button"
+            className={styles.dismiss}
+            aria-label={i18n.t('edit.dismiss')}
+            onClick={onDismissNotice}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 7l10 10M17 7L7 17" />
+            </svg>
+          </button>
+        )}
+      </p>
 
       {helpOpen && (
         <ShortcutHelp
