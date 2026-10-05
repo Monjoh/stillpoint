@@ -178,7 +178,17 @@ describe('the layout section', () => {
   // only way a number field can say "no value", so it has to mean that where the
   // schema allows one — and go on meaning "still typing" where it does not.
   it('clears the maximum width to nothing, as its help text promises', () => {
-    const { onChangeLayout } = setup({ open: 'layout' });
+    // Uncapped is the default since S27, so start from a cap to have one to clear.
+    const capped = profileSchema.parse({
+      id: 'p1',
+      name: 'Focus',
+      background: { kind: 'solid', color: '#000' },
+      layout: { maxWidth: 1600 },
+    });
+    const { onChangeLayout } = setup({ config: config([capped]), open: 'layout' });
+    expect((screen.getByLabelText('Maximum width') as HTMLInputElement).value).toBe(
+      '1600',
+    );
 
     fireEvent.change(screen.getByLabelText('Maximum width'), { target: { value: '' } });
     expect(onChangeLayout).toHaveBeenCalledWith(

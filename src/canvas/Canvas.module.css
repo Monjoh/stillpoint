@@ -1,12 +1,13 @@
 /* The stage is the viewport. It owns the outer breathing room and the max-width cap,
-   so the canvas itself has no padding and its content box is exactly the grid. */
+   so the canvas itself has no padding and its content box is exactly the grid. The
+   room is 16px (was 24 until S27; the user wanted the widgets nearer the edges). */
 .stage {
   position: relative;
   z-index: 1;
   display: flex;
   justify-content: center;
   height: 100%;
-  padding: var(--sp-space-4, 24px);
+  padding: var(--sp-space-3, 16px);
   box-sizing: border-box;
   /* The new tab must never scroll. If something inside tries, it loses. */
   overflow: hidden;
@@ -31,7 +32,7 @@
 */
 @media (min-width: 760px) {
   .stage[data-panel] {
-    padding-right: calc(var(--sp-ui-panel-width, 288px) + var(--sp-space-4, 24px));
+    padding-right: calc(var(--sp-ui-panel-width, 288px) + var(--sp-space-3, 16px));
   }
 }
 
@@ -39,7 +40,7 @@
   position: relative;
   flex: 1 1 auto;
   width: 100%;
-  max-width: var(--sp-canvas-max-width, 1600px);
+  max-width: var(--sp-canvas-max-width, none);
   height: 100%;
 }
 

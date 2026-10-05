@@ -121,13 +121,19 @@ export const layoutSchema = z
       .max(64)
       .default(12)
       .meta({ label: i18n.t('config.layout.gap.label'), unit: 'px' }),
-    /** Caps canvas width so an ultrawide composes instead of smearing. */
+    /**
+     * Caps canvas width so an ultrawide composes instead of smearing. Uncapped by
+     * default since S27: at 1600 the view-mode page sat inset on any screen wider
+     * than ~1650px, while edit mode (which gives up the panel's width) reached the
+     * edges, so the two looked different. A default, not a shape change: stored
+     * configs keep the value they have.
+     */
     maxWidth: z
       .number()
       .int()
       .min(480)
       .nullable()
-      .default(1600)
+      .default(null)
       .meta({
         label: i18n.t('config.layout.maxWidth.label'),
         unit: 'px',

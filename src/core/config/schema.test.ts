@@ -31,7 +31,7 @@ describe('configSchema', () => {
       columns: 24,
       rows: 12,
       gap: 12,
-      maxWidth: 1600,
+      maxWidth: null,
     });
     expect(profile.theme).toEqual({ preset: 'midnight', overrides: {} });
     expect(profile.widgets).toEqual([]);
