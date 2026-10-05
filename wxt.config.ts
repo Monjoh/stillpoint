@@ -24,7 +24,11 @@ export default defineConfig({
         relativeDest: 'LICENSE.txt',
       });
     },
-    'build:done': (wxt) => notices.write(wxt.config.outDir),
+    // Not in `npm run dev`: its build carries WXT's reload client, which never ships
+    // and whose packages (@webext-core/match-patterns) have no licence file.
+    'build:done': (wxt) => {
+      if (wxt.config.command === 'build') notices.write(wxt.config.outDir);
+    },
   },
   zip: {
     // An allowlist, not WXT's default of "everything not hidden": that default put
