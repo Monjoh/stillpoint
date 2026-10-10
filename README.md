@@ -97,7 +97,8 @@ npm run test         # unit and component tests (Vitest)
 npm run typecheck
 npm run lint
 npm run format       # Prettier
-npm run build:chrome # Chrome build; checks the code stays cross-browser
+npm run build:chrome # the Chrome build, in .output/chrome-mv3/
+npm run zip:chrome   # the Chrome build, packaged for the Chrome Web Store
 ```
 
 Stillpoint is built with [WXT](https://wxt.dev), React and TypeScript, styled with

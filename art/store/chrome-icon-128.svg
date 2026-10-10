@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Chrome Web Store icon: the 128 master scaled to 96 px with 16 px of transparent padding, as the store's guidelines ask. -->
+  <defs>
+    <linearGradient id="g" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#1d2033"/>
+      <stop offset="1" stop-color="#11131c"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(16 16) scale(0.75)"><rect width="128" height="128" rx="28" fill="url(#g)"/>
+  <rect x="22" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="82" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="22" y="52" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="52" width="24" height="24" rx="7" fill="#eef1fb"/>
+  <rect x="82" y="52" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="22" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="82" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+</g>
+</svg>

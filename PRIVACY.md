@@ -18,7 +18,7 @@ then update.
 | ------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | **Weather**: finding a place   | [Open-Meteo](https://open-meteo.com/en/terms) (`geocoding-api.open-meteo.com`)       | The place name you type, and your browser's language                                                                         | While you search in the widget's settings                                                                |
 | **Weather**: the forecast      | Open-Meteo (`api.open-meteo.com`)                                                    | The place's coordinates, rounded to about 1 km, and your choice of units                                                     | At most every 30 minutes, while a new tab is open                                                        |
-| **Weather**: "Use my location" | Firefox's own location service, not Stillpoint                                       | Whatever Firefox sends to locate you; Firefox asks you first                                                                 | Once, when you click the button. Stillpoint keeps only the rounded coordinates                           |
+| **Weather**: "Use my location" | Your browser's own location service, not Stillpoint                                  | Whatever your browser sends to locate you; it asks you first                                                                 | Once, when you click the button. Stillpoint keeps only the rounded coordinates                           |
 | **Background**: Lorem Picsum   | [Lorem Picsum](https://picsum.photos) (`picsum.photos`)                              | A request for a page of the photo list, then the photos themselves                                                           | When the photo is due to change (every tab, hourly or daily, your choice). Photos are fetched in batches |
 | **Background**: Unsplash       | [Unsplash](https://unsplash.com/privacy) (`api.unsplash.com`, `images.unsplash.com`) | Your Unsplash access key and your search words. A "download" notice for each photo shown, which Unsplash's API terms require | Same as above                                                                                            |
 | **Links**: site icons          | Each linked site                                                                     | A request for that site's own icon (`/apple-touch-icon.png`, then `/favicon.ico`)                                            | Each time the widget shows, cached by the browser. Never for local or private-network addresses          |
@@ -34,9 +34,13 @@ are built into the extension.
 
 ## Permissions
 
-- **Storage** (`storage`), to keep your settings on this device. This is the only
-  permission asked for at install, and there are no site permissions: every
-  service above lets the extension read its answers without one.
+- **Storage** (`storage`), to keep your settings on this device. In Firefox this is
+  the only permission asked for at install. There are no site permissions in any
+  browser: every service above lets the extension read its answers without one.
+- **Unlimited storage** (`unlimitedStorage`), in Chrome and other Chromium-based
+  browsers only. Your photos are stored on this device, and Chrome otherwise limits
+  an extension's storage to 10 MB, a few photos. It lets Stillpoint store more on your
+  device; it sends nothing anywhere. Firefox has no such limit and is not asked.
 - **Firefox's data-collection categories**, optional:
   - _Location_ (`locationInfo`): asked for when you set a place for Weather.
   - _Search terms_ (`searchTerms`): asked for when you search for Unsplash
@@ -45,6 +49,10 @@ are built into the extension.
   Each is asked for from the click that turns the feature on. Without it, that
   feature stays off and nothing else changes. You can withdraw either one in
   `about:addons`.
+
+  Chrome has no such categories. There, Weather sends the place you set and an
+  Unsplash search sends its words as soon as you set them, with no separate
+  question. The data sent and where it goes are the same, as listed above.
 
 Three features send something but are not declared as data collection, since none
 sends your personal data to the developer or to a service of Stillpoint's choosing:

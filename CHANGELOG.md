@@ -7,7 +7,7 @@ is tagged in git as `v<version>`.
 Numbering: a fix raises the last number (1.0.1), a new feature the middle one (1.1.0),
 and a change that breaks how something used to work the first (2.0.0).
 
-## Unreleased
+## 1.1.1 — 2026-10-10
 
 A photo background opens sharper: the copy shown for the moment before the photo
 has loaded is now detailed enough to show the scene, not just its colours. Photos

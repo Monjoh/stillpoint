@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <!-- Chrome Web Store small promo tile. Opaque: the store wants 24-bit, no alpha. -->
+  <defs>
+    <linearGradient id="g" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#1d2033"/>
+      <stop offset="1" stop-color="#11131c"/>
+    </linearGradient>
+  </defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0" stop-color="#1d2033"/>
+    <stop offset="1" stop-color="#11131c"/>
+  </linearGradient>
+  <rect width="440" height="280" fill="url(#bg)"/>
+  <g transform="translate(40 76) scale(1)"><rect width="128" height="128" rx="28" fill="url(#g)" stroke="#2c3150" stroke-width="1.5"/>
+  <rect x="22" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="82" y="22" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="22" y="52" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="52" width="24" height="24" rx="7" fill="#eef1fb"/>
+  <rect x="82" y="52" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="22" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="52" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+  <rect x="82" y="82" width="24" height="24" rx="7" fill="#7aa2f7" fill-opacity="0.3"/>
+</g>
+  <text x="196" y="132" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="40" font-weight="500" fill="#eef1fb">Stillpoint</text>
+  <text x="197" y="166" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" fill="#a9b4d6">A calm new tab page</text>
+  <text x="197" y="189" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="17" fill="#a9b4d6">you arrange yourself.</text>
+</svg>
