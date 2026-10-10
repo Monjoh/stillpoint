@@ -1,6 +1,6 @@
 # Stillpoint
 
-A calm, personalizable new tab page for Firefox.
+A personalizable new tab page for Firefox: your widgets, your layout, your look.
 
 ![Stillpoint on a photo background: the date and clock, a search box and links, with Weather and Calendar widgets on frosted cards](screenshots/overview.jpg)
 

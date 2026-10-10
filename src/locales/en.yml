@@ -11,7 +11,7 @@
 
 manifest:
   name: Stillpoint
-  description: A quiet, personalizable new tab page.
+  description: 'A personalizable new tab page: your widgets, your layout, your look.'
 
 # View mode: the new tab itself.
 newtab:
