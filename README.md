@@ -2,6 +2,8 @@
 
 A calm, personalizable new tab page for Firefox.
 
+![Stillpoint on a photo background: the date and clock, a search box and links, with Weather and Calendar widgets on frosted cards](screenshots/overview.jpg)
+
 Place widgets anywhere on a grid. Give the whole page one look with a theme, and set
 the background to a colour, your own photo or a rotating photograph. Your settings
 stay on your device: there is no account and no server, and nothing is sent to the
