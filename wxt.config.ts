@@ -80,9 +80,6 @@ export default defineConfig({
                 optional: [...OPTIONAL_DATA_COLLECTION],
               },
             },
-            // Android gained data_collection_permissions in 142. Without this the
-            // desktop floor above is assumed for Android too, and web-ext lint warns.
-            gecko_android: { strict_min_version: '142.0' },
           },
         }
       : {}),
