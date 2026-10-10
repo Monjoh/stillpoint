@@ -25,6 +25,9 @@ Links can hold folders, as on a phone. A folder's tile shows its first four site
 icons, and a click opens its links beside it. Make one in the widget's settings by
 setting a row's Type to Folder.
 
+Stillpoint has its own icon, a grid with its centre lit. It also shows in the tab of
+the new tab and the settings page.
+
 Fixed: adding more rows than a list allows, such as a 49th link, could reset the
 whole list. The Add button now stops at the limit and says so.
 

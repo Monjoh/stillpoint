@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+  <!-- Stillpoint's icon: a grid with its still point lit. Drawn on whole pixels at this size. -->
+  <defs>
+    <linearGradient id="g" x1="0.3" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#1d2033"/>
+      <stop offset="1" stop-color="#11131c"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="url(#g)"/>
+  <rect x="5" y="5" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="13" y="5" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="21" y="5" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="5" y="13" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="13" y="13" width="6" height="6" rx="1.5" fill="#eef1fb"/>
+  <rect x="21" y="13" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="5" y="21" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="13" y="21" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+  <rect x="21" y="21" width="6" height="6" rx="1.5" fill="#7aa2f7" fill-opacity="0.42"/>
+</svg>
