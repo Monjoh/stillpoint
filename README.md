@@ -44,10 +44,12 @@ Every widget's settings, and whether it sits on a card, are in the edit panel. P
 
 ## Install
 
-Stillpoint needs Firefox 140 or later.
+Install Stillpoint from
+[addons.mozilla.org](https://addons.mozilla.org/firefox/addon/stillpoint-tab/). It
+needs Firefox 140 or later, on a desktop.
 
-It is not yet on addons.mozilla.org. Until it is, build it from source (below) and
-load it from `about:debugging` → **This Firefox** → **Load Temporary Add-on**, choosing
+To try your own build instead, build it from source (below) and load it from
+`about:debugging` → **This Firefox** → **Load Temporary Add-on**, choosing
 `.output/firefox-mv3/manifest.json`. A temporary add-on is removed when Firefox
 closes.
 

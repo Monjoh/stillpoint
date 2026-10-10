@@ -7,7 +7,7 @@ is tagged in git as `v<version>`.
 Numbering: a fix raises the last number (1.0.1), a new feature the middle one (1.1.0),
 and a change that breaks how something used to work the first (2.0.0).
 
-## 1.1.0 — unreleased
+## 1.1.0 — 2026-10-10
 
 Three new widgets:
 
