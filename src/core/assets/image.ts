@@ -23,9 +23,18 @@ import { newId } from '@/lib/id';
 export interface ImagePreview {
   /** `#rrggbb`. Painted underneath everything, so the first frame is never wrong. */
   color: string;
-  /** A data URL, a few dozen pixels across and about a kilobyte. */
+  /** A data URL, `PREVIEW_EDGE` pixels on its longest edge, about 6 KB. */
   thumb: string;
 }
+
+/**
+ * The thumbnail's longest edge, for an uploaded photo and a web one alike. Stretched
+ * over the screen for the frames before the photograph decodes, 128 px still shows
+ * the scene; 32 px showed only its colours (S34, compared at screen size). It is
+ * read before first paint, so it stays a few kilobytes: 192 px nearly doubled the
+ * size for little more.
+ */
+export const PREVIEW_EDGE = 128;
 
 export interface ImageAsset {
   v: 1;

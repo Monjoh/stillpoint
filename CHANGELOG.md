@@ -9,6 +9,10 @@ and a change that breaks how something used to work the first (2.0.0).
 
 ## Unreleased
 
+A photo background opens sharper: the copy shown for the moment before the photo
+has loaded is now detailed enough to show the scene, not just its colours. Photos
+uploaded before this version keep the old one until they are uploaded again.
+
 Fixed: with a web photo set to change at every tab, a tab opened while the one
 before it was still downloading could stay on a blurred copy of the previous photo.
 Two tabs opened together also each downloaded a photo, and one of the two was never

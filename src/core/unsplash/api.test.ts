@@ -105,7 +105,7 @@ describe('sizing and tracking', () => {
     expect(full.get('w')).toBe('2560');
     expect(full.get('fm')).toBe('webp');
     expect(full.get('ixid')).toBe('abc');
-    expect(new URL(thumbUrl(photo)).searchParams.get('w')).toBe('32');
+    expect(new URL(thumbUrl(photo)).searchParams.get('w')).toBe('128');
   });
 
   it('pings the download endpoint, and swallows a failure', async () => {
@@ -135,7 +135,7 @@ describe('Picsum photos', () => {
   it('sized by path, in the photo’s own shape, never past its own width', () => {
     expect(photoUrl(picsum, 1920)).toBe('https://picsum.photos/id/10/1920/1280.webp');
     expect(photoUrl(picsum, 3840)).toBe('https://picsum.photos/id/10/2500/1667.webp');
-    expect(thumbUrl(picsum)).toBe('https://picsum.photos/id/10/32/21.jpg');
+    expect(thumbUrl(picsum)).toBe('https://picsum.photos/id/10/128/85.jpg');
   });
 
   it('have no download ping to send', async () => {

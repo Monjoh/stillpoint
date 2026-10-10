@@ -14,6 +14,8 @@
  * Nothing here runs before first paint. See `refresh.ts` for when it does run.
  */
 
+import { PREVIEW_EDGE } from '@/core/assets/image';
+
 const API = 'https://api.unsplash.com';
 
 /**
@@ -112,10 +114,15 @@ export function photoUrl(photo: UnsplashPhoto, width: number): string {
   });
 }
 
-/** The first-paint thumbnail: the same 32 px as an uploaded photo's. */
+/** The first-paint thumbnail, the same size as an uploaded photo's. */
 export function thumbUrl(photo: UnsplashPhoto): string {
-  if (photo.source === 'picsum') return picsumUrl(photo, 32, 'jpg');
-  return withParams(photo.rawUrl, { w: '32', q: '50', fm: 'jpg', fit: 'max' });
+  if (photo.source === 'picsum') return picsumUrl(photo, PREVIEW_EDGE, 'jpg');
+  return withParams(photo.rawUrl, {
+    w: String(PREVIEW_EDGE),
+    q: '60',
+    fm: 'jpg',
+    fit: 'max',
+  });
 }
 
 /** Picsum sizes by path and crops to the box given, so the box keeps the photo's shape. */

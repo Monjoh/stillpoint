@@ -120,7 +120,7 @@ export function writePaintCache(config: StillpointConfig): void {
  *
  * The cache is derived from the config, and the config holds only an asset id — the
  * photograph lives in `storage.local`, which is async and so useless before the first
- * pixel. Its average colour and a one-kilobyte thumbnail are what let a cold tab open
+ * pixel. Its average colour and a thumbnail of a few kilobytes are what let a cold tab open
  * on the right picture, and they have to be somewhere synchronous for that.
  *
  * Kept per asset rather than per profile, so switching to a profile with a different

@@ -1,5 +1,5 @@
 import { i18n } from '#i18n';
-import type { ImageAsset } from '@/core/assets/image';
+import { PREVIEW_EDGE, type ImageAsset } from '@/core/assets/image';
 import { averageColor } from '@/lib/average-color';
 
 export { averageColor };
@@ -24,8 +24,6 @@ export { averageColor };
 export const MAX_EDGE = 3840;
 /** Refused before decoding. A larger file is almost certainly not a photograph. */
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
-/** The preview's longest edge. A kilobyte, and enough to read as a blurred copy. */
-export const THUMB_EDGE = 32;
 
 export class ImageUploadError extends Error {}
 
@@ -62,7 +60,7 @@ export async function prepareImage(file: File): Promise<ImageAsset> {
     const full = draw(bitmap, size.width, size.height);
     const dataUrl = await blobToDataUrl(await encode(full));
 
-    const thumbSize = fitWithin(bitmap.width, bitmap.height, THUMB_EDGE);
+    const thumbSize = fitWithin(bitmap.width, bitmap.height, PREVIEW_EDGE);
     const thumb = draw(bitmap, thumbSize.width, thumbSize.height);
     const pixels = thumb
       .getContext('2d')!
