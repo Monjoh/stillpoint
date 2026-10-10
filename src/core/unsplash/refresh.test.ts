@@ -1,10 +1,11 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import type { UnsplashBackground } from '@/core/config/schema';
 import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import { readImagePreview } from '@/core/storage/paint-cache';
 import { fakeUnsplash } from './__fixtures__/fake-unsplash';
+import type { Fetch } from './api';
 import { loadPhotoImage, loadState, refreshUnsplash } from './refresh';
 import { UNSPLASH_PREVIEW_ID } from './state';
 
@@ -129,6 +130,102 @@ describe('refreshUnsplash', () => {
 
     expect(result.showNow?.photo.id).toBe('photo-2');
     expect(result.state.skip).toBe(1);
+  });
+
+  // Two tabs opened in quick succession, on "every tab". The first moves on and
+  // downloads the photo after next, which takes seconds; the second opens meanwhile.
+  describe('two tabs at once', () => {
+    const everyTab = background({ refresh: 'tab' });
+
+    /** The real fake server, with photo downloads held until `release`. */
+    function slowImages() {
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      const fetcher: Fetch = async (input, init) => {
+        const url = String(input);
+        if (url.startsWith('https://images.unsplash.com/')) await gate;
+        return server.fetcher(input, init);
+      };
+      return { fetcher, release };
+    }
+
+    const tab = (name: string, fetcher: Fetch, now = DAY_ONE) =>
+      refreshUnsplash({
+        adapter: localAdapter,
+        key: 'key',
+        background: everyTab,
+        width: 2560,
+        now,
+        fetcher,
+        tab: name,
+      });
+
+    const storedPhotos = async () =>
+      Object.keys(await fakeBrowser.storage.local.get(null))
+        .filter((key) => key.startsWith('cache/unsplash/'))
+        .sort();
+
+    it('saves the new photo before downloading the next one', async () => {
+      await run({ background: everyTab });
+      const slow = slowImages();
+      const first = tab('one', slow.fetcher);
+
+      // Mid-download, a new tab finds photo-2 to open on, with its bytes.
+      await vi.waitFor(async () =>
+        expect((await loadState(localAdapter))?.current?.photo.id).toBe('photo-2'),
+      );
+      expect(await loadPhotoImage(localAdapter, 'photo-2')).not.toBeNull();
+      expect(await loadPhotoImage(localAdapter, 'photo-1')).toBeNull();
+
+      slow.release();
+      expect((await first).state.next?.photo.id).toBe('photo-3');
+    });
+
+    it('leaves the next download to the tab already doing it', async () => {
+      await run({ background: everyTab });
+      const slow = slowImages();
+      const first = tab('one', slow.fetcher);
+      await vi.waitFor(async () =>
+        expect((await loadState(localAdapter))?.prefetching?.by).toBe('one'),
+      );
+      server.images.mockClear();
+
+      const second = await tab('two', server.fetcher);
+      expect(second.state.current?.photo.id).toBe('photo-2');
+      expect(server.images).not.toHaveBeenCalled();
+
+      slow.release();
+      await first;
+      const state = await loadState(localAdapter);
+      expect(state?.next?.photo.id).toBe('photo-3');
+      expect(state?.prefetching).toBeNull();
+      expect(await storedPhotos()).toEqual([
+        'cache/unsplash/photo-2',
+        'cache/unsplash/photo-3',
+      ]);
+    });
+
+    // A claim left by a tab closed mid-download runs out, and another tab downloads.
+    // If the first one finishes after all, its photo is deleted, not orphaned.
+    it('keeps one of two downloads, and deletes the other', async () => {
+      await run({ background: everyTab });
+      const slow = slowImages();
+      const first = tab('one', slow.fetcher);
+      await vi.waitFor(async () =>
+        expect((await loadState(localAdapter))?.prefetching?.by).toBe('one'),
+      );
+
+      await tab('two', server.fetcher, DAY_ONE + 3 * 60 * 1000);
+      slow.release();
+      await first;
+
+      const state = await loadState(localAdapter);
+      expect(state?.current?.photo.id).toBe('photo-2');
+      expect(await storedPhotos()).toEqual([
+        'cache/unsplash/photo-2',
+        `cache/unsplash/${state!.next!.photo.id}`,
+      ]);
+    });
   });
 
   describe('when Unsplash says no', () => {

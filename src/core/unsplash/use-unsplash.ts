@@ -108,11 +108,12 @@ export function useUnsplash(
     if (!active || !unsplash || consent === 'checking') return;
     let cancelled = false;
 
-    const show = async (photo: ShownPhoto, forQuery: string) => {
-      if (shownId.current === photo.photo.id) return;
+    /** False when the photo's bytes are gone, which leaves only its preview up. */
+    const show = async (photo: ShownPhoto, forQuery: string): Promise<boolean> => {
+      if (shownId.current === photo.photo.id) return true;
       const { loadPhotoImage } = await import('./refresh');
       const asset = await loadPhotoImage(adapter, photo.photo.id);
-      if (cancelled || !asset) return;
+      if (cancelled || !asset) return false;
       const next = URL.createObjectURL(dataUrlToBlob(asset.dataUrl));
       if (url.current) URL.revokeObjectURL(url.current);
       url.current = next;
@@ -122,6 +123,7 @@ export function useUnsplash(
         photo: photo.photo,
         source: { ...photo.preview, url: next },
       });
+      return true;
     };
 
     let showing: string | null = null;
@@ -132,9 +134,11 @@ export function useUnsplash(
       // What this tab opened on, if the store has it for this search.
       const state = await loadState(adapter);
       lastSkip.current = state?.skip ?? 0;
+      // Its bytes can be missing: another tab moved on and deleted them between this
+      // tab's first paint and now. Then the refresh's `current` is shown below
+      // instead, rather than leaving the blurred preview up for good.
       if (state?.current && sameQuery(state.query, query) && !settled.current) {
-        showing = query;
-        await show(state.current, query);
+        if (await show(state.current, query)) showing = query;
       }
       if (consent !== 'granted') {
         settled.current = true;
@@ -146,6 +150,7 @@ export function useUnsplash(
         key,
         background: unsplash,
         width: wantedWidth(),
+        onRotated: () => notify.current?.(),
       });
       if (cancelled) return;
       lastSkip.current = result.state.skip;

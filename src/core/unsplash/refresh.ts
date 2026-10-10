@@ -56,6 +56,13 @@ export interface RefreshContext {
   width: number;
   now?: number;
   fetcher?: Fetch;
+  /**
+   * Called once `current` has moved on and is saved, before the next photo's
+   * download, so the paint cache can follow without waiting seconds for it.
+   */
+  onRotated?: () => void;
+  /** Which tab this is, for the prefetch claim. Tests stand in for several. */
+  tab?: string;
 }
 
 export interface RefreshResult {
@@ -77,6 +84,14 @@ const RETRY_AFTER_MS: Record<UnsplashErrorKind, number> = {
   empty: 60 * 60 * 1000,
 };
 
+/**
+ * How long a tab's claim on the next photo's download holds. Long enough for a 4K
+ * photo on a slow line; a tab closed mid-download frees it no later than this.
+ */
+const PREFETCH_CLAIM_MS = 2 * 60 * 1000;
+
+const THIS_TAB = crypto.randomUUID();
+
 export async function loadState(
   adapter: StorageAdapter,
 ): Promise<UnsplashState | null> {
@@ -96,16 +111,21 @@ export async function loadPhotoImage(
  * One refresh at a time per page. The canvas and the panel's "Show another photo" can
  * both start one, and two interleaved would promote twice and orphan a download.
  */
-let running: Promise<unknown> = Promise.resolve();
+const running = new Map<string, Promise<unknown>>();
 
 export function refreshUnsplash(
   context: RefreshContext,
   options: { force?: boolean } = {},
 ): Promise<RefreshResult> {
-  const result = running.then(() =>
+  // Keyed by tab only so tests can stand in for two; a real page is one tab.
+  const tab = context.tab ?? THIS_TAB;
+  const result = (running.get(tab) ?? Promise.resolve()).then(() =>
     refresh(forSource(context), options.force ?? false),
   );
-  running = result.catch(() => {});
+  running.set(
+    tab,
+    result.catch(() => {}),
+  );
   return result;
 }
 
@@ -156,16 +176,15 @@ async function refresh(
     (s.error.kind !== 'key' || s.error.key === key) &&
     now - s.error.at < RETRY_AFTER_MS[s.error.kind];
 
-  const promote = async (incoming: ShownPhoto) => {
-    const previous = s.current;
+  const tab = context.tab ?? THIS_TAB;
+  let claimed = false;
+
+  const promote = (incoming: ShownPhoto) => {
     s.current = incoming;
     s.shownAt = now;
     if (s.next?.photo.id === incoming.photo.id) s.next = null;
     if (force) s.skip += 1;
     if (!had || force) showNow = incoming;
-    // The tab showing `previous` holds it as an object URL; deleting the stored copy
-    // does not take it off that screen.
-    if (previous) await drop(adapter, [previous]);
     if (key) void trackDownload(key, incoming.photo, fetcher);
   };
 
@@ -173,25 +192,79 @@ async function refresh(
     if (!had || force || isDue(background.refresh, s.shownAt, now)) {
       // The prefetched one costs nothing. Downloading on the spot is only worth it
       // when the picture has to change in this tab anyway.
-      if (s.next) await promote(s.next);
-      else if ((!had || force) && !blocked)
-        await promote(await take(s, context, fetcher));
-      // Otherwise due but nothing prefetched (the last prefetch failed): keep the
-      // current photo, and let the prefetch below put the next tab right.
+      if (s.next) promote(s.next);
+      else if ((!had || force) && !blocked) promote(await take(s, context, fetcher));
+      // Otherwise due but nothing prefetched (the last prefetch failed, or another
+      // tab is still downloading it): keep the current photo for now.
     }
 
-    if (!s.next && !blocked) s.next = await take(s, context, fetcher);
+    if (had && s.current !== had) {
+      // Saved before the next photo's download, which can take seconds. A tab opened
+      // meanwhile reads the new `current`, whose bytes are stored, rather than the
+      // old one, whose bytes are about to go: that tab used to keep the old photo's
+      // blurred preview for good.
+      await adapter.set(StorageKeys.unsplash, s);
+      writeImagePreview(UNSPLASH_PREVIEW_ID, s.current!.preview);
+      context.onRotated?.();
+      // Only now. A tab showing the old photo holds it as an object URL; deleting
+      // the stored copy does not take it off that screen.
+      await drop(adapter, [had]);
+    }
+
+    if (!s.next && !blocked && !claimedElsewhere(await loadState(adapter), tab, now)) {
+      s.prefetching = { by: tab, until: now + PREFETCH_CLAIM_MS };
+      claimed = true;
+      await adapter.set(StorageKeys.unsplash, s);
+      s.next = await take(s, context, fetcher);
+    }
     if (!blocked) s.error = null;
   } catch (error) {
     if (!(error instanceof UnsplashError)) throw error;
     s.error = { kind: error.kind, at: now, key };
   }
 
-  await adapter.set(StorageKeys.unsplash, s);
+  await adapter.set(StorageKeys.unsplash, await settle(adapter, s, claimed));
 
   const changed = s.current !== null && s.current.photo.id !== had?.photo.id;
   if (changed) writeImagePreview(UNSPLASH_PREVIEW_ID, s.current!.preview);
   return { state: s, showNow, changed };
+}
+
+function claimedElsewhere(
+  state: UnsplashState | null,
+  tab: string,
+  now: number,
+): boolean {
+  const claim = state?.prefetching;
+  return claim != null && claim.by !== tab && claim.until > now;
+}
+
+/**
+ * This tab's state, reconciled with whatever another tab wrote while it was busy.
+ * Two tabs on the same photo share one `next`: the one already stored wins, and a
+ * second download is deleted rather than orphaned. A claim is released only by the
+ * tab that made it.
+ */
+async function settle(
+  adapter: StorageAdapter,
+  s: UnsplashState,
+  claimed: boolean,
+): Promise<UnsplashState> {
+  const latest = await loadState(adapter);
+  const same =
+    latest !== null &&
+    latest.source === s.source &&
+    sameQuery(latest.query, s.query) &&
+    latest.current?.photo.id === s.current?.photo.id;
+  if (same) {
+    if (latest.next && latest.next.photo.id !== s.next?.photo.id) {
+      if (s.next) await drop(adapter, [s.next]);
+      s.next = latest.next;
+    }
+    if (!claimed) s.prefetching = latest.prefetching ?? null;
+  }
+  if (claimed) s.prefetching = null;
+  return s;
 }
 
 /** The next photo off the batch, downloaded and stored. Fetches a batch if empty. */

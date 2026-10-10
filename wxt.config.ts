@@ -56,7 +56,10 @@ export default defineConfig({
     short_name: '__MSG_manifest_name__',
     description: '__MSG_manifest_description__',
     homepage_url: 'https://github.com/Monjoh/stillpoint',
-    permissions: ['storage'],
+    // Photos live in storage.local as base64, up to ~2.7 MB each. Chrome caps the
+    // area at 10 MB without unlimitedStorage, which is a few photos; Firefox has no
+    // such cap, and would list the permission at install for nothing.
+    permissions: browser === 'firefox' ? ['storage'] : ['storage', 'unlimitedStorage'],
     // No host permissions: every service a widget uses sends CORS headers. A widget
     // that needs one declares it in its definition's `origins`, and the origin must be
     // listed here as `optional_host_permissions`, asked for from a click.

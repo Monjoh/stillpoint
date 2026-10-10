@@ -7,6 +7,13 @@ is tagged in git as `v<version>`.
 Numbering: a fix raises the last number (1.0.1), a new feature the middle one (1.1.0),
 and a change that breaks how something used to work the first (2.0.0).
 
+## Unreleased
+
+Fixed: with a web photo set to change at every tab, a tab opened while the one
+before it was still downloading could stay on a blurred copy of the previous photo.
+Two tabs opened together also each downloaded a photo, and one of the two was never
+deleted.
+
 ## 1.1.0 — 2026-10-10
 
 Three new widgets:

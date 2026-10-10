@@ -40,6 +40,12 @@ export interface UnsplashState {
   skip: number;
   /** `key` is the access key the error was for, or null for Picsum. */
   error: { kind: UnsplashErrorKind; at: number; key: string | null } | null;
+  /**
+   * A tab downloading `next`, until when. Other tabs leave the download to it rather
+   * than fetch a second photo that one of the two writes would orphan. Absent in
+   * states written before it existed.
+   */
+  prefetching?: { by: string; until: number } | null;
 }
 
 export function emptyState(
@@ -56,6 +62,7 @@ export function emptyState(
     queue: [],
     skip: 0,
     error: null,
+    prefetching: null,
   };
 }
 

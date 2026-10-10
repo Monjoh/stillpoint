@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { actAsFirefox } from '@/core/__fixtures__/permissions';
 import type { BackgroundConfig, UnsplashBackground } from '@/core/config/schema';
+import { StorageKeys } from '@/core/storage/adapter';
 import { localAdapter } from '@/core/storage/local';
 import { fakeUnsplash } from './__fixtures__/fake-unsplash';
 import { refreshUnsplash } from './refresh';
@@ -88,6 +89,18 @@ describe('useUnsplash', () => {
 
     await act(() => previousTab(server, true));
     await waitFor(() => expect(result.current.credit?.name).toBe('Author 2'));
+  });
+
+  // Another tab moved on, and deleted this one's photo, between its first paint and
+  // its read of the store. It used to keep the blurred preview for good.
+  it('shows the new photo when the one it opened on has gone', async () => {
+    await previousTab(server);
+    await localAdapter.remove(StorageKeys.unsplashImage('photo-1'));
+    const everyTab = { ...unsplash, refresh: 'tab' as const };
+
+    const { result } = renderHook(() => useUnsplash(everyTab, 'k'));
+    await waitFor(() => expect(result.current.source?.url).toMatch(/^blob:test/));
+    expect(result.current.credit?.name).toBe('Author 2');
   });
 });
 
